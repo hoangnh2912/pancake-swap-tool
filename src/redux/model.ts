@@ -132,7 +132,7 @@ interface StoreModel {
   wallets: Wallet;
   chainNetwork: ChainNetwork;
   currentTx: CurrentTx;
-  tabIdx: number;
+  tabId: string;
 }
 
 export type { StepDetail, TransactionDetail, WalletDetail };

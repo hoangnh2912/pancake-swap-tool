@@ -11,8 +11,8 @@ const useStorage = () => {
     }
   };
 
-  const getKeyCacheByTabIdx = (tabIdx: number) => {
-    return `cache-${tabIdx}`;
+  const getKeyCacheByTabId = (tabId: string) => {
+    return `cache-${tabId}`;
   };
 
   const removeItem = (key: string) => {
@@ -23,7 +23,7 @@ const useStorage = () => {
     setItem,
     getItem,
     removeItem,
-    getKeyCacheByTabIdx,
+    getKeyCacheByTabId,
   };
 };
 

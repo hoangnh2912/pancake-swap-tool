@@ -31,7 +31,7 @@ import {
   DEFAULT_PAGINATE_SIZE,
   PANCAKE_ADDRESS,
   Shell,
-  ZERO_ADDRESS
+  ZERO_ADDRESS,
 } from "../utils/constants";
 import {
   chainNetworkColor,
@@ -51,7 +51,7 @@ const AddStepCall = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const tabIdx = useStoreState((state) => state.tabIdx);
+  const tabId = useStoreState((state) => state.tabId);
   const pairData = useStoreState((state) => state.steps.pairData);
   const stepData = useStoreState((state) => state.steps.data);
 
@@ -112,7 +112,7 @@ const AddStepCall = () => {
   const handleDelete = useStoreActions((action) => action.steps.delete);
   const handleDeleteAll = useStoreActions((action) => action.steps.deleteAll);
 
-  const { setItem, getItem, getKeyCacheByTabIdx } = useStorage();
+  const { setItem, getItem, getKeyCacheByTabId } = useStorage();
 
   useEffect(() => {
     const cache = getItem<{
@@ -127,7 +127,7 @@ const AddStepCall = () => {
       tokenAddress: string;
       delay: number;
       steps: StepDetail[];
-    }>(getKeyCacheByTabIdx(tabIdx));
+    }>(getKeyCacheByTabId(tabId));
     if (cache) {
       setPrivateKeys(cache.privateKeys);
       setChainNetwork({
@@ -150,7 +150,7 @@ const AddStepCall = () => {
 
   const onSaveLocalCache = () => {
     if (!isLoadCacheDone.current) return;
-    setItem(getKeyCacheByTabIdx(tabIdx), {
+    setItem(getKeyCacheByTabId(tabId), {
       privateKeys,
       ...chainNetwork,
       delay,
@@ -165,6 +165,7 @@ const AddStepCall = () => {
 
   return (
     <Stack flex={1} boxShadow="md" p="4" bg={"white"} rounded={"md"}>
+      <Text>{tabId}</Text>
       <Text fontWeight={"bold"}>Mạng blockchain</Text>
       <Menu>
         <MenuButton

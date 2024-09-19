@@ -1,6 +1,7 @@
 import {
   CloseButton,
   HStack,
+  Stack,
   Tab,
   TabList,
   TabPanel,
@@ -23,28 +24,42 @@ const Main = () => {
   const [allStore, setAllStore] = useState<
     {
       title: string;
+      id: string;
       data: StorePayload;
     }[]
   >([
     {
       title: "Tab-1",
-      data: getStore(0),
+      id: "1a2b3c4d",
+      data: getStore("1a2b3c4d"),
     },
   ]);
-  const { removeItem, getKeyCacheByTabIdx, getItem, setItem } = useStorage();
+  const { removeItem, getKeyCacheByTabId, getItem, setItem } = useStorage();
 
   const [indexTab, setIndexTab] = useState(0);
 
   useEffect(() => {
     const cache = getItem<{
-      tab: string[];
+      tab: {
+        title: string;
+        id: string;
+      }[];
     }>("tab");
     if (cache) {
       setAllStore(
-        cache.tab.map((v: string, i: number) => ({
-          title: v,
-          data: getStore(i),
-        }))
+        cache.tab.map(
+          (
+            tab: {
+              title: string;
+              id: string;
+            },
+            i: number
+          ) => ({
+            title: tab.title,
+            data: getStore(tab.id),
+            id: tab.id,
+          })
+        )
       );
     }
     isLoadCacheDone.current = true;
@@ -53,7 +68,10 @@ const Main = () => {
   const onSaveLocalCache = () => {
     if (!isLoadCacheDone.current) return;
     setItem("tab", {
-      tab: allStore.map((v) => v.title),
+      tab: allStore.map((v) => ({
+        title: v.title,
+        id: v.id,
+      })),
     });
   };
 
@@ -61,15 +79,17 @@ const Main = () => {
     onSaveLocalCache();
   }, [allStore.length]);
 
-  const storeKeys = allStore.map((v) => v.title);
+  const storeTabTitles = allStore.map((v) => v.title);
 
   const createNewTab = useCallback(() => {
     const key = `Tab-${allStore.length + 1}`;
+    const newId = Math.random().toString(16).substring(7);
     setAllStore((prev) => [
       ...prev,
       {
         title: key,
-        data: getStore(allStore.length),
+        data: getStore(newId),
+        id: newId,
       },
     ]);
   }, [allStore.length]);
@@ -77,26 +97,34 @@ const Main = () => {
   const closeTab = useCallback(
     (index: number) => {
       setAllStore((prev) => {
-        const newStore = [...prev];
-        newStore.splice(index, 1);
+        const idCloseTab = prev[index].id;
         setIndexTab((prevIdx) => {
-          if (prevIdx === newStore.length) {
+          const idOfCurrentTab = prev[prevIdx].id;
+          if (idCloseTab === idOfCurrentTab) {
             return Math.max(0, prevIdx - 1);
           }
           return prevIdx;
         });
-        removeItem(getKeyCacheByTabIdx(index));
-        return newStore;
+        removeItem(getKeyCacheByTabId(idCloseTab));
+        return prev.filter((v) => v.id !== idCloseTab);
       });
     },
     [setIndexTab]
   );
 
+  const onChangeTab = useCallback((index: number) => {
+    setIndexTab(index);
+  }, []);
+
   return (
-    <Tabs index={indexTab} onChange={setIndexTab}>
+    <Tabs index={indexTab} variant="unstyled" isFitted onChange={onChangeTab}>
       <TabList>
-        {storeKeys.map((v, i) => (
-          <Tab justifyContent={"space-between"}>
+        {storeTabTitles.map((v, i) => (
+          <Tab
+            _selected={{ color: "white", bg: "green" }}
+            minW={"200px"}
+            justifyContent={"space-between"}
+          >
             {v}
             {i !== 0 && (
               <CloseButton
@@ -108,9 +136,16 @@ const Main = () => {
             )}
           </Tab>
         ))}
-        <Tab onClick={createNewTab}>
-          <Text fontSize={"2xl"}>+</Text>
-        </Tab>
+        {allStore.length < 8 && (
+          <Stack
+            onClick={createNewTab}
+            cursor={"pointer"}
+            px={"10px"}
+            bg={"yellowgreen"}
+          >
+            <Text fontSize={"2xl"}>+</Text>
+          </Stack>
+        )}
       </TabList>
       <TabPanels>
         {allStore.map((store) => (

@@ -108,13 +108,13 @@ const storePayload: StoreModel = {
       if (payload.symbol) state.symbol = payload.symbol;
     }),
   },
-  tabIdx: 0,
+  tabId: "",
 };
 
 type StorePayload = Store<StoreModel, EasyPeasyConfig<undefined, {}>>;
 
-const getStore = (idx: number) =>
-  createStore<StoreModel>({ ...storePayload, tabIdx: idx });
+const getStore = (id: string) =>
+  createStore<StoreModel>({ ...storePayload, tabId: id });
 
 export { getStore };
 export type { StorePayload };
