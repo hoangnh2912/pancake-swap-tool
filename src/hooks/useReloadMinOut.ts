@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { useCallback, useEffect, useRef } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
 import { calculateAmount, getOfPairBalance, getProvider } from "../web3";
@@ -46,43 +46,47 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
           },
         });
       }),
-      ...stepsData.map(async (step) => {
-        const { maxInDisplay, minOutDisplay } = await calculateAmount({
-          provider,
-          weth: chainNetwork.weth,
-          tokenAddress,
-          addressRouter: chainNetwork.router,
-          amount: step.amount,
-          slippage: step.slippage,
-          factoryAddress: chainNetwork.factory,
-        });
+      ...stepsData
+        .filter((step) => BigNumber.from(step.amountCalculate.value).isZero())
+        .map(async (step) => {
+          const { maxInDisplay, minOutDisplay } = await calculateAmount({
+            provider,
+            weth: chainNetwork.weth,
+            tokenAddress,
+            addressRouter: chainNetwork.router,
+            amount: step.amount,
+            slippage: step.slippage,
+            factoryAddress: chainNetwork.factory,
+          });
 
-        updateStep({
-          ...step,
-          amountCalculate: {
-            value: step.method == "buy" ? minOutDisplay : maxInDisplay,
-          },
-        });
-      }),
-      ...txsData.map(async (txs) => {
-        try {
-          if (txs.transactionReceipt.timestamp) return;
-          const rc = await provider.getTransactionReceipt(
-            txs.transactionReceipt.transactionHash
-          );
-          const block = await provider.getBlock(rc.blockNumber);
-          const timestamp = block.timestamp;
-          updateTx({
-            ...txs,
-            transactionReceipt: {
-              ...txs.transactionReceipt,
-              timestamp,
+          updateStep({
+            ...step,
+            amountCalculate: {
+              value: step.method == "buy" ? minOutDisplay : maxInDisplay,
             },
           });
-        } catch (error) {
-          console.error("[useReloadMinOut][txsData]", error);
-        }
-      }),
+        }),
+      ...txsData
+        .filter((txs) => !txs.transactionReceipt.timestamp)
+        .map(async (txs) => {
+          try {
+            if (txs.transactionReceipt.timestamp) return;
+            const rc = await provider.getTransactionReceipt(
+              txs.transactionReceipt.transactionHash
+            );
+            const block = await provider.getBlock(rc.blockNumber);
+            const timestamp = block.timestamp;
+            updateTx({
+              ...txs,
+              transactionReceipt: {
+                ...txs.transactionReceipt,
+                timestamp,
+              },
+            });
+          } catch (error) {
+            console.error("[useReloadMinOut][txsData]", error);
+          }
+        }),
     ]);
     const { pairBalance, pairAddress } =
       resSettled[0].status == "fulfilled"

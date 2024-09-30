@@ -64,6 +64,7 @@ const AddStepCall = () => {
     );
   }, [currentPage, stepData]);
 
+
   const chainNetwork = useStoreState((state) => state.chainNetwork);
 
   const priceWETH9 = useTokenPrice(chainNetwork.symbol);
@@ -365,6 +366,7 @@ const AddStepCall = () => {
           <Text>Price Token: {priceToken}</Text>
         </Stack>
       </Flex>
+      <Text>Tổng lệnh: {stepData.length}</Text>
       <TableContainer>
         <Table>
           <Thead>

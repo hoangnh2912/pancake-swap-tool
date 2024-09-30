@@ -5,6 +5,7 @@ import {
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
@@ -37,6 +38,7 @@ const OutputTransaction = () => {
 
   return (
     <Stack boxShadow="md" p="4" flex={1} bg={"white"} rounded={"md"} w="100%">
+      <Text>Tổng transaction: {txsData.length}</Text>
       <TableContainer>
         <Table>
           <Thead>
