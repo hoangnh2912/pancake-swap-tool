@@ -65,7 +65,7 @@ const AddStepCall = () => {
   }, [currentPage, stepData]);
 
   const chainNetwork = useStoreState((state) => state.chainNetwork);
-
+  
   const priceWETH9 = useTokenPrice(chainNetwork.symbol);
 
   const priceToken = useMemo(() => {
@@ -126,6 +126,7 @@ const AddStepCall = () => {
       weth: string;
       tokenAddress: string;
       delay: number;
+      gasPrice: string;
       steps: StepDetail[];
     }>(getKeyCacheByTabId(tabId));
     if (cache) {
@@ -138,6 +139,7 @@ const AddStepCall = () => {
         router: cache.router,
         symbol: cache.symbol,
         weth: cache.weth,
+        gasPrice: cache.gasPrice,
       });
       setDelay(cache.delay);
       setTokenAddress(cache.tokenAddress);
@@ -280,7 +282,16 @@ const AddStepCall = () => {
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập gasPrice </Text>
-            <Input id="gasPrice" type="number" defaultValue={0} />
+            <Input
+              id="gasPrice"
+              type="number"
+              onChange={(e) =>
+                setChainNetwork({
+                  gasPrice: e.target.value,
+                })
+              }
+              defaultValue={chainNetwork.gasPrice}
+            />
           </Flex>
           <Button
             onClick={() =>
@@ -292,9 +303,7 @@ const AddStepCall = () => {
                 amountCalculate: {
                   value: ethers.BigNumber.from(0),
                 },
-                gasPrice: $("#gasPrice").val() as string,
                 privateKey: $("#privateKey").val() as string,
-                chainNetworkName: chainNetwork.name,
               })
             }
             isDisabled={
@@ -335,11 +344,9 @@ const AddStepCall = () => {
             <Tr>
               <Th>ID</Th>
               <Th>Wallet</Th>
-              <Th>Mạng</Th>
               <Th>Lệnh</Th>
               <Th>Số lượng {chainNetwork.symbol}</Th>
               <Th>Slippage</Th>
-              <Th>Gas Price</Th>
               <Th>Số lượng token</Th>
               <Th>Địa chỉ token</Th>
               <Th>
@@ -373,11 +380,9 @@ const AddStepCall = () => {
                 >
                   {shortenIfAddress(tryPrivateKeyToAddress(item.privateKey))}
                 </Td>
-                <Td>{item.chainNetworkName}</Td>
                 <Td>{item.method == "buy" ? "Mua" : "Bán"}</Td>
                 <Td>{item.amount}</Td>
                 <Td>{item.slippage}</Td>
-                <Td>{item.gasPrice}</Td>
                 <Td>{formatEtherWithDecimals(item.amountCalculate.value)} </Td>
                 <Td
                   onClick={() =>

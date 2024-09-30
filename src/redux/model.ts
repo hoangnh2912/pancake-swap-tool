@@ -3,7 +3,6 @@ import { ethers, providers } from "ethers";
 
 interface StepDetail {
   id: string;
-  gasPrice: string;
   method: string;
   amount: string;
   slippage: string;
@@ -11,7 +10,6 @@ interface StepDetail {
   amountCalculate: {
     value: ethers.BigNumber;
   };
-  chainNetworkName: string;
 }
 
 interface Steps {
@@ -97,6 +95,7 @@ interface ChainNetwork {
   weth: string;
   factory: string;
   symbol: string;
+  gasPrice: string;
   setChainNetwork: Action<
     ChainNetwork,
     {
@@ -107,6 +106,7 @@ interface ChainNetwork {
       weth?: string;
       factory?: string;
       symbol?: string;
+      gasPrice?: string;
     }
   >;
 }

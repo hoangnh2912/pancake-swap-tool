@@ -12,7 +12,9 @@ const StartProcess = () => {
   const delay = useStoreState((state) => state.steps.delay);
   const stepData = useStoreState((state) => state.steps.data);
   const addTxs = useStoreActions((action) => action.txs.add);
-  const setCurrentTxId = useStoreActions((action) => action.currentTx.setCurrentTxId);
+  const setCurrentTxId = useStoreActions(
+    (action) => action.currentTx.setCurrentTxId
+  );
 
   const toast = useToast();
 
@@ -38,6 +40,7 @@ const StartProcess = () => {
             WETH: chainNetwork.weth,
             tokenAddress,
             factoryAddress: chainNetwork.factory,
+            gasPrice: chainNetwork.gasPrice,
             onResult: (result, stepResult) => {
               addTxs({
                 id: stepResult.id,

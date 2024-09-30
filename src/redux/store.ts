@@ -98,6 +98,7 @@ const storePayload: StoreModel = {
     router: PANCAKE_ADDRESS.BSC.Mainnet.Router,
     weth: PANCAKE_ADDRESS.BSC.Mainnet.WETH,
     symbol: PANCAKE_ADDRESS.BSC.Mainnet.Symbol,
+    gasPrice: "5",
     setChainNetwork: action((state, payload) => {
       if (payload.explorer) state.explorer = payload.explorer;
       if (payload.name) state.name = payload.name;
@@ -106,6 +107,7 @@ const storePayload: StoreModel = {
       if (payload.router) state.router = payload.router;
       if (payload.weth) state.weth = payload.weth;
       if (payload.symbol) state.symbol = payload.symbol;
+      if (payload.gasPrice) state.gasPrice = payload.gasPrice;
     }),
   },
   tabId: "",
