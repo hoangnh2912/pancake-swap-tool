@@ -127,6 +127,7 @@ const AddStepCall = () => {
       tokenAddress: string;
       delay: number;
       gasPrice: string;
+      gasLimit: string;
       steps: StepDetail[];
     }>(getKeyCacheByTabId(tabId));
     if (cache) {
@@ -140,6 +141,7 @@ const AddStepCall = () => {
         symbol: cache.symbol,
         weth: cache.weth,
         gasPrice: cache.gasPrice,
+        gasLimit: cache.gasLimit,
       });
       setDelay(cache.delay);
       setTokenAddress(cache.tokenAddress);
@@ -163,7 +165,18 @@ const AddStepCall = () => {
 
   useEffect(() => {
     onSaveLocalCache();
-  }, [privateKeys, chainNetwork.name, delay, stepData, tokenAddress]);
+  }, [
+    privateKeys,
+    chainNetwork.name,
+    delay,
+    stepData,
+    tokenAddress,
+    chainNetwork.gasLimit,
+    chainNetwork.gasPrice,
+    chainNetwork.rpc,
+  ]);
+
+  if (!isLoadCacheDone.current) return null;
 
   return (
     <Stack flex={1} boxShadow="md" p="4" bg={"white"} rounded={"md"}>

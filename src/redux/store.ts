@@ -109,9 +109,10 @@ const storePayload: StoreModel = {
       if (payload.weth) state.weth = payload.weth;
       if (payload.symbol) state.symbol = payload.symbol;
       if (payload.gasPrice) state.gasPrice = payload.gasPrice;
+      if (payload.gasLimit) state.gasLimit = payload.gasLimit;
     }),
   },
-  tabId: "",
+  tabId: "1a2b3c4d",
 };
 
 type StorePayload = Store<StoreModel, EasyPeasyConfig<undefined, {}>>;

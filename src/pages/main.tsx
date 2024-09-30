@@ -148,7 +148,7 @@ const Main = () => {
         )}
       </TabList>
       <TabPanels>
-        {allStore.map((store) => (
+        {isLoadCacheDone.current && allStore.map((store) => (
           <StoreProvider store={store.data}>
             <TabPanel>
               <VStack flex={1} bg={"#EDF2F7"} p="6" w={"100%"}>
