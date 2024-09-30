@@ -96,6 +96,7 @@ interface ChainNetwork {
   factory: string;
   symbol: string;
   gasPrice: string;
+  gasLimit: string;
   setChainNetwork: Action<
     ChainNetwork,
     {
@@ -107,6 +108,7 @@ interface ChainNetwork {
       factory?: string;
       symbol?: string;
       gasPrice?: string;
+      gasLimit?: string;
     }
   >;
 }

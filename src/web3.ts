@@ -123,6 +123,7 @@ const startSendTx = async ({
   tokenAddress,
   wallet,
   gasPrice,
+  gasLimit,
   onResult,
 }: {
   wallet: ethers.Wallet;
@@ -132,6 +133,7 @@ const startSendTx = async ({
   tokenAddress: string;
   factoryAddress: string;
   gasPrice: string;
+  gasLimit: string;
   onResult?: (result: providers.TransactionResponse, step: StepDetail) => void;
 }) => {
   const routerContract = getRouterContract(
@@ -196,12 +198,22 @@ const startSendTx = async ({
     }
   }
 
+  let gasLimitValue = "";
+  if (gasLimit) {
+    gasLimitValue = gasLimit;
+  } else {
+    gasLimitValue = (
+      await routerContract.estimateGas[methodName](...args)
+    ).toString();
+  }
+
   const payload = {
     gasPrice: ethers.utils.parseUnits(`${gasPrice}`, "gwei").toString(),
     value:
       step.method == "buy"
         ? ethers.utils.parseUnits(`${step.amount}`, "ether").toString()
         : "0",
+    gasLimit: gasLimitValue,
   };
 
   console.log("[Transaction]", methodName, args, payload);

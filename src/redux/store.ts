@@ -99,6 +99,7 @@ const storePayload: StoreModel = {
     weth: PANCAKE_ADDRESS.BSC.Mainnet.WETH,
     symbol: PANCAKE_ADDRESS.BSC.Mainnet.Symbol,
     gasPrice: "5",
+    gasLimit: "300000",
     setChainNetwork: action((state, payload) => {
       if (payload.explorer) state.explorer = payload.explorer;
       if (payload.name) state.name = payload.name;

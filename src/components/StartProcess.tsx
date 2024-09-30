@@ -41,6 +41,7 @@ const StartProcess = () => {
             tokenAddress,
             factoryAddress: chainNetwork.factory,
             gasPrice: chainNetwork.gasPrice,
+            gasLimit: chainNetwork.gasLimit,
             onResult: (result, stepResult) => {
               addTxs({
                 id: stepResult.id,

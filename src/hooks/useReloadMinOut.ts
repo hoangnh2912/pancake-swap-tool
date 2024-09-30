@@ -1,12 +1,7 @@
+import { ethers } from "ethers";
 import { useCallback, useEffect, useRef } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import {
-  ENVIROMENT,
-  ENVIRONMENT_TYPE,
-  PANCAKE_ADDRESS,
-} from "../utils/constants";
 import { calculateAmount, getOfPairBalance, getProvider } from "../web3";
-import { ethers } from "ethers";
 
 const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
   const intervalCheck = useRef<NodeJS.Timeout>();
@@ -32,7 +27,6 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
       return;
     isCalculating.current = true;
     const provider = getProvider(chainNetwork.rpc);
-
     const resSettled = await Promise.allSettled([
       getOfPairBalance(
         provider,

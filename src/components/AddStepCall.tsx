@@ -65,7 +65,7 @@ const AddStepCall = () => {
   }, [currentPage, stepData]);
 
   const chainNetwork = useStoreState((state) => state.chainNetwork);
-  
+
   const priceWETH9 = useTokenPrice(chainNetwork.symbol);
 
   const priceToken = useMemo(() => {
@@ -285,12 +285,26 @@ const AddStepCall = () => {
             <Input
               id="gasPrice"
               type="number"
-              onChange={(e) =>
+              onChange={(e) => {
                 setChainNetwork({
                   gasPrice: e.target.value,
-                })
-              }
+                });
+              }}
               defaultValue={chainNetwork.gasPrice}
+            />
+          </Flex>
+          <Flex gap={"5px"} alignItems={"center"}>
+            <Text>Nhập gasLimit </Text>
+            <Input
+              id="gasLimit"
+              placeholder="Để trống sẽ tự tính toán"
+              type="number"
+              onChange={(e) => {
+                setChainNetwork({
+                  gasLimit: e.target.value,
+                });
+              }}
+              defaultValue={chainNetwork.gasLimit}
             />
           </Flex>
           <Button
