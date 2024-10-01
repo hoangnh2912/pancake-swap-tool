@@ -55,7 +55,6 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
             tokenAddress,
             addressRouter: chainNetwork.router,
             amount: step.amount,
-            slippage: step.slippage,
             factoryAddress: chainNetwork.factory,
           });
 

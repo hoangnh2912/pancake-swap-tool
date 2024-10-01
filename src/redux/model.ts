@@ -5,7 +5,6 @@ interface StepDetail {
   id: string;
   method: string;
   amount: string;
-  slippage: string;
   privateKey: string;
   amountCalculate: {
     value: ethers.BigNumber;
@@ -51,7 +50,6 @@ interface TransactionDetail {
   rpc: string;
   method: string;
   amount: string;
-  slippage: string;
   tokenAddress: string;
   tokenAmount: string;
   transactionReceipt: Partial<providers.TransactionReceipt> & {

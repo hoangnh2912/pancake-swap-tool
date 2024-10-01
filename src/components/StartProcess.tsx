@@ -5,6 +5,7 @@ import { TransactionStatus } from "../redux/model";
 import { sleep } from "../utils/utils";
 import { getProvider, getWallet, startSendTx } from "../web3";
 import { Shell } from "../utils/constants";
+import { Wallet } from "ethers";
 
 const StartProcess = () => {
   const chainNetwork = useStoreState((state) => state.chainNetwork);
@@ -28,12 +29,19 @@ const StartProcess = () => {
         setCurrentTxId(stepData[i].id);
         const step = stepData[i];
         console.log("Start step", i);
+
+        const childWallet = getWallet(
+          getProvider(chainNetwork.rpc),
+          Wallet.createRandom().privateKey
+        );
+
         const wallet = getWallet(
           getProvider(chainNetwork.rpc),
           step.privateKey
         );
         try {
           const res = await startSendTx({
+            childWallet,
             wallet,
             step,
             addressRouter: chainNetwork.router,
@@ -49,7 +57,6 @@ const StartProcess = () => {
                 rpc: chainNetwork.rpc,
                 method: stepResult.method,
                 amount: stepResult.amount,
-                slippage: stepResult.slippage,
                 tokenAddress,
                 tokenAmount: "0",
                 transactionReceipt: {
@@ -66,7 +73,6 @@ const StartProcess = () => {
             rpc: chainNetwork.rpc,
             method: step.method,
             amount: step.amount,
-            slippage: step.slippage,
             transactionReceipt: {
               transactionHash: res.hash,
               blockHash: res.blockHash,
@@ -83,7 +89,6 @@ const StartProcess = () => {
             rpc: chainNetwork.rpc,
             method: step.method,
             amount: step.amount,
-            slippage: step.slippage,
             tokenAddress,
             transactionReceipt: {},
             tokenAmount: "0",

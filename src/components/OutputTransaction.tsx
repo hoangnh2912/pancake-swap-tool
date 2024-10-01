@@ -50,7 +50,6 @@ const OutputTransaction = () => {
               <Th>Time</Th>
               <Th>Lệnh</Th>
               <Th>Số lượng</Th>
-              <Th>Slippage</Th>
               <Th>Địa chỉ token</Th>
               <Th>
                 <Button
@@ -97,7 +96,6 @@ const OutputTransaction = () => {
                 </Td>
                 <Td>{item.method == "buy" ? "Mua" : "Bán"}</Td>
                 <Td>{item.amount}</Td>
-                <Td>{item.slippage}</Td>
                 <Td
                   onClick={() =>
                     Shell.openExternal(

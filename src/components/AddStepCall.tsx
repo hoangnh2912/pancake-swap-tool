@@ -19,7 +19,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { ethers } from "ethers";
+import { Wallet, ethers } from "ethers";
 import $ from "jquery";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useReloadFetchOnchain from "../hooks/useReloadMinOut";
@@ -50,6 +50,7 @@ const AddStepCall = () => {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [numOfstep, setNumOfStep] = useState(1);
 
   const tabId = useStoreState((state) => state.tabId);
   const pairData = useStoreState((state) => state.steps.pairData);
@@ -63,7 +64,6 @@ const AddStepCall = () => {
       currentPage * DEFAULT_PAGINATE_SIZE
     );
   }, [currentPage, stepData]);
-
 
   const chainNetwork = useStoreState((state) => state.chainNetwork);
 
@@ -280,19 +280,8 @@ const AddStepCall = () => {
             </Select>
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Chọn lệnh</Text>
-            <Select id="method">
-              <option value="buy">{"Mua"}</option>
-              <option value="sell">{"Bán"}</option>
-            </Select>
-          </Flex>
-          <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập số lượng {chainNetwork.symbol}</Text>
             <Input id="amount" type="number" defaultValue={1} />
-          </Flex>
-          <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Nhập số slippage %</Text>
-            <Input id="slippage" type="number" defaultValue={0.5} />
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập gasPrice </Text>
@@ -318,22 +307,35 @@ const AddStepCall = () => {
                   gasLimit: e.target.value,
                 });
               }}
-              defaultValue={chainNetwork.gasLimit}
+              defaultValue={'200000'}
+            />
+          </Flex>
+          <Flex gap={"5px"} alignItems={"center"}>
+            <Text>Nhập số lượng lệnh </Text>
+            <Input
+              placeholder="Để trống sẽ tự tính toán"
+              type="number"
+              onChange={(e) => {
+                if (e.target.value && parseInt(e.target.value) > 0)
+                  setNumOfStep(parseInt(e.target.value));
+              }}
+              defaultValue={1}
             />
           </Flex>
           <Button
-            onClick={() =>
-              addStep({
-                amount: $("#amount").val() as string,
-                id: Math.random().toString(16).substring(7),
-                method: $("#method").val() as string,
-                slippage: $("#slippage").val() as string,
-                amountCalculate: {
-                  value: ethers.BigNumber.from(0),
-                },
-                privateKey: $("#privateKey").val() as string,
-              })
-            }
+            onClick={() => {
+              for (let i = 0; i < numOfstep; i++) {
+                addStep({
+                  amount: $("#amount").val() as string,
+                  id: Math.random().toString(16).substring(7),
+                  method: "buy",
+                  amountCalculate: {
+                    value: ethers.BigNumber.from(0),
+                  },
+                  privateKey: $("#privateKey").val() as string,
+                });
+              }
+            }}
             isDisabled={
               pairData.address == ZERO_ADDRESS ||
               !pairData.address ||
@@ -375,7 +377,6 @@ const AddStepCall = () => {
               <Th>Wallet</Th>
               <Th>Lệnh</Th>
               <Th>Số lượng {chainNetwork.symbol}</Th>
-              <Th>Slippage</Th>
               <Th>Số lượng token</Th>
               <Th>Địa chỉ token</Th>
               <Th>
@@ -411,7 +412,6 @@ const AddStepCall = () => {
                 </Td>
                 <Td>{item.method == "buy" ? "Mua" : "Bán"}</Td>
                 <Td>{item.amount}</Td>
-                <Td>{item.slippage}</Td>
                 <Td>{formatEtherWithDecimals(item.amountCalculate.value)} </Td>
                 <Td
                   onClick={() =>

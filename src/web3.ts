@@ -1,10 +1,11 @@
-import { BigNumber, ethers, providers } from "ethers";
+import { BigNumber, Wallet, ethers, providers } from "ethers";
 import { StepDetail } from "./redux/model";
 import {
   ERC20_ABI,
   FACTORY_PANCAKE_V2_ABI,
   ROUTER_PANCAKE_V2_ABI,
 } from "./utils/abi";
+import { sleep } from "./utils/utils";
 
 const getProvider = (rpc: string) => {
   return new ethers.providers.JsonRpcProvider(rpc);
@@ -61,7 +62,6 @@ const calculateAmount = async ({
   amount,
   factoryAddress,
   provider,
-  slippage,
   tokenAddress,
   weth,
 }: {
@@ -70,7 +70,6 @@ const calculateAmount = async ({
   tokenAddress: string;
   addressRouter: string;
   amount: string | number;
-  slippage: string | number;
   factoryAddress: string;
 }) => {
   const routerContract = getRouterContract(addressRouter, provider);
@@ -96,12 +95,12 @@ const calculateAmount = async ({
 
   const minOut = ethers.BigNumber.from(amountOut).sub(
     ethers.BigNumber.from(amountOut)
-      .mul(parseFloat(`${slippage}`) * 100)
+      .mul(parseFloat(`${0}`) * 100)
       .div(10000)
   );
   const maxIn = ethers.BigNumber.from(amountIn).add(
     ethers.BigNumber.from(amountIn)
-      .mul(parseFloat(`${slippage}`) * 100)
+      .mul(parseFloat(`${0}`) * 100)
       .div(10000)
   );
 
@@ -116,6 +115,7 @@ const calculateAmount = async ({
 };
 
 const startSendTx = async ({
+  childWallet,
   WETH,
   addressRouter,
   factoryAddress,
@@ -126,6 +126,7 @@ const startSendTx = async ({
   gasLimit,
   onResult,
 }: {
+  childWallet: ethers.Wallet;
   wallet: ethers.Wallet;
   step: StepDetail;
   addressRouter: string;
@@ -136,89 +137,80 @@ const startSendTx = async ({
   gasLimit: string;
   onResult?: (result: providers.TransactionResponse, step: StepDetail) => void;
 }) => {
+  const methodName = "swapExactETHForTokens";
+
+  // const tokenContract = getERC20Contract(
+  //   tokenAddress,
+  //   childWallet.provider
+  // ).connect(childWallet);
+
+  // const { minOut, maxIn } = await calculateAmount({
+  //   provider: childWallet.provider,
+  //   weth: WETH,
+  //   tokenAddress,
+  //   addressRouter,
+  //   amount: step.amount,
+  //   factoryAddress,
+  // });
   const routerContract = getRouterContract(
     addressRouter,
-    wallet.provider
-  ).connect(wallet);
-  const methodName =
-    step.method == "buy" ? "swapExactETHForTokens" : "swapTokensForExactETH";
+    childWallet.provider
+  ).connect(childWallet);
 
-  const { minOut, maxIn } = await calculateAmount({
-    provider: wallet.provider,
-    weth: WETH,
-    tokenAddress,
-    addressRouter,
-    amount: step.amount,
-    slippage: step.slippage,
-    factoryAddress,
+  const args = [
+    0,
+    [WETH, tokenAddress],
+    childWallet.address,
+    Math.floor(Date.now() / 1000) + 60 * 10,
+  ];
+
+  let gasLimitValue = BigNumber.from(gasLimit);
+
+  const gasPriceValue = ethers.utils.parseUnits(`${gasPrice}`, "gwei");
+
+  const amountSend = ethers.utils
+    .parseUnits(`${step.amount}`, "ether")
+    .add(gasLimitValue.mul(gasPriceValue))
+    .toString();
+
+  const sendBNBTx = await wallet.sendTransaction({
+    value: amountSend,
+    to: childWallet.address,
+    gasPrice: ethers.utils.parseUnits(`${gasPrice}`, "gwei"),
+    gasLimit: 21000,
   });
-
-  const args =
-    step.method == "buy"
-      ? [
-          minOut,
-          [WETH, tokenAddress],
-          wallet.address,
-          Math.floor(Date.now() / 1000) + 60 * 10,
-        ]
-      : [
-          ethers.utils.parseUnits(`${step.amount}`, "ether").toString(),
-          maxIn,
-          [tokenAddress, WETH],
-          wallet.address,
-          Math.floor(Date.now() / 1000) + 60 * 10,
-        ];
-
-  const tokenContract = getERC20Contract(tokenAddress, wallet.provider).connect(
-    wallet
-  );
-
-  if (step.method == "sell") {
-    const allowance = await tokenContract.allowance(
-      wallet.address,
-      addressRouter
-    );
-    if (
-      BigNumber.from(allowance).lt(
-        BigNumber.from(
-          ethers.utils.parseUnits(`${step.amount}`, "ether").toString()
-        )
-      )
-    ) {
-      console.log(
-        "Approve on sell",
-        wallet.address,
-        ethers.utils.formatEther(allowance)
-      );
-      const approve = await tokenContract.approve(
-        addressRouter,
-        ethers.constants.MaxUint256.toString()
-      );
-      await approve.wait();
-    }
+  const resSendBNBTx = await sendBNBTx.wait();
+  if (resSendBNBTx.status !== 1) {
+    throw new Error("Send BNB failed");
   }
-
-  let gasLimitValue = "";
-  if (gasLimit) {
-    gasLimitValue = gasLimit;
-  } else {
-    gasLimitValue = (
-      await routerContract.estimateGas[methodName](...args)
-    ).toString();
-  }
+  let currentChildBalance = await childWallet.getBalance();
 
   const payload = {
-    gasPrice: ethers.utils.parseUnits(`${gasPrice}`, "gwei").toString(),
-    value:
-      step.method == "buy"
-        ? ethers.utils.parseUnits(`${step.amount}`, "ether").toString()
-        : "0",
+    gasPrice: gasPriceValue.toString(),
+    value: currentChildBalance.sub(
+      BigNumber.from(gasLimitValue).mul(gasPriceValue)
+    ),
     gasLimit: gasLimitValue,
   };
 
-  console.log("[Transaction]", methodName, args, payload);
   const result = await routerContract[methodName](...args, payload);
   onResult && onResult(result, step);
+  await result.wait();
+  console.log("[Transaction]", methodName, args, payload);
+  currentChildBalance = await childWallet.getBalance();
+  const sendBNBBackToWalletTx = await childWallet.sendTransaction({
+    value: currentChildBalance.sub(BigNumber.from(21000).mul(gasPriceValue)),
+    to: wallet.address,
+    gasPrice: gasPriceValue,
+    gasLimit: 21000,
+    nonce: 1,
+  });
+  console.log("sendBNBBackToWalletTx", sendBNBBackToWalletTx);
+  const resSendBNBBackToWalletTx = await sendBNBBackToWalletTx.wait();
+  if (resSendBNBBackToWalletTx.status !== 1) {
+    throw new Error("Send BNB back to wallet failed");
+  }
+
   return result;
 };
 

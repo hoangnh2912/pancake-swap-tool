@@ -22,7 +22,7 @@ const tryPrivateKeyToAddress = (privateKey: string) => {
 
 const formatEtherWithDecimals = (
   value: ethers.BigNumberish,
-  decimals: number = 4
+  decimals: number = 12
 ) => {
   const valueString = ethers.utils.formatEther(value);
 
