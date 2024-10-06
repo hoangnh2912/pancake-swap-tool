@@ -1,14 +1,14 @@
 import { ethers } from "ethers";
 
-const shortenIfAddress = (
-  address?: string | null | false,
+const shortenHex = (
+  hexVal?: string | null | false,
   extraShort?: true
 ): string => {
-  if (!address) {
+  if (!hexVal) {
     return "";
   }
-  return `${address.substring(0, extraShort ? 4 : 6)}...${address.substring(
-    address.length - (extraShort ? 3 : 4)
+  return `${hexVal.substring(0, extraShort ? 4 : 6)}...${hexVal.substring(
+    hexVal.length - (extraShort ? 3 : 4)
   )}`;
 };
 
@@ -57,7 +57,7 @@ const chainNetworkColor = (name: string) => {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export {
-  shortenIfAddress,
+  shortenHex,
   sleep,
   tryPrivateKeyToAddress,
   formatEtherWithDecimals,

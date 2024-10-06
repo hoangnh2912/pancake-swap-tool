@@ -19,7 +19,7 @@ const PaginationComponent = ({
   currentPage: number;
   onPaginate?: (page: number) => void;
 }) => {
-  const { currentPage, setCurrentPage, pages } = usePagination({
+  const { setCurrentPage, pages } = usePagination({
     initialState: {
       currentPage: currentPageProp,
       pageSize: DEFAULT_PAGINATE_SIZE,
@@ -35,7 +35,7 @@ const PaginationComponent = ({
       {pagesCount > 1 && (
         <Pagination
           pagesCount={pagesCount}
-          currentPage={currentPage}
+          currentPage={currentPageProp}
           onPageChange={(pageSelect) => {
             onPaginate && onPaginate(pageSelect);
             setCurrentPage(pageSelect);
@@ -43,7 +43,7 @@ const PaginationComponent = ({
         >
           <PaginationContainer gap={"15px"}>
             <Flex
-              opacity={currentPage === 1 ? 0.5 : 1}
+              opacity={currentPageProp === 1 ? 0.5 : 1}
               alignItems={"center"}
               gap={"15px"}
             >
@@ -68,7 +68,7 @@ const PaginationComponent = ({
                 cursor={"pointer"}
                 rounded={"full"}
                 onClick={() => {
-                  const newPage = Math.max(1, currentPage - 1);
+                  const newPage = Math.max(1, currentPageProp - 1);
                   onPaginate && onPaginate(newPage);
                   setCurrentPage(newPage);
                 }}
@@ -97,14 +97,14 @@ const PaginationComponent = ({
                   h={"32px"}
                   rounded={"full"}
                   bg={
-                    page === currentPage
+                    page === currentPageProp
                       ? colors.common.primary
                       : colors.dark.color
                   }
                   color={colors.common.medium_gray}
                   borderWidth={"1px"}
                   borderColor={
-                    page === currentPage
+                    page === currentPageProp
                       ? colors.common.primary
                       : colors.common.border_page_button
                   }
@@ -125,7 +125,7 @@ const PaginationComponent = ({
               ))}
             </PaginationPageGroup>
             <Flex
-              opacity={currentPage < pagesCount ? 1 : 0.5}
+              opacity={currentPageProp < pagesCount ? 1 : 0.5}
               alignItems={"center"}
               gap={"15px"}
             >
@@ -135,7 +135,7 @@ const PaginationComponent = ({
                 cursor={"pointer"}
                 rounded={"full"}
                 onClick={() => {
-                  const newPage = Math.min(currentPage + 1, pagesCount);
+                  const newPage = Math.min(currentPageProp + 1, pagesCount);
                   onPaginate && onPaginate(newPage);
                   setCurrentPage(newPage);
                 }}

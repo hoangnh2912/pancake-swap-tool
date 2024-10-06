@@ -13,13 +13,12 @@ import {
 import { StoreProvider } from "easy-peasy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddStepCall from "../components/AddStepCall";
-import OutputTransaction from "../components/OutputTransaction";
-import StartProcess from "../components/StartProcess";
-import { StorePayload, getStore } from "../redux/store";
+import OutputWallet from "../components/OutputWallet";
 import useStorage from "../hooks/useStorage";
+import { StorePayload, getStore } from "../redux/store";
 
 const Main = () => {
-  const isLoadCacheDone = useRef(false);
+  const [isLoadCacheDone, setIsLoadCacheDone] = useState(false);
 
   const [allStore, setAllStore] = useState<
     {
@@ -62,11 +61,11 @@ const Main = () => {
         )
       );
     }
-    isLoadCacheDone.current = true;
+    setIsLoadCacheDone(true);
   }, []);
 
   const onSaveLocalCache = () => {
-    if (!isLoadCacheDone.current) return;
+    if (!isLoadCacheDone) return;
     setItem("tab", {
       tab: allStore.map((v) => ({
         title: v.title,
@@ -77,7 +76,7 @@ const Main = () => {
 
   useEffect(() => {
     onSaveLocalCache();
-  }, [allStore.length]);
+  }, [allStore.length, isLoadCacheDone]);
 
   const storeTabTitles = allStore.map((v) => v.title);
 
@@ -123,6 +122,7 @@ const Main = () => {
           <Tab
             _selected={{ color: "white", bg: "green" }}
             minW={"200px"}
+            key={i}
             justifyContent={"space-between"}
           >
             {v}
@@ -148,19 +148,19 @@ const Main = () => {
         )}
       </TabList>
       <TabPanels>
-        {isLoadCacheDone.current && allStore.map((store) => (
-          <StoreProvider store={store.data}>
-            <TabPanel>
-              <VStack flex={1} bg={"#EDF2F7"} p="6" w={"100%"}>
-                <HStack flex={1} w={"100%"} alignItems={"start"}>
-                  <AddStepCall />
-                </HStack>
-                <StartProcess />
-                <OutputTransaction />
-              </VStack>
-            </TabPanel>
-          </StoreProvider>
-        ))}
+        {isLoadCacheDone &&
+          allStore.map((store) => (
+            <StoreProvider store={store.data} key={store.id}>
+              <TabPanel>
+                <VStack flex={1} bg={"#EDF2F7"} p="6" w={"100%"}>
+                  <HStack flex={1} w={"100%"} alignItems={"start"}>
+                    <AddStepCall />
+                  </HStack>
+                  <OutputWallet />
+                </VStack>
+              </TabPanel>
+            </StoreProvider>
+          ))}
       </TabPanels>
     </Tabs>
   );

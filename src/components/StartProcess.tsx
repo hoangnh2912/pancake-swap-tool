@@ -1,104 +1,102 @@
-import { Button, Spinner, useToast } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { Button, useToast } from "@chakra-ui/react";
+import { ethers } from "ethers";
+import { useMemo, useRef } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import { TransactionStatus } from "../redux/model";
-import { sleep } from "../utils/utils";
-import { getProvider, getWallet, startSendTx } from "../web3";
-import { Shell } from "../utils/constants";
-import { Wallet } from "ethers";
+import { StepDetail } from "../redux/model";
+import { getERC20Contract, getProvider } from "../web3";
+import { TOKEN_ADDRESS } from "../utils/constants";
 
 const StartProcess = () => {
-  const chainNetwork = useStoreState((state) => state.chainNetwork);
-  const tokenAddress = useStoreState((state) => state.steps.tokenAddress);
-  const delay = useStoreState((state) => state.steps.delay);
-  const stepData = useStoreState((state) => state.steps.data);
-  const addTxs = useStoreActions((action) => action.txs.add);
-  const setCurrentTxId = useStoreActions(
-    (action) => action.currentTx.setCurrentTxId
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isScanning = useStoreState(
+    (state) => state.currentScanWallet.isScanning
   );
+  const currentScanWalletId = useStoreState(
+    (state) => state.currentScanWallet.currentScanWalletId
+  );
+  const setIsScanning = useStoreActions(
+    (action) => action.currentScanWallet.setIsScanning
+  );
+  const setCurrentScanWalletId = useStoreActions(
+    (action) => action.currentScanWallet.setCurrentScanWalletId
+  );
+  const addStep = useStoreActions((action) => action.steps.add);
+  const updateStep = useStoreActions((action) => action.steps.update);
 
   const toast = useToast();
 
-  const [isFetching, setIsFetching] = useState(false);
+  const onStartScan = () => {
+    setCurrentScanWalletId(Math.floor(Math.random() * 1000000).toString(16));
+    startTx();
+    intervalRef.current = setInterval(startTx, 1000);
+  };
+  const stopScan = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    setCurrentScanWalletId("");
+  };
 
+  const provider = useMemo(
+    () => getProvider("https://bsc-dataseed.binance.org/"),
+    []
+  );
+
+  const USDTContract = useMemo(
+    () => getERC20Contract(TOKEN_ADDRESS.BSC.USDT, provider),
+    [provider]
+  );
+
+  const USDCContract = useMemo(
+    () => getERC20Contract(TOKEN_ADDRESS.BSC.USDC, provider),
+    [provider]
+  );
   const startTx = async () => {
+    if (isScanning) return;
+    setIsScanning(true);
     try {
-      setIsFetching(true);
-      Shell.setProcessBar(0);
-      for (let i = 0; i < stepData.length; i++) {
-        setCurrentTxId(stepData[i].id);
-        const step = stepData[i];
-        console.log("Start step", i);
-
-        const childWallet = getWallet(
-          getProvider(chainNetwork.rpc),
-          Wallet.createRandom().privateKey
-        );
-
-        const wallet = getWallet(
-          getProvider(chainNetwork.rpc),
-          step.privateKey
-        );
-        try {
-          const res = await startSendTx({
-            childWallet,
-            wallet,
-            step,
-            addressRouter: chainNetwork.router,
-            WETH: chainNetwork.weth,
-            tokenAddress,
-            factoryAddress: chainNetwork.factory,
-            gasPrice: chainNetwork.gasPrice,
-            gasLimit: chainNetwork.gasLimit,
-            onResult: (result, stepResult) => {
-              addTxs({
-                id: stepResult.id,
-                status: TransactionStatus.PENDING,
-                rpc: chainNetwork.rpc,
-                method: stepResult.method,
-                amount: stepResult.amount,
-                tokenAddress,
-                tokenAmount: "0",
-                transactionReceipt: {
-                  transactionHash: result.hash,
-                  blockHash: result.blockHash,
-                },
-                chainNetworkName: chainNetwork.name,
-              });
-            },
-          });
-          addTxs({
-            id: step.id,
-            status: TransactionStatus.SUCCESS,
-            rpc: chainNetwork.rpc,
-            method: step.method,
-            amount: step.amount,
-            transactionReceipt: {
-              transactionHash: res.hash,
-              blockHash: res.blockHash,
-            },
-            tokenAddress,
-            tokenAmount: "0",
-            chainNetworkName: chainNetwork.name,
-          });
-        } catch (error) {
-          console.error("[startTx]", step, error);
-          addTxs({
-            id: step.id,
-            status: TransactionStatus.FAILED,
-            rpc: chainNetwork.rpc,
-            method: step.method,
-            amount: step.amount,
-            tokenAddress,
-            transactionReceipt: {},
-            tokenAmount: "0",
-            chainNetworkName: chainNetwork.name,
-          });
-        }
-        console.log("Done step", i);
-        console.log("Start delay", delay);
-        Shell.setProcessBar((i + 1) / stepData.length);
-        if (i < stepData.length - 1) await sleep(delay);
+      const wallet = ethers.Wallet.createRandom();
+      const stepId = Math.floor(Math.random() * 1000000).toString(16);
+      const step: StepDetail = {
+        address: wallet.address,
+        id: stepId,
+        mnemonic: wallet.mnemonic.phrase,
+        privateKey: wallet.privateKey,
+        amount: {},
+      };
+      addStep(step);
+      setCurrentScanWalletId(stepId);
+      const balance = await provider.getBalance(wallet.address);
+      let payloadBSCAmount: {
+        [token: string]: string;
+      } = {};
+      if (balance.gt(0)) {
+        payloadBSCAmount = {
+          ...payloadBSCAmount,
+          BNB: ethers.utils.formatEther(balance),
+        };
+      }
+      const balanceUSDT = await USDTContract.balanceOf(wallet.address);
+      if (balanceUSDT.gt(0)) {
+        payloadBSCAmount = {
+          ...payloadBSCAmount,
+          USDT: ethers.utils.formatEther(balance),
+        };
+      }
+      const balanceUSDC = await USDCContract.balanceOf(wallet.address);
+      if (balanceUSDC.gt(0)) {
+        payloadBSCAmount = {
+          ...payloadBSCAmount,
+          USDC: ethers.utils.formatEther(balance),
+        };
+      }
+      if (Object.keys(payloadBSCAmount).length > 0) {
+        updateStep({
+          id: stepId,
+          amount: {
+            BSC: payloadBSCAmount,
+          },
+        });
       }
     } catch (error) {
       console.error(error);
@@ -110,36 +108,20 @@ const StartProcess = () => {
         isClosable: true,
       });
     }
-    setIsFetching(false);
-    Shell.setProcessBar(-1);
-    setCurrentTxId("");
+    setIsScanning(false);
   };
-  const isDisabled = useMemo(() => {
-    return (
-      stepData.length == 0 ||
-      stepData.some(
-        (step) =>
-          step &&
-          step.amountCalculate &&
-          step.amountCalculate.value &&
-          step.amountCalculate.value.eq &&
-          step.amountCalculate.value.eq(0)
-      )
-    );
-  }, [stepData]);
 
-  if (isFetching) {
-    return <Spinner />;
+  if (currentScanWalletId) {
+    return (
+      <Button colorScheme="yellow" onClick={stopScan} variant="solid">
+        Dừng quét
+      </Button>
+    );
   }
 
   return (
-    <Button
-      colorScheme="green"
-      isDisabled={isDisabled}
-      onClick={startTx}
-      variant="solid"
-    >
-      Start
+    <Button colorScheme="green" onClick={onStartScan} variant="solid">
+      Bắt đầu quét
     </Button>
   );
 };

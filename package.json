@@ -1,6 +1,6 @@
 {
-  "name": "bot-swap",
-  "productName": "bot-swap",
+  "name": "bot-scan-wallet",
+  "productName": "bot-scan-wallet",
   "version": "1.0.0",
   "description": "",
   "main": ".webpack/main",
