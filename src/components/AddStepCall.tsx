@@ -16,18 +16,22 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import useStorage from "../hooks/useStorage";
+import { useEffect, useMemo, useState } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import { StepDetail } from "../redux/model";
-import { DEFAULT_PAGINATE_SIZE, Shell } from "../utils/constants";
-import { shortenHex, tryPrivateKeyToAddress } from "../utils/utils";
+import { DEFAULT_PAGINATE_SIZE } from "../utils/constants";
+import { tryPrivateKeyToAddress } from "../utils/utils";
 import PaginationComponent from "./Pagination";
 import StartProcess from "./StartProcess";
 
 const AddStepCall = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const tabId = useStoreState((state) => state.tabId);
+  const selectedChain = useStoreState((state) => state.selectedChain);
+  const selectedToken = useStoreState((state) => state.selectedToken);
+
+  const setSelectedChain = useStoreActions((action) => action.setSelectedChain);
+  const setSelectedToken = useStoreActions((action) => action.setSelectedToken);
+
   const stepData = useStoreState((state) => state.steps.data);
   const pageCount = Math.ceil(stepData.length / DEFAULT_PAGINATE_SIZE);
 
@@ -52,9 +56,13 @@ const AddStepCall = () => {
     <Stack flex={1} boxShadow="md" p="4" bg={"white"} rounded={"md"}>
       <Text>{tabId}</Text>
       <Text fontWeight={"bold"}>Mạng blockchain</Text>
-      <CheckboxGroup colorScheme="green">
+      <CheckboxGroup
+        colorScheme="green"
+        value={selectedChain}
+        onChange={setSelectedChain}
+      >
         <Stack spacing={"25px"} direction={"row"}>
-          <Checkbox value="eth">
+          <Checkbox value="ETH">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
@@ -63,7 +71,7 @@ const AddStepCall = () => {
               Ethereum
             </Flex>
           </Checkbox>
-          <Checkbox value="matic">
+          <Checkbox value="MATIC">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
@@ -72,7 +80,7 @@ const AddStepCall = () => {
               Polygon
             </Flex>
           </Checkbox>
-          <Checkbox value="bsc">
+          <Checkbox value="BSC">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
@@ -81,7 +89,7 @@ const AddStepCall = () => {
               Binance Smart Chain
             </Flex>
           </Checkbox>
-          <Checkbox value="sol">
+          <Checkbox value="SOL">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
@@ -93,46 +101,14 @@ const AddStepCall = () => {
         </Stack>
       </CheckboxGroup>
       <Divider />
-      <Text fontWeight={"bold"}>Crypto</Text>
-      <CheckboxGroup colorScheme="green">
+      <Text fontWeight={"bold"}>Token</Text>
+      <CheckboxGroup
+        value={selectedToken}
+        onChange={setSelectedToken}
+        colorScheme="green"
+      >
         <Stack spacing={"25px"} direction={"row"}>
-          <Checkbox value="btc">
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Image
-                w={"35px"}
-                src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/btc.png"
-              />
-              BTC
-            </Flex>
-          </Checkbox>
-          <Checkbox value="eth">
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Image
-                w={"35px"}
-                src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/eth.png"
-              />
-              ETH
-            </Flex>
-          </Checkbox>
-          <Checkbox value="bsc">
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Image
-                w={"35px"}
-                src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/bnb.png"
-              />
-              BNB
-            </Flex>
-          </Checkbox>
-          <Checkbox value="sol">
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Image
-                w={"35px"}
-                src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/sol.png"
-              />
-              SOL
-            </Flex>
-          </Checkbox>
-          <Checkbox value="usdt">
+          <Checkbox value="USDT">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
@@ -141,13 +117,22 @@ const AddStepCall = () => {
               USDT
             </Flex>
           </Checkbox>
-          <Checkbox value="usdc">
+          <Checkbox value="USDC">
             <Flex gap={"5px"} alignItems={"center"}>
               <Image
                 w={"35px"}
                 src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/usdc.png"
               />
               USDC
+            </Flex>
+          </Checkbox>
+          <Checkbox value="WBTC">
+            <Flex gap={"5px"} alignItems={"center"}>
+              <Image
+                w={"35px"}
+                src="https://s2.coinmarketcap.com/static/img/coins/200x200/3717.png"
+              />
+              WBTC
             </Flex>
           </Checkbox>
         </Stack>
@@ -173,7 +158,6 @@ const AddStepCall = () => {
               <Th>Mnemonic</Th>
               <Th>Private Key</Th>
               <Th>Wallet</Th>
-              <Th>Số dư</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -189,28 +173,13 @@ const AddStepCall = () => {
                 <Td>
                   {currentScanWalletId == item.id ? <Spinner /> : item.id}
                 </Td>
-                <Td>{shortenHex(item.mnemonic)}</Td>
-                <Td>{shortenHex(item.privateKey)}</Td>
+                <Td>{item.mnemonic}</Td>
+                <Td>{item.privateKey}</Td>
                 <Td
-                  onClick={() =>
-                    Shell.openExternal(
-                      `${"todo"}/address/${tryPrivateKeyToAddress(
-                        item.privateKey
-                      )}`
-                    )
-                  }
                   cursor={"pointer"}
                 >
-                  {shortenHex(tryPrivateKeyToAddress(item.privateKey))}
+                  {tryPrivateKeyToAddress(item.privateKey)}
                 </Td>
-                <Td>{`${Object.keys(item.amount)
-                  .map(
-                    (k) =>
-                      `${k}: ${Object.keys(item.amount[k])
-                        .map((t) => `${item.amount[k][t]} ${t}`)
-                        .join(",")}`
-                  )
-                  .join("|")}`}</Td>
               </Tr>
             ))}
           </Tbody>

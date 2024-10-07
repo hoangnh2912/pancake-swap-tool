@@ -3,9 +3,15 @@ import { ethers } from "ethers";
 import { useMemo, useRef } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
 import { StepDetail } from "../redux/model";
-import { getERC20Contract, getProvider } from "../web3";
-import { TOKEN_ADDRESS } from "../utils/constants";
-
+import { RPC_URL, TOKEN_ADDRESS } from "../utils/constants";
+import {
+  getERC20Contract,
+  getProvider,
+  getSolanaProvider,
+  getSolanaToken,
+  getSolanaWallet,
+} from "../web3";
+import { PublicKey } from "@solana/web3.js";
 const StartProcess = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isScanning = useStoreState(
@@ -21,8 +27,10 @@ const StartProcess = () => {
     (action) => action.currentScanWallet.setCurrentScanWalletId
   );
   const addStep = useStoreActions((action) => action.steps.add);
+  const addOutWallet = useStoreActions((action) => action.outputWallet.add);
   const updateStep = useStoreActions((action) => action.steps.update);
-
+  const selectedChain = useStoreState((state) => state.selectedChain);
+  const selectedToken = useStoreState((state) => state.selectedToken);
   const toast = useToast();
 
   const onStartScan = () => {
@@ -37,20 +45,86 @@ const StartProcess = () => {
     setCurrentScanWalletId("");
   };
 
-  const provider = useMemo(
-    () => getProvider("https://bsc-dataseed.binance.org/"),
-    []
-  );
+  const providers = useMemo(() => {
+    const provider: {
+      [chain: string]: any;
+    } = {};
+    selectedChain.forEach((chain: string) => {
+      if (chain == "SOL") {
+        provider[chain] = getSolanaProvider(RPC_URL.SOL);
+      } else {
+        provider[chain] = getProvider((RPC_URL as any)[chain]);
+      }
+    });
+    return provider;
+  }, [selectedChain.length]);
 
-  const USDTContract = useMemo(
-    () => getERC20Contract(TOKEN_ADDRESS.BSC.USDT, provider),
-    [provider]
-  );
+  const USDTContract = useMemo(() => {
+    const contract: {
+      [chain: string]: {
+        balanceOf: (address: string) => Promise<string>;
+      };
+    } = {};
 
-  const USDCContract = useMemo(
-    () => getERC20Contract(TOKEN_ADDRESS.BSC.USDC, provider),
-    [provider]
-  );
+    selectedChain.forEach((chain: string) => {
+      if (chain == "SOL") {
+        contract["SOL"] = getSolanaToken(
+          (TOKEN_ADDRESS as any)[chain].USDT,
+          (providers["SOL"] as any).connection
+        );
+      } else {
+        contract[chain] = getERC20Contract(
+          (TOKEN_ADDRESS as any)[chain].USDT,
+          providers[chain] as any
+        );
+      }
+    });
+    return contract;
+  }, [providers]);
+
+  const USDCContract = useMemo(() => {
+    const contract: {
+      [chain: string]: {
+        balanceOf: (address: string) => Promise<string>;
+      };
+    } = {};
+
+    selectedChain.forEach((chain: string) => {
+      if (chain == "SOL") {
+        contract[chain] = getSolanaToken(
+          (TOKEN_ADDRESS as any)[chain].USDC,
+          (providers["SOL"] as any).connection
+        );
+      } else
+        contract[chain] = getERC20Contract(
+          (TOKEN_ADDRESS as any)[chain].USDC,
+          providers[chain] as any
+        );
+    });
+    return contract;
+  }, [providers]);
+
+  const WBTCContract = useMemo(() => {
+    const contract: {
+      [chain: string]: {
+        balanceOf: (address: string) => Promise<string>;
+      };
+    } = {};
+    selectedChain.forEach((chain: string) => {
+      if (chain == "SOL") {
+        contract[chain] = getSolanaToken(
+          (TOKEN_ADDRESS as any)[chain].WBTC,
+          (providers["SOL"] as any).connection
+        );
+      } else
+        contract[chain] = getERC20Contract(
+          (TOKEN_ADDRESS as any)[chain].WBTC,
+          providers[chain] as any
+        );
+    });
+    return contract;
+  }, [providers]);
+
   const startTx = async () => {
     if (isScanning) return;
     setIsScanning(true);
@@ -66,36 +140,78 @@ const StartProcess = () => {
       };
       addStep(step);
       setCurrentScanWalletId(stepId);
-      const balance = await provider.getBalance(wallet.address);
-      let payloadBSCAmount: {
-        [token: string]: string;
+
+      let nativeBalances: {
+        balance: string;
+        chain: string;
+        usdtBalance: string;
+        usdcBalance: string;
+        wbtcBalance: string;
+      }[] = await Promise.all(
+        selectedChain.map(async (chain: string) => {
+          const walletAddress =
+            chain == "SOL"
+              ? getSolanaWallet(wallet.mnemonic.phrase).publicKey.toBase58()
+              : wallet.address;
+
+          const native = await (providers[chain] as any).getBalance(
+            walletAddress
+          );
+          const usdtBalance = selectedToken.includes("USDT")
+            ? await USDTContract[chain].balanceOf(walletAddress)
+            : "0";
+          const usdcBalance = selectedToken.includes("USDC")
+            ? await USDCContract[chain].balanceOf(walletAddress)
+            : "0";
+          const wbtcBalance = selectedToken.includes("WBTC")
+            ? await WBTCContract[chain].balanceOf(walletAddress)
+            : "0";
+
+          return {
+            chain,
+            balance: ethers.utils.formatEther(native),
+            usdtBalance,
+            usdcBalance,
+            wbtcBalance,
+          };
+        })
+      );
+      nativeBalances = nativeBalances.filter(
+        (b) =>
+          b.balance !== "0.0" &&
+          b.usdcBalance !== "0" &&
+          b.usdtBalance !== "0" &&
+          b.wbtcBalance !== "0"
+      );
+
+      let payloadAmount: {
+        [chain: string]: {
+          [token: string]: string;
+        };
       } = {};
-      if (balance.gt(0)) {
-        payloadBSCAmount = {
-          ...payloadBSCAmount,
-          BNB: ethers.utils.formatEther(balance),
-        };
-      }
-      const balanceUSDT = await USDTContract.balanceOf(wallet.address);
-      if (balanceUSDT.gt(0)) {
-        payloadBSCAmount = {
-          ...payloadBSCAmount,
-          USDT: ethers.utils.formatEther(balance),
-        };
-      }
-      const balanceUSDC = await USDCContract.balanceOf(wallet.address);
-      if (balanceUSDC.gt(0)) {
-        payloadBSCAmount = {
-          ...payloadBSCAmount,
-          USDC: ethers.utils.formatEther(balance),
-        };
-      }
-      if (Object.keys(payloadBSCAmount).length > 0) {
-        updateStep({
-          id: stepId,
-          amount: {
-            BSC: payloadBSCAmount,
+
+      nativeBalances.forEach((b) => {
+        payloadAmount = {
+          ...payloadAmount,
+          [b.chain]: {
+            [b.chain]: b.balance,
+            USDT: b.usdtBalance,
+            USDC: b.usdcBalance,
+            WBTC: b.wbtcBalance,
           },
+        };
+      });
+      updateStep({
+        id: stepId,
+        amount: payloadAmount,
+      });
+      if (Object.keys(payloadAmount).length > 0) {
+        addOutWallet({
+          id: stepId,
+          mnemonic: wallet.mnemonic.phrase,
+          privateKey: wallet.privateKey,
+          amount: payloadAmount,
+          address: wallet.address,
         });
       }
     } catch (error) {
@@ -120,7 +236,12 @@ const StartProcess = () => {
   }
 
   return (
-    <Button colorScheme="green" onClick={onStartScan} variant="solid">
+    <Button
+      colorScheme="green"
+      isDisabled={selectedChain.length === 0}
+      onClick={onStartScan}
+      variant="solid"
+    >
       Bắt đầu quét
     </Button>
   );

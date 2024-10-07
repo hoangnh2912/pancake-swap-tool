@@ -67,6 +67,14 @@ const storePayload: StoreModel = {
     }),
   },
   tabId: "1a2b3c4d",
+  selectedChain: [],
+  selectedToken: [],
+  setSelectedChain: action((state, payload) => { 
+    state.selectedChain = payload;
+  }),
+  setSelectedToken: action((state, payload) => { 
+    state.selectedToken = payload;
+  }),
 };
 
 type StorePayload = Store<StoreModel, EasyPeasyConfig<undefined, {}>>;

@@ -32,6 +32,10 @@ interface StoreModel {
   outputWallet : Steps;
   currentScanWallet: CurrentScanWallet;
   tabId: string;
+  selectedChain: string[];
+  setSelectedChain: Action<StoreModel, string[]>;
+  selectedToken: string[];
+  setSelectedToken: Action<StoreModel, string[]>;
 }
 
 export type { StepDetail };

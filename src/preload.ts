@@ -4,8 +4,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("Shell", {
-  openExternal: (url: string) =>
-    ipcRenderer.send("open-link", url),
-  setProcessBar: (value: number) =>
-    ipcRenderer.send("set-progress-bar", value),
+  openExternal: (url: string) => ipcRenderer.send("open-link", url),
+  setProcessBar: (value: number) => ipcRenderer.send("set-progress-bar", value),
 });

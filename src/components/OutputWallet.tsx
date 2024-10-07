@@ -12,8 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import { DEFAULT_PAGINATE_SIZE, Shell } from "../utils/constants";
-import { shortenHex, tryPrivateKeyToAddress } from "../utils/utils";
+import { DEFAULT_PAGINATE_SIZE } from "../utils/constants";
+import { tryPrivateKeyToAddress } from "../utils/utils";
 import PaginationComponent from "./Pagination";
 
 const OutputWallet = () => {
@@ -21,7 +21,7 @@ const OutputWallet = () => {
   const outWalletData = useStoreState((state) => state.outputWallet.data);
   const pageCount = Math.ceil(outWalletData.length / DEFAULT_PAGINATE_SIZE);
 
-  const txsDataPaginated = useMemo(() => {
+  const outWalletDataPaginated = useMemo(() => {
     return outWalletData.slice(
       (currentPage - 1) * DEFAULT_PAGINATE_SIZE,
       currentPage * DEFAULT_PAGINATE_SIZE
@@ -31,8 +31,6 @@ const OutputWallet = () => {
   const clearOutWallet = useStoreActions(
     (state) => state.outputWallet.deleteAll
   );
-
-  const deleteOutWallet = useStoreActions((state) => state.outputWallet.delete);
 
   return (
     <Stack boxShadow="md" p="4" flex={1} bg={"white"} rounded={"md"} w="100%">
@@ -58,7 +56,7 @@ const OutputWallet = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {txsDataPaginated.map((item, index) => (
+            {outWalletDataPaginated.map((item, index) => (
               <Tr
                 bg={
                   Object.keys(item.amount).length > 0
@@ -67,24 +65,20 @@ const OutputWallet = () => {
                 }
                 key={index}
               >
-                <Td>
-                  {item.id}
+                <Td>{item.id}</Td>
+                <Td>{item.mnemonic}</Td>
+                <Td>{item.privateKey}</Td>
+                <Td cursor={"pointer"}>
+                  {tryPrivateKeyToAddress(item.privateKey)}
                 </Td>
-                <Td>{shortenHex(item.mnemonic)}</Td>
-                <Td>{shortenHex(item.privateKey)}</Td>
-                <Td
-                  onClick={() =>
-                    Shell.openExternal(
-                      `${"todo"}/address/${tryPrivateKeyToAddress(
-                        item.privateKey
-                      )}`
-                    )
-                  }
-                  cursor={"pointer"}
-                >
-                  {shortenHex(tryPrivateKeyToAddress(item.privateKey))}
-                </Td>
-                <Td>{`${item.amount}`}</Td>
+                <Td>{`${Object.keys(item.amount)
+                  .map(
+                    (k) =>
+                      `${k}: ${Object.keys(item.amount[k])
+                        .map((t) => `${item.amount[k][t]} ${t}`)
+                        .join(",")}`
+                  )
+                  .join("|")}`}</Td>
               </Tr>
             ))}
           </Tbody>
