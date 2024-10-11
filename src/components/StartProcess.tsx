@@ -6,12 +6,9 @@ import { StepDetail } from "../redux/model";
 import { RPC_URL, TOKEN_ADDRESS } from "../utils/constants";
 import {
   getERC20Contract,
-  getProvider,
-  getSolanaProvider,
-  getSolanaToken,
-  getSolanaWallet,
+  getProvider
 } from "../web3";
-import { PublicKey } from "@solana/web3.js";
+import { sleep } from "../utils/utils";
 const StartProcess = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isScanning = useStoreState(
@@ -50,11 +47,7 @@ const StartProcess = () => {
       [chain: string]: any;
     } = {};
     selectedChain.forEach((chain: string) => {
-      if (chain == "SOL") {
-        provider[chain] = getSolanaProvider(RPC_URL.SOL);
-      } else {
-        provider[chain] = getProvider((RPC_URL as any)[chain]);
-      }
+      provider[chain] = getProvider((RPC_URL as any)[chain]);
     });
     return provider;
   }, [selectedChain.length]);
@@ -67,17 +60,10 @@ const StartProcess = () => {
     } = {};
 
     selectedChain.forEach((chain: string) => {
-      if (chain == "SOL") {
-        contract["SOL"] = getSolanaToken(
-          (TOKEN_ADDRESS as any)[chain].USDT,
-          (providers["SOL"] as any).connection
-        );
-      } else {
-        contract[chain] = getERC20Contract(
-          (TOKEN_ADDRESS as any)[chain].USDT,
-          providers[chain] as any
-        );
-      }
+      contract[chain] = getERC20Contract(
+        (TOKEN_ADDRESS as any)[chain].USDT,
+        providers[chain] as any
+      );
     });
     return contract;
   }, [providers]);
@@ -90,16 +76,10 @@ const StartProcess = () => {
     } = {};
 
     selectedChain.forEach((chain: string) => {
-      if (chain == "SOL") {
-        contract[chain] = getSolanaToken(
-          (TOKEN_ADDRESS as any)[chain].USDC,
-          (providers["SOL"] as any).connection
-        );
-      } else
-        contract[chain] = getERC20Contract(
-          (TOKEN_ADDRESS as any)[chain].USDC,
-          providers[chain] as any
-        );
+      contract[chain] = getERC20Contract(
+        (TOKEN_ADDRESS as any)[chain].USDC,
+        providers[chain] as any
+      );
     });
     return contract;
   }, [providers]);
@@ -111,16 +91,10 @@ const StartProcess = () => {
       };
     } = {};
     selectedChain.forEach((chain: string) => {
-      if (chain == "SOL") {
-        contract[chain] = getSolanaToken(
-          (TOKEN_ADDRESS as any)[chain].WBTC,
-          (providers["SOL"] as any).connection
-        );
-      } else
-        contract[chain] = getERC20Contract(
-          (TOKEN_ADDRESS as any)[chain].WBTC,
-          providers[chain] as any
-        );
+      contract[chain] = getERC20Contract(
+        (TOKEN_ADDRESS as any)[chain].WBTC,
+        providers[chain] as any
+      );
     });
     return contract;
   }, [providers]);
@@ -149,10 +123,7 @@ const StartProcess = () => {
         wbtcBalance: string;
       }[] = await Promise.all(
         selectedChain.map(async (chain: string) => {
-          const walletAddress =
-            chain == "SOL"
-              ? getSolanaWallet(wallet.mnemonic.phrase).publicKey.toBase58()
-              : wallet.address;
+          const walletAddress = wallet.address;
 
           const native = await (providers[chain] as any).getBalance(
             walletAddress
@@ -214,6 +185,7 @@ const StartProcess = () => {
           address: wallet.address,
         });
       }
+      await sleep(3000);
     } catch (error) {
       console.error(error);
       toast({

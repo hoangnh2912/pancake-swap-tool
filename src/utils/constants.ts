@@ -14,18 +14,12 @@ const TOKEN_ADDRESS = {
     USDC: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
     WBTC: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
   },
-  SOL: {
-    USDT: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-    USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    WBTC: "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
-  },
 };
 
 const RPC_URL = {
-  ETH: "https://1.rpc.thirdweb.com/",
-  BSC: "https://56.rpc.thirdweb.com/",
-  MATIC: "https://137.rpc.thirdweb.com/",
-  SOL: "https://api.mainnet-beta.solana.com",
+  ETH: "https://1.rpc.thirdweb.com/dadfeca037b78c93e1a05061d7af37a0",
+  BSC: "https://56.rpc.thirdweb.com/dadfeca037b78c93e1a05061d7af37a0",
+  MATIC: "https://137.rpc.thirdweb.com/dadfeca037b78c93e1a05061d7af37a0",
 };
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
