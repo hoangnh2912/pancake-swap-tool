@@ -27,5 +27,6 @@ const DEFAULT_PAGINATE_SIZE = 10;
 const Shell: {
   openExternal: (url: string) => void;
   setProcessBar: (value: number) => void;
+  getPcUUID: () => void;
 } = (window as any).Shell;
 export { TOKEN_ADDRESS, Shell, ZERO_ADDRESS, DEFAULT_PAGINATE_SIZE, RPC_URL };

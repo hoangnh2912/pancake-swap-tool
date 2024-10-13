@@ -6,6 +6,7 @@ import { ToastContainer } from "./utils/toast";
 const root = createRoot(document.body);
 
 const App = () => {
+
   return (
     <ChakraProvider>
       <Main />

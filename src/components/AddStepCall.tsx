@@ -166,9 +166,7 @@ const AddStepCall = () => {
                 </Td>
                 <Td>{item.mnemonic}</Td>
                 <Td>{item.privateKey}</Td>
-                <Td
-                  cursor={"pointer"}
-                >
+                <Td cursor={"pointer"}>
                   {tryPrivateKeyToAddress(item.privateKey)}
                 </Td>
               </Tr>

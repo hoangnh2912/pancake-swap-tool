@@ -51,6 +51,7 @@
     "ethers": "5",
     "framer-motion": "^11.0.5",
     "jquery": "^3.7.1",
+    "node-machine-id": "^1.1.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1"

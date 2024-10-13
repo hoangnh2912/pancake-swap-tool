@@ -1,6 +1,12 @@
 import {
+  AbsoluteCenter,
+  Button,
+  Center,
   CloseButton,
+  Container,
+  Flex,
   HStack,
+  Input,
   Stack,
   Tab,
   TabList,
@@ -9,6 +15,7 @@ import {
   Tabs,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { StoreProvider } from "easy-peasy";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,9 +23,14 @@ import AddStepCall from "../components/AddStepCall";
 import OutputWallet from "../components/OutputWallet";
 import useStorage from "../hooks/useStorage";
 import { StorePayload, getStore } from "../redux/store";
-
+import { Shell } from "../utils/constants";
+import { machineIdToReadable, verifyLicense } from "../utils/utils";
+import $ from "jquery";
 const Main = () => {
   const [isLoadCacheDone, setIsLoadCacheDone] = useState(false);
+  const [machineId, setMachineId] = useState("");
+  const [isValidLicense, setIsValidLicense] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   const [allStore, setAllStore] = useState<
     {
@@ -36,6 +48,15 @@ const Main = () => {
   const { removeItem, getKeyCacheByTabId, getItem, setItem } = useStorage();
 
   const [indexTab, setIndexTab] = useState(0);
+
+  const getMachineId = () => {
+    intervalRef.current = setInterval(() => {
+      if ((window as any).machineId) {
+        setMachineId((window as any).machineId);
+        clearInterval(intervalRef.current);
+      }
+    }, 1000);
+  };
 
   useEffect(() => {
     const cache = getItem<{
@@ -75,7 +96,9 @@ const Main = () => {
   };
 
   useEffect(() => {
+    Shell.getPcUUID();
     onSaveLocalCache();
+    getMachineId();
   }, [allStore.length, isLoadCacheDone]);
 
   const storeTabTitles = allStore.map((v) => v.title);
@@ -114,6 +137,42 @@ const Main = () => {
   const onChangeTab = useCallback((index: number) => {
     setIndexTab(index);
   }, []);
+
+  const toast = useToast();
+
+  if (!isValidLicense)
+    return (
+      <Flex w={"100%"} h={"100vh"}>
+        <AbsoluteCenter>
+          <Stack gap={4}>
+            <Text>Nhập license key</Text>
+            <Text>Mã phần phềm: {machineIdToReadable(machineId)}</Text>
+            <Input id="license" maxLength={999} />
+            <Button
+              onClick={() => {
+                if (
+                  verifyLicense(
+                    machineIdToReadable(machineId),
+                    $("#license").val().toString()
+                  )
+                ) {
+                  setIsValidLicense(true);
+                } else {
+                  toast({
+                    title: "License không hợp lệ",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                  });
+                }
+              }}
+            >
+              Xác nhận
+            </Button>
+          </Stack>
+        </AbsoluteCenter>
+      </Flex>
+    );
 
   return (
     <Tabs index={indexTab} variant="unstyled" isFitted onChange={onChangeTab}>
