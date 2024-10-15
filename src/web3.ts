@@ -6,25 +6,80 @@ import {
   ROUTER_PANCAKE_V2_ABI,
 } from "./utils/abi";
 
+const instance = {
+  provider: {} as {
+    [key: string]: providers.JsonRpcProvider;
+  },
+  wallet: {} as {
+    [key: string]: ethers.Wallet;
+  },
+  routerContract: {} as {
+    [key: string]: ethers.Contract;
+  },
+  factoryContract: {} as {
+    [key: string]: ethers.Contract;
+  },
+  wethContract: {} as {
+    [key: string]: ethers.Contract;
+  },
+  tokenContract: {} as {
+    [key: string]: ethers.Contract;
+  },
+  tokenSymbol: {} as {
+    [key: string]: string;
+  }
+};
+
 const getProvider = (rpc: string) => {
-  return new ethers.providers.JsonRpcProvider(rpc);
+  if (!instance.provider[rpc]) {
+    instance.provider[rpc] = new ethers.providers.JsonRpcProvider(rpc);
+  }
+  return instance.provider[rpc];
 };
 
 const getWallet = (provider: providers.JsonRpcProvider, privateKey: string) => {
-  return new ethers.Wallet(privateKey, provider);
+  if (!instance.wallet[privateKey]) {
+    instance.wallet[privateKey] = new ethers.Wallet(privateKey, provider);
+  }
+  return instance.wallet[privateKey];
 };
 
 const getRouterContract = (address: string, provider: providers.Provider) => {
-  return new ethers.Contract(address, ROUTER_PANCAKE_V2_ABI, provider);
+  if (!instance.routerContract[address]) {
+    instance.routerContract[address] = new ethers.Contract(
+      address,
+      ROUTER_PANCAKE_V2_ABI,
+      provider
+    );
+  }
+  return instance.routerContract[address];
 };
 
 const getERC20Contract = (address: string, provider: providers.Provider) => {
-  return new ethers.Contract(address, ERC20_ABI, provider);
+  if (!instance.tokenContract[address]) {
+    instance.tokenContract[address] = new ethers.Contract(address, ERC20_ABI, provider);
+  }
+  return instance.tokenContract[address];
 };
 
 const getFactoryContract = (address: string, provider: providers.Provider) => {
-  return new ethers.Contract(address, FACTORY_PANCAKE_V2_ABI, provider);
+  if (!instance.factoryContract[address]) {
+    instance.factoryContract[address] = new ethers.Contract(
+      address,
+      FACTORY_PANCAKE_V2_ABI,
+      provider
+    );
+  }
+  return instance.factoryContract[address];
 };
+
+const getTokenSymbol = async (tokenAddressContract: ethers.Contract) => { 
+  if (!instance.tokenSymbol[tokenAddressContract.address]) {
+    instance.tokenSymbol[tokenAddressContract.address] = await tokenAddressContract.symbol();
+  }
+  return instance.tokenSymbol[tokenAddressContract.address];
+}
+
 
 const getOfPairBalance = async (
   provider: providers.Provider,
@@ -40,7 +95,7 @@ const getOfPairBalance = async (
 
   const pairBalance = {
     [symbol]: ethers.BigNumber.from(await wethContract.balanceOf(pairAddress)),
-    [await tokenAddressContract.symbol()]: ethers.BigNumber.from(
+    [await getTokenSymbol(tokenAddressContract)]: ethers.BigNumber.from(
       await tokenAddressContract.balanceOf(pairAddress)
     ).mul(
       ethers.BigNumber.from(10).pow(

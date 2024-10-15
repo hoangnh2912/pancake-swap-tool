@@ -1,7 +1,7 @@
 import { BigNumber, ethers } from "ethers";
 import { useCallback, useEffect, useRef } from "react";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import { calculateAmount, getOfPairBalance, getProvider } from "../web3";
+import { calculateAmount, getOfPairBalance, getProvider, getWallet } from "../web3";
 
 const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
   const intervalCheck = useRef<NodeJS.Timeout>();
@@ -36,7 +36,7 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
         chainNetwork.symbol
       ),
       ...privateKeys.map(async (privateKey) => {
-        const wallet = new ethers.Wallet(privateKey);
+        const wallet = getWallet(provider, privateKey);
         setDataWallet({
           [wallet.address]: {
             address: wallet.address,
@@ -70,7 +70,6 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
         .filter((txs) => !txs.transactionReceipt.timestamp)
         .map(async (txs) => {
           try {
-            if (txs.transactionReceipt.timestamp) return;
             const rc = await provider.getTransactionReceipt(
               txs.transactionReceipt.transactionHash
             );
@@ -106,7 +105,7 @@ const useReloadFetchOnchain = ({ privateKeys }: { privateKeys: string[] }) => {
 
   useEffect(() => {
     if (intervalCheck.current) clearInterval(intervalCheck.current);
-    intervalCheck.current = setInterval(onStartCheck, 2000);
+    intervalCheck.current = setInterval(onStartCheck, 6000);
     return () => {
       if (intervalCheck.current) clearInterval(intervalCheck.current);
     };

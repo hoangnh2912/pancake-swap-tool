@@ -57,7 +57,9 @@ const storePayload: StoreModel = {
         }
         return item;
       });
-
+      if (state.data.length == 300) {
+        state.data.shift();
+      }
       if (!isExist) state.data.push(payload);
     }),
     data: [],
@@ -109,7 +111,7 @@ const storePayload: StoreModel = {
       if (payload.weth) state.weth = payload.weth;
       if (payload.symbol) state.symbol = payload.symbol;
       if (payload.gasPrice) state.gasPrice = payload.gasPrice;
-      if (payload.gasLimit) state.gasLimit = payload.gasLimit;
+      if (payload.gasLimit != undefined) state.gasLimit = payload.gasLimit;
     }),
   },
   tabId: "1a2b3c4d",

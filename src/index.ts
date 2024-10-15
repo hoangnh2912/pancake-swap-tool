@@ -40,6 +40,11 @@ const createWindow = (): void => {
     mainWindow.setProgressBar(value);
   });
 
+  const ses = mainWindow.webContents.session
+  ses.clearAuthCache()
+  ses.clearCache()
+  ses.clearHostResolverCache()
+  mainWindow.webContents.clearHistory()
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
 };

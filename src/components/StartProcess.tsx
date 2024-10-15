@@ -23,7 +23,6 @@ const StartProcess = () => {
   const startTx = async () => {
     try {
       setIsFetching(true);
-      Shell.setProcessBar(0);
       for (let i = 0; i < stepData.length; i++) {
         setCurrentTxId(stepData[i].id);
         const step = stepData[i];
@@ -92,7 +91,6 @@ const StartProcess = () => {
         }
         console.log("Done step", i);
         console.log("Start delay", delay);
-        Shell.setProcessBar((i + 1) / stepData.length);
         if (i < stepData.length - 1) await sleep(delay);
       }
     } catch (error) {
@@ -106,7 +104,6 @@ const StartProcess = () => {
       });
     }
     setIsFetching(false);
-    Shell.setProcessBar(-1);
     setCurrentTxId("");
   };
   const isDisabled = useMemo(() => {
