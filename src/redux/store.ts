@@ -102,6 +102,7 @@ const storePayload: StoreModel = {
     symbol: PANCAKE_ADDRESS.BSC.Mainnet.Symbol,
     gasPrice: "5",
     gasLimit: "300000",
+    rpcSubmit: PANCAKE_ADDRESS.BSC.Mainnet.RPC,
     setChainNetwork: action((state, payload) => {
       if (payload.explorer) state.explorer = payload.explorer;
       if (payload.name) state.name = payload.name;
@@ -112,6 +113,7 @@ const storePayload: StoreModel = {
       if (payload.symbol) state.symbol = payload.symbol;
       if (payload.gasPrice) state.gasPrice = payload.gasPrice;
       if (payload.gasLimit != undefined) state.gasLimit = payload.gasLimit;
+      if (payload.rpcSubmit) state.rpcSubmit = payload.rpcSubmit;
     }),
   },
   tabId: "1a2b3c4d",

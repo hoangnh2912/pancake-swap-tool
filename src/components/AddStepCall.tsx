@@ -64,7 +64,6 @@ const AddStepCall = () => {
     );
   }, [currentPage, stepData]);
 
-
   const chainNetwork = useStoreState((state) => state.chainNetwork);
 
   const priceWETH9 = useTokenPrice(chainNetwork.symbol);
@@ -119,6 +118,7 @@ const AddStepCall = () => {
     const cache = getItem<{
       privateKeys: string[];
       rpc: string;
+      rpcSubmit: string;
       name: string;
       explorer: string;
       factory: string;
@@ -135,6 +135,7 @@ const AddStepCall = () => {
       setPrivateKeys(cache.privateKeys);
       setChainNetwork({
         rpc: cache.rpc,
+        rpcSubmit: cache.rpcSubmit,
         name: cache.name,
         explorer: cache.explorer,
         factory: cache.factory,
@@ -175,6 +176,7 @@ const AddStepCall = () => {
     chainNetwork.gasLimit,
     chainNetwork.gasPrice,
     chainNetwork.rpc,
+    chainNetwork.rpcSubmit,
   ]);
 
   if (!isLoadCacheDone.current) return null;
@@ -242,6 +244,17 @@ const AddStepCall = () => {
                 })
               }
               value={chainNetwork.rpc}
+            />
+          </Flex>
+          <Flex gap={"5px"} alignItems={"center"}>
+            <Text>Nhập RPC Submit</Text>
+            <Input
+              onChange={(e) =>
+                setChainNetwork({
+                  rpcSubmit: e.target.value,
+                })
+              }
+              value={chainNetwork.rpcSubmit}
             />
           </Flex>
         </Flex>

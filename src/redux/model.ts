@@ -90,6 +90,7 @@ interface Wallet {
 interface ChainNetwork {
   name: string;
   rpc: string;
+  rpcSubmit: string;
   explorer: string;
   router: string;
   weth: string;
@@ -102,6 +103,7 @@ interface ChainNetwork {
     {
       name?: string;
       rpc?: string;
+      rpcSubmit?: string;
       explorer?: string;
       router?: string;
       weth?: string;
@@ -113,19 +115,16 @@ interface ChainNetwork {
   >;
 }
 
-
 interface CurrentTx {
   currentTxId: string;
   setCurrentTxId: Action<CurrentTx, string>;
 }
 
-
-
-interface Tabs{
+interface Tabs {
   tabs: {
     title: string;
-    data: StoreModel
-  }
+    data: StoreModel;
+  };
 }
 
 interface StoreModel {

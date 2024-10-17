@@ -4,7 +4,6 @@ import { useStoreActions, useStoreState } from "../redux/hook";
 import { TransactionStatus } from "../redux/model";
 import { sleep } from "../utils/utils";
 import { getProvider, getWallet, startSendTx } from "../web3";
-import { Shell } from "../utils/constants";
 
 const StartProcess = () => {
   const chainNetwork = useStoreState((state) => state.chainNetwork);
@@ -28,7 +27,7 @@ const StartProcess = () => {
         const step = stepData[i];
         console.log("Start step", i);
         const wallet = getWallet(
-          getProvider(chainNetwork.rpc),
+          getProvider(chainNetwork.rpcSubmit),
           step.privateKey
         );
         try {
@@ -45,7 +44,7 @@ const StartProcess = () => {
               addTxs({
                 id: stepResult.id,
                 status: TransactionStatus.PENDING,
-                rpc: chainNetwork.rpc,
+                rpc: chainNetwork.rpcSubmit,
                 method: stepResult.method,
                 amount: stepResult.amount,
                 slippage: stepResult.slippage,

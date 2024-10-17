@@ -27,7 +27,7 @@ const instance = {
   },
   tokenSymbol: {} as {
     [key: string]: string;
-  }
+  },
 };
 
 const getProvider = (rpc: string) => {
@@ -57,7 +57,11 @@ const getRouterContract = (address: string, provider: providers.Provider) => {
 
 const getERC20Contract = (address: string, provider: providers.Provider) => {
   if (!instance.tokenContract[address]) {
-    instance.tokenContract[address] = new ethers.Contract(address, ERC20_ABI, provider);
+    instance.tokenContract[address] = new ethers.Contract(
+      address,
+      ERC20_ABI,
+      provider
+    );
   }
   return instance.tokenContract[address];
 };
@@ -73,13 +77,13 @@ const getFactoryContract = (address: string, provider: providers.Provider) => {
   return instance.factoryContract[address];
 };
 
-const getTokenSymbol = async (tokenAddressContract: ethers.Contract) => { 
+const getTokenSymbol = async (tokenAddressContract: ethers.Contract) => {
   if (!instance.tokenSymbol[tokenAddressContract.address]) {
-    instance.tokenSymbol[tokenAddressContract.address] = await tokenAddressContract.symbol();
+    instance.tokenSymbol[tokenAddressContract.address] =
+      await tokenAddressContract.symbol();
   }
   return instance.tokenSymbol[tokenAddressContract.address];
-}
-
+};
 
 const getOfPairBalance = async (
   provider: providers.Provider,
