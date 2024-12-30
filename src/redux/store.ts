@@ -93,16 +93,16 @@ const storePayload: StoreModel = {
     }),
   },
   chainNetwork: {
-    explorer: PANCAKE_ADDRESS.BSC.Mainnet.Explorer,
-    name: PANCAKE_ADDRESS.BSC.Mainnet.Name,
-    rpc: PANCAKE_ADDRESS.BSC.Mainnet.RPC,
-    factory: PANCAKE_ADDRESS.BSC.Mainnet.Factory,
-    router: PANCAKE_ADDRESS.BSC.Mainnet.Router,
-    weth: PANCAKE_ADDRESS.BSC.Mainnet.WETH,
-    symbol: PANCAKE_ADDRESS.BSC.Mainnet.Symbol,
+    explorer: PANCAKE_ADDRESS.BASE.Mainnet.Explorer,
+    name: PANCAKE_ADDRESS.BASE.Mainnet.Name,
+    rpc: PANCAKE_ADDRESS.BASE.Mainnet.RPC,
+    factory: PANCAKE_ADDRESS.BASE.Mainnet.Factory,
+    router: PANCAKE_ADDRESS.BASE.Mainnet.Router,
+    weth: PANCAKE_ADDRESS.BASE.Mainnet.WETH,
+    symbol: PANCAKE_ADDRESS.BASE.Mainnet.Symbol,
     gasPrice: "5",
     gasLimit: "300000",
-    rpcSubmit: PANCAKE_ADDRESS.BSC.Mainnet.RPC,
+    rpcSubmit: PANCAKE_ADDRESS.BASE.Mainnet.RPC,
     setChainNetwork: action((state, payload) => {
       if (payload.explorer) state.explorer = payload.explorer;
       if (payload.name) state.name = payload.name;

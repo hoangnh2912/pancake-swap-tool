@@ -26,7 +26,7 @@ import useReloadFetchOnchain from "../hooks/useReloadMinOut";
 import useStorage from "../hooks/useStorage";
 import useTokenPrice from "../hooks/useTokenPrice";
 import { useStoreActions, useStoreState } from "../redux/hook";
-import { StepDetail } from "../redux/model";
+import type { StepDetail } from "../redux/model";
 import {
   DEFAULT_PAGINATE_SIZE,
   PANCAKE_ADDRESS,
@@ -71,7 +71,7 @@ const AddStepCall = () => {
   const priceToken = useMemo(() => {
     try {
       return pairData.pairBalance[chainNetwork.symbol]
-        .mul(parseInt(priceWETH9))
+        .mul(Number.parseInt(priceWETH9))
         .div(pairData.pairBalance["TK"])
         .toString();
     } catch (error) {
@@ -374,7 +374,7 @@ const AddStepCall = () => {
           ))}
           <Text>
             Price {chainNetwork.symbol}:{" "}
-            {!!priceWETH9 ? parseFloat(priceWETH9).toFixed(2) : "0"} USD
+            {priceWETH9 ? Number.parseFloat(priceWETH9).toFixed(2) : "0"} USD
           </Text>
           <Text>Price Token: {priceToken}</Text>
         </Stack>
