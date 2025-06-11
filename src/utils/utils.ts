@@ -16,6 +16,8 @@ const tryPrivateKeyToAddress = (privateKey: string) => {
   try {
     return new ethers.Wallet(privateKey).address;
   } catch (error) {
+    console.log('Error converting private key to address:', error);
+
     return "";
   }
 };
