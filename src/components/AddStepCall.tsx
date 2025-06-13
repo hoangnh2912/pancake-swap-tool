@@ -200,8 +200,12 @@ const AddStepCall = () => {
 
 
   const exportWalletAddresses = () => {
-    const addresses = privateKeys.map((key) => tryPrivateKeyToAddress(key));
-    const blob = new Blob([addresses.join("\n")], { type: "text/plain" });
+    const addresses = privateKeys.map((key, idx) => ({
+      index: idx + 1,
+      privateKey: key.trim(),
+      address: tryPrivateKeyToAddress(key)
+    }));
+    const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.privateKey}`).join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -350,17 +354,6 @@ const AddStepCall = () => {
         >
           Xuất địa chỉ ví
         </Button>}
-        {/* <Textarea
-          noOfLines={10}
-          defaultValue={privateKeys.join("\n")}
-          onChange={(e) =>
-            setPrivateKeys(
-              e.target.value
-                .split("\n")
-                .filter((k) => !!tryPrivateKeyToAddress(k))
-            )
-          }
-        /> */}
       </Flex>
       <Flex gap={"10px"}>
         <Flex flex={1} direction={"column"}>
@@ -412,7 +405,7 @@ const AddStepCall = () => {
           <Flex gap={"5px"} alignItems={"center"}>
             <Text>Danh sách ví</Text>
             <Textarea
-              value={privateKeys.map(key => `${tryPrivateKeyToAddress(key)} ${formatEtherWithDecimals(
+              value={privateKeys.map((key, idx) => `${idx + 1} ${tryPrivateKeyToAddress(key)} ${formatEtherWithDecimals(
                 getWalletBalance(key)
               )} ${chainNetwork.symbol}`).join("\n")}
             />
@@ -477,9 +470,21 @@ const AddStepCall = () => {
               defaultValue={1}
             />
           </Flex>
+          <Flex gap={"5px"} alignItems={"center"}>
+            <Text>Số thứ tự ví</Text>
+            <Input
+              id="walletIndex"
+              placeholder="Chọn ví theo thứ tự"
+              type="number"
+              defaultValue={1}
+            />
+          </Flex>
           <Button
             onClick={() => {
-              const stepCount = parseInt($("#stepCount").val() as string) || 1;
+              const stepCount = Math.min(parseInt($("#stepCount").val() as string), 1);
+              const walletIndex = Math.min(1, parseInt(
+                $("#walletIndex").val() as string
+              ));
               if (!privateKeys || privateKeys.length === 0) {
                 alert("Vui lòng nhập private key trước khi thêm lệnh");
                 return;
@@ -494,7 +499,20 @@ const AddStepCall = () => {
                 );
                 return;
               }
-              for (let i = 0; i < stepCount; i++) {
+
+              if (walletIndex <= 0 || walletIndex > privateKeys.length) {
+                alert(
+                  `Số thứ tự ví phải từ 1 đến ${privateKeys.length}, hiện tại chỉ có ${privateKeys.length} ví`
+                );
+                return;
+              }
+              if (walletIndex + stepCount - 1 > privateKeys.length) {
+                alert(
+                  `Số lệnh không thể vượt quá số ví hiện tại (${privateKeys.length}), vui lòng chọn lại số lệnh hoặc ví`
+                );
+                return;
+              }
+              for (let i = walletIndex - 1; i < stepCount; i++) {
                 addStep({
                   amount: $("#amount").val() as string,
                   id: Math.random().toString(16).substring(7),
