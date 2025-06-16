@@ -10,6 +10,7 @@ interface StepDetail {
   amountCalculate: {
     value: ethers.BigNumber;
   };
+  receivedWallet: string;
 }
 
 interface Steps {

@@ -427,6 +427,10 @@ const AddStepCall = () => {
             </Select>
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
+            <Text>Ví nhận</Text>
+            <Input id="receivedWallet" />
+          </Flex>
+          <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập số lượng {chainNetwork.symbol}</Text>
             <Input id="amount" type="number" defaultValue={1} />
           </Flex>
@@ -522,6 +526,7 @@ const AddStepCall = () => {
                     value: ethers.BigNumber.from(0),
                   },
                   privateKey: privateKeys[i],
+                  receivedWallet: $("#receivedWallet").val() as string,
                 })
               }
             }

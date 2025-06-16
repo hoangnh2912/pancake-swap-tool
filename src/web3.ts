@@ -215,18 +215,18 @@ const startSendTx = async ({
   const args =
     step.method == "buy"
       ? [
-          minOut,
-          [WETH, tokenAddress],
-          wallet.address,
-          Math.floor(Date.now() / 1000) + 60 * 10,
-        ]
+        minOut,
+        [WETH, tokenAddress],
+        step.receivedWallet,
+        Math.floor(Date.now() / 1000) + 60 * 10,
+      ]
       : [
-          ethers.utils.parseUnits(`${step.amount}`, "ether").toString(),
-          maxIn,
-          [tokenAddress, WETH],
-          wallet.address,
-          Math.floor(Date.now() / 1000) + 60 * 10,
-        ];
+        ethers.utils.parseUnits(`${step.amount}`, "ether").toString(),
+        maxIn,
+        [tokenAddress, WETH],
+        step.receivedWallet,
+        Math.floor(Date.now() / 1000) + 60 * 10,
+      ];
 
   const tokenContract = getERC20Contract(tokenAddress, wallet.provider).connect(
     wallet
