@@ -1,15 +1,12 @@
 import {
   Button,
   Flex,
-  Input,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
-  Select,
   Spinner,
   Stack,
-  Table,
   TableContainer,
   Tbody,
   Td,
@@ -22,6 +19,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { ethers } from "ethers";
+import { Input, Select, Table } from "antd";
 import $ from "jquery";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useReloadFetchOnchain from "../hooks/useReloadMinOut";
@@ -380,9 +378,39 @@ const AddStepCall = () => {
             />
           </Flex>
         </Flex>
-        <Flex flex={1} direction={"column"}>
+      </Flex>
+
+      <Flex gap={"10px"}>
+        <Stack flex={1}>
+          <Text fontWeight={"bold"}>Lệnh chuyển tiền</Text>
+          <Text>Danh sách ví</Text>
+          <Table
+            columns={[
+              {
+                title: 'STT',
+                dataIndex: 'idx'
+              },
+              {
+                title: 'Địa chỉ',
+                dataIndex: 'address'
+              },
+              {
+                title: 'Số dư',
+                dataIndex: 'balance'
+              }
+            ]}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+            }}
+            dataSource={privateKeys.map((key, idx) => ({
+              idx: idx + 1,
+              address: tryPrivateKeyToAddress(key),
+              balance: formatEtherWithDecimals(getWalletBalance(key))
+            }))}
+          />
           <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Nhập delay (giây)</Text>
+            <Text>Nhập delay giữa các lần chuyển (giây)</Text>
             <Input
               type="number"
               onChange={(e) => setDelay(parseInt(e.target.value) * 1000)}
@@ -390,53 +418,14 @@ const AddStepCall = () => {
             />
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Nhập địa chỉ token </Text>
-            <Input
-              onChange={(e) => setTokenAddress(e.target.value)}
-              value={tokenAddress}
-            />
-          </Flex>
-        </Flex>
-      </Flex>
-
-      <Text fontWeight={"bold"}>Thêm lệnh</Text>
-      <Flex gap={"10px"}>
-        <Stack flex={1}>
-          <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Danh sách ví</Text>
-            <Textarea
-              value={privateKeys.map((key, idx) => `${idx + 1} ${tryPrivateKeyToAddress(key)} ${formatEtherWithDecimals(
-                getWalletBalance(key)
-              )} ${chainNetwork.symbol}`).join("\n")}
-            />
-            {/* <Select id="privateKey">
-              {privateKeys.map((key, idx) => (
-                <option key={`${key}-${idx}`} value={key}>
-                  {`${tryPrivateKeyToAddress(key)} ${formatEtherWithDecimals(
-                    getWalletBalance(key)
-                  )} ${chainNetwork.symbol} `}
-                </option>
-              ))}
-            </Select> */}
-          </Flex>
-          <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Chọn lệnh</Text>
-            <Select id="method">
-              <option value="buy">{"Mua"}</option>
-              <option value="sell">{"Bán"}</option>
-            </Select>
-          </Flex>
-          <Flex gap={"5px"} alignItems={"center"}>
             <Text>Ví nhận</Text>
-            <Input id="receivedWallet" />
+            <Input.TextArea
+              rows={5}
+              id="receivedWallet" />
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập số lượng {chainNetwork.symbol}</Text>
             <Input id="amount" type="number" defaultValue={1} />
-          </Flex>
-          <Flex gap={"5px"} alignItems={"center"}>
-            <Text>Nhập số slippage %</Text>
-            <Input id="slippage" type="number" defaultValue={0.5} />
           </Flex>
           <Flex gap={"5px"} alignItems={"center"}>
             <Text>Nhập gasPrice </Text>
@@ -543,24 +532,29 @@ const AddStepCall = () => {
           </Button>
         </Stack>
         <Stack flex={1} gap={"5px"}>
-          <Text fontWeight={"bold"}>Thông tin pair</Text>
-          <Text>Pair Address:{pairData.address}</Text>
-          {pairData.address == ZERO_ADDRESS && (
-            <Text color={"red"}>
-              Địa chỉ pair không tồn tại, hãy tạo LQ trước khi swap
-            </Text>
-          )}
-          <Text>Pair Balance</Text>
-          {Object.keys(pairData.pairBalance).map((key) => (
-            <Text key={key}>
-              {formatEtherWithDecimals(pairData.pairBalance[key])} {key}
-            </Text>
-          ))}
-          <Text>
-            Price {chainNetwork.symbol}:{" "}
-            {!!priceWETH9 ? parseFloat(priceWETH9).toFixed(2) : "0"} USD
-          </Text>
-          <Text>Price Token: {priceToken}</Text>
+          <Text fontWeight={"bold"}>Quét ví</Text>
+          <Input
+            id="scanAddress"
+            placeholder="Nhập địa chỉ quét"
+          />
+          <Input
+            id="scanAmount"
+            placeholder="Số lượng ví"
+          />
+          <Select
+            placeholder="Chọn loại coin"
+            mode="multiple"
+            options={[
+              {
+                label: "BNB", value: "0x",
+              },
+              { label: "USDT", value: "0x55d398326f99059ff775485246999027b3197955" },
+              { label: "USDC", value: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d" },
+              { label: "ETH", value: "0x2170ed0880ac9a755fd29b2688956bd959f933f8" },
+              { label: "WBNB", value: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" },
+              { label: "BTC", value: "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c" },
+            ]}
+          />
         </Stack>
       </Flex>
       <Text>Tổng lệnh: {stepData.length}</Text>
