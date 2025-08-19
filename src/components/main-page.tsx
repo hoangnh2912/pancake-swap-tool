@@ -188,7 +188,7 @@ const MainPage = () => {
       balance: `${wallet.native} ${chainNetwork.symbol}`,
       tokens: wallet.tokens,
     }));
-    (window as any).Shell.saveFile(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
+    (window as any)?.Shell?.saveFile?.(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
 
     // const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n")], { type: "text/plain" });
     // const url = URL.createObjectURL(blob);
