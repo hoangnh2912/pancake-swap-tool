@@ -188,15 +188,17 @@ const MainPage = () => {
       balance: `${wallet.native} ${chainNetwork.symbol}`,
       tokens: wallet.tokens,
     }));
-    const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "wallet_scan.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    (window as any).Shell.saveFile(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
+
+    // const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n")], { type: "text/plain" });
+    // const url = URL.createObjectURL(blob);
+    // const a = document.createElement("a");
+    // a.href = url;
+    // a.download = "wallet_scan.txt";
+    // document.body.appendChild(a);
+    // a.click();
+    // document.body.removeChild(a);
+    // URL.revokeObjectURL(url);
   }
 
   const importPrivateKeys = (file: File) => {
@@ -349,6 +351,7 @@ const MainPage = () => {
                 setIsScanning(true);
                 await contractScanner.current.start(setProgress);
                 setIsScanning(false);
+                exportWalletScan()
               }}>
               <Form.Item label="Địa chỉ quét" name="scanAddress"
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {

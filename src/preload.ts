@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld("Shell", {
     ipcRenderer.send("open-link", url),
   setProcessBar: (value: number) =>
     ipcRenderer.send("set-progress-bar", value),
+  saveFile: (data: string) => ipcRenderer.send("save-file", data),
 });
