@@ -128,12 +128,19 @@ interface Tabs {
   };
 }
 
+
+interface Scan {
+  isScanning: boolean;
+  setIsScanning: Action<Scan, boolean>;
+}
+
 interface StoreModel {
   steps: Steps;
   txs: Transaction;
   wallets: Wallet;
   chainNetwork: ChainNetwork;
   currentTx: CurrentTx;
+  scan: Scan;
   tabId: string;
 }
 

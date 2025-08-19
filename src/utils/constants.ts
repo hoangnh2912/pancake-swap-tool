@@ -41,6 +41,14 @@ const PANCAKE_ADDRESS = {
     },
   },
 };
+
+const TOKEN_ADDRESS = [
+  { label: "USDT", value: "0x55d398326f99059ff775485246999027b3197955" },
+  { label: "USDC", value: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d" },
+  { label: "ETH", value: "0x2170ed0880ac9a755fd29b2688956bd959f933f8" },
+  { label: "WBNB", value: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" },
+  { label: "BTC", value: "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c" },
+]
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const ENVIRONMENT_TYPE = {
   Mainnet: "Mainnet",
@@ -59,5 +67,5 @@ export {
   Shell,
   ZERO_ADDRESS,
   ENVIRONMENT_TYPE,
-  DEFAULT_PAGINATE_SIZE,
+  DEFAULT_PAGINATE_SIZE, TOKEN_ADDRESS
 };

@@ -117,6 +117,12 @@ const storePayload: StoreModel = {
     }),
   },
   tabId: "1a2b3c4d",
+  scan: {
+    isScanning: false,
+    setIsScanning: action((state, payload) => {
+      state.isScanning = payload;
+    }),
+  },
 };
 
 type StorePayload = Store<StoreModel, EasyPeasyConfig<undefined, {}>>;

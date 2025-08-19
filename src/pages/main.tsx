@@ -12,9 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { StoreProvider } from "easy-peasy";
 import { useCallback, useEffect, useRef, useState } from "react";
-import AddStepCall from "../components/AddStepCall";
-import OutputTransaction from "../components/OutputTransaction";
-import StartProcess from "../components/StartProcess";
+import MainPage from "../components/main-page";
 import { StorePayload, getStore } from "../redux/store";
 import useStorage from "../hooks/useStorage";
 
@@ -153,10 +151,8 @@ const Main = () => {
             <TabPanel>
               <VStack flex={1} bg={"#EDF2F7"} p="6" w={"100%"}>
                 <HStack flex={1} w={"100%"} alignItems={"start"}>
-                  <AddStepCall />
+                  <MainPage />
                 </HStack>
-                <StartProcess />
-                <OutputTransaction />
               </VStack>
             </TabPanel>
           </StoreProvider>
