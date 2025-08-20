@@ -52,6 +52,7 @@ const MainPage = () => {
   const scanningFromBlock = Form.useWatch("scanningFromBlock", form);
   const scanningToBlock = Form.useWatch("scanningToBlock", form);
   const walletIndex = Form.useWatch("walletIndex", form) || 1;
+  const airdropToken = Form.useWatch("airdropToken", form);
   const [privateKeys, setPrivateKeys] = useState([
     "4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042",
   ]);
@@ -421,13 +422,13 @@ const MainPage = () => {
                   contractAddress: values.scanAddress,
                   fromBlock: values.fromBlock,
                   airdropContract: values.airdropContract,
-                  tokens: values.tokens.reduce((acc, q) => {
+                  tokens: values.tokens.length > 0 ? values.tokens.reduce((acc, q) => {
                     const token = TOKEN_ADDRESS.find(e => e.value === q)?.label
                     return {
                       ...acc,
                       [token]: q
                     }
-                  }, {}),
+                  }, {}) : {},
                   rpcUrl: chainNetwork.rpc,
                   options: {
                     blockChunk: values.blockChunk,
@@ -571,11 +572,13 @@ const MainPage = () => {
                   title: "Số dư",
                   dataIndex: "native",
                   key: "native",
+                  align: "center"
                 },
                 {
                   title: "Token",
                   dataIndex: "tokens",
                   key: "tokens",
+                  align: "center",
                   render: (tokens: Record<string, string>) => (
                     <ul>
                       {Object.entries(tokens).map(([symbol, balance]) => (
@@ -588,6 +591,7 @@ const MainPage = () => {
                 },
                 {
                   title: "Airdrop",
+                  align: "center",
                   render: (_, record) => {
                     const isAirdropped = record.airdrop;
                     return (
