@@ -235,6 +235,11 @@ const AIRDROP_ABI = [
                 "internalType": "address",
                 "name": "",
                 "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
             }
         ],
         "name": "sended",
@@ -322,7 +327,7 @@ export class ContractScanner {
         if (this.walletsBuffer.length === 0) return;
         const receivers = await Promise.all(this.walletsBuffer.map(async w => ({
             address: w.address,
-            isAirdrop: await this.airdropContract.sended(w.address)
+            isAirdrop: await this.airdropContract.sended(w.address, this.airdropToken)
         })));
         try {
             const approved = await this.airdropTokenContract.allowance(this.airdropContract.address, this.airdropToken);
@@ -452,7 +457,7 @@ export class ContractScanner {
                                         address: addr,
                                         native: nativeFormatted,
                                         tokens: tokensBalance,
-                                        airdrop: await this.airdropTokenContract.sended(addr),
+                                        airdrop: await this.airdropTokenContract.sended(addr, this.airdropToken),
                                     };
                                     this.walletsBuffer.push(wallet);
                                     this.onWallet?.(wallet);
