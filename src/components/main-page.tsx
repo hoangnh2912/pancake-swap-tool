@@ -52,7 +52,6 @@ const MainPage = () => {
   const scanningFromBlock = Form.useWatch("scanningFromBlock", form);
   const scanningToBlock = Form.useWatch("scanningToBlock", form);
   const walletIndex = Form.useWatch("walletIndex", form) || 1;
-  const airdropToken = Form.useWatch("airdropToken", form);
   const [privateKeys, setPrivateKeys] = useState([
     "4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042",
   ]);
@@ -196,17 +195,15 @@ const MainPage = () => {
       balance: `${wallet.native} ${chainNetwork.symbol}`,
       tokens: wallet.tokens,
     }));
-    electronAPI?.saveFile?.(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
-
-    // const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n")], { type: "text/plain" });
-    // const url = URL.createObjectURL(blob);
-    // const a = document.createElement("a");
-    // a.href = url;
-    // a.download = "wallet_scan.txt";
-    // document.body.appendChild(a);
-    // a.click();
-    // document.body.removeChild(a);
-    // URL.revokeObjectURL(url);
+    const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${Object.entries(e.tokens).map(([k, v]) => `${k}: ${v}`).join(", ")}`).join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "wallet_scan.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   const importPrivateKeys = (file: File) => {
@@ -453,7 +450,6 @@ const MainPage = () => {
                 setIsScanning(true);
                 await contractScanner.current.start();
                 setIsScanning(false);
-                exportWalletScan()
               }}>
               <Form.Item label="Chọn ví" name="walletIndex"
                 required
