@@ -3,7 +3,7 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 
-contextBridge.exposeInMainWorld("Shell", {
+contextBridge.exposeInMainWorld("electronAPI", {
   openExternal: (url: string) =>
     ipcRenderer.send("open-link", url),
   setProcessBar: (value: number) =>

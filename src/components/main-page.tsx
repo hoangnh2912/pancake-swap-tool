@@ -8,7 +8,7 @@ import {
   Text,
   useToast
 } from "@chakra-ui/react";
-import { Button, Form, Input, InputNumber, Progress, Select, Table, Tabs } from "antd";
+import { Button, Form, Input, InputNumber, Progress, Select, Table, Tabs, Tag } from "antd";
 import { ethers } from "ethers";
 import $ from "jquery";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,6 +16,7 @@ import useStorage from "../hooks/useStorage";
 import { useStoreActions, useStoreState } from "../redux/hook";
 import { StepDetail } from "../redux/model";
 import {
+  electronAPI,
   PANCAKE_ADDRESS,
   TOKEN_ADDRESS,
   ZERO_ADDRESS
@@ -31,23 +32,29 @@ import {
 type ScanWallet = {
   fromBlock: number;
   scanAddress: string;
+  airdropContract: string;
   concurrency: number;
   blockChunk: number;
   tokens: string[];
-  wallets: WalletBalance[];
+  wallets: Record<string, WalletBalance>;
+  scanningFromBlock: number;
+  scanningToBlock: number;
+  airdropAmount: number;
+  airdropToken: string;
+  walletIndex: number;
 }
 
 const MainPage = () => {
   const [form] = Form.useForm<ScanWallet>();
 
   const contractScanner = useRef<ContractScanner | null>(null);
-  const wallets = Form.useWatch("wallets", form) || [];
-
+  const wallets = Form.useWatch("wallets", form) || {};
+  const scanningFromBlock = Form.useWatch("scanningFromBlock", form);
+  const scanningToBlock = Form.useWatch("scanningToBlock", form);
+  const walletIndex = Form.useWatch("walletIndex", form) || 1;
   const [privateKeys, setPrivateKeys] = useState([
     "4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042",
   ]);
-
-  const [progress, setProgress] = useState(0);
 
   const [privateKeysFile, setPrivateKeysFile] = useState<File | null>(null);
 
@@ -182,13 +189,13 @@ const MainPage = () => {
   }
 
   const exportWalletScan = () => {
-    const addresses = wallets.map((wallet, idx) => ({
+    const addresses = Object.values(wallets).map((wallet, idx) => ({
       index: idx + 1,
       address: wallet.address,
       balance: `${wallet.native} ${chainNetwork.symbol}`,
       tokens: wallet.tokens,
     }));
-    (window as any)?.Shell?.saveFile?.(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
+    electronAPI?.saveFile?.(addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n"));
 
     // const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${JSON.stringify(e.tokens)}`).join("\n")], { type: "text/plain" });
     // const url = URL.createObjectURL(blob);
@@ -307,7 +314,91 @@ const MainPage = () => {
           </Flex>
         </Flex>
       </Flex>
-
+      <Flex gap={"5px"} alignItems={"center"}>
+        <Text>Nhập private key</Text>
+        <Stack
+          onClick={() => {
+            let input = document.createElement("input");
+            input.hidden = true;
+            input.type = "file";
+            input.accept = ".txt";
+            input.onchange = (e: any) => {
+              const file = e.target?.files?.item(0);
+              importPrivateKeys(file);
+              input.remove();
+            };
+            input.click();
+          }}
+          w={'300px'}
+          h={"50px"}
+          justifyContent="center"
+          alignItems="center"
+          borderRadius="lg"
+          overflow="hidden"
+          boxShadow="5px 5px 5px 5px rgba(0,0,0,0.3)"
+          _hover={{
+            bg: "#0D166D",
+          }}
+          border="2px dashed gray"
+          bg="#0D164D"
+          style={{
+            aspectRatio: "2.5",
+          }}
+          cursor="pointer"
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const file = e.dataTransfer.files.item(0);
+            if (!file || file.type !== "text/plain") {
+              alert("Vui lòng chọn file .txt chứa private key");
+              return;
+            }
+            importPrivateKeys(file);
+          }}
+        >
+          {privateKeysFile ? (
+            <Text color={"white"}>{privateKeysFile.name}</Text>
+          ) : (
+            <Text color={"white"}>Chọn file chứa private key</Text>
+          )}
+        </Stack>
+        {privateKeys.length > 0 && <Button
+          onClick={() => exportWalletAddresses()}
+          type="primary"
+        >
+          Xuất địa chỉ ví
+        </Button>}
+      </Flex>
+      <Text>Danh sách ví</Text>
+      <Table
+        columns={[
+          {
+            title: 'STT',
+            dataIndex: 'idx',
+            width: 50,
+          },
+          {
+            title: 'Địa chỉ',
+            dataIndex: 'address'
+          },
+          {
+            title: 'Số dư',
+            dataIndex: 'balance'
+          }
+        ]}
+        pagination={{
+          defaultPageSize: 10,
+          showSizeChanger: true,
+        }}
+        dataSource={privateKeys.map((key, idx) => ({
+          idx: idx + 1,
+          address: tryPrivateKeyToAddress(key),
+          balance: formatEtherWithDecimals(getWalletBalance(key))
+        }))}
+      />
       <Tabs defaultActiveKey="1" items={[
         {
           key: "1",
@@ -316,17 +407,20 @@ const MainPage = () => {
             <Text fontWeight={"bold"}>Quét ví</Text>
             <Form form={form}
               initialValues={{
-                scanAddress: "0x4dec822fB95d76b2D2254bEaF3f258A7E8A1760c", // USDT contract address
-                fromBlock: 58155294,
+                scanAddress: "0xb300000b72DEAEb607a12d5f54773D1C19c7028d", // USDT contract address
+                airdropContract: "0x00", // Airdrop contract address
                 blockChunk: 1000,
                 concurrency: 1,
+                airdropAmount: 1,
+                airdropToken: TOKEN_ADDRESS[0].value,
+                walletIndex: 1,
                 tokens: [TOKEN_ADDRESS[0]]
               }}
               onFinish={async (values) => {
                 contractScanner.current = new ContractScanner({
                   contractAddress: values.scanAddress,
                   fromBlock: values.fromBlock,
-                  toBlock: 'latest',
+                  airdropContract: values.airdropContract,
                   tokens: values.tokens.reduce((acc, q) => {
                     const token = TOKEN_ADDRESS.find(e => e.value === q)?.label
                     return {
@@ -346,13 +440,33 @@ const MainPage = () => {
                       wallet
                     ]);
                   },
+                  airdropAmount: values.airdropAmount,
+                  airdropToken: values.airdropToken,
+                  onScan(fromBlock, toBlock) {
+                    form.setFieldValue("scanningFromBlock", fromBlock);
+                    form.setFieldValue("scanningToBlock", toBlock);
+                  },
+                  privateKeySigner: privateKeys[values.walletIndex - 1],
                 });
                 await contractScanner.current.initTokens();
                 setIsScanning(true);
-                await contractScanner.current.start(setProgress);
+                await contractScanner.current.start();
                 setIsScanning(false);
                 exportWalletScan()
               }}>
+              <Form.Item label="Chọn ví" name="walletIndex"
+                required
+              >
+                <InputNumber
+                  placeholder="Chọn ví theo thứ tự"
+                  defaultValue={1}
+                />
+              </Form.Item>
+              {walletIndex && privateKeys.length > 0 && privateKeys[walletIndex - 1] && <Text
+                style={{
+                  marginBottom: '10px',
+                }}
+              >Ví gửi token: {tryPrivateKeyToAddress(privateKeys[walletIndex - 1])}</Text>}
               <Form.Item label="Địa chỉ quét" name="scanAddress"
                 rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
                   validator: async (_, value) => {
@@ -366,9 +480,31 @@ const MainPage = () => {
                   placeholder="Nhập địa chỉ quét"
                 />
               </Form.Item>
-              <Form.Item label="Từ block" name="fromBlock">
+              <Form.Item label="Địa chỉ airdrop" name="airdropContract" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
+                validator: async (_, value) => {
+                  if (!ethers.utils.isAddress(value)) {
+                    return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+                  }
+                }
+              }]}>
+                <Input
+                  placeholder="Nhập địa chỉ airdrop"
+                />
+              </Form.Item>
+              <Form.Item label="Địa chỉ token airdrop" name="airdropToken" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
+                validator: async (_, value) => {
+                  if (!ethers.utils.isAddress(value)) {
+                    return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+                  }
+                }
+              }]}>
+                <Input
+                  placeholder="Nhập địa chỉ token airdrop"
+                />
+              </Form.Item>
+              <Form.Item label="Số lượng airdrop" name="airdropAmount" >
                 <InputNumber
-                  placeholder="Từ block"
+                  placeholder="Nhập số lượng airdrop"
                 />
               </Form.Item>
               <Form.Item label="Kích thước quét block" name="blockChunk">
@@ -391,6 +527,8 @@ const MainPage = () => {
                 />
               </Form.Item>
               <Form.Item hidden name="wallets" />
+              <Form.Item hidden name="scanningFromBlock" />
+              <Form.Item hidden name="scanningToBlock" />
               <Button
                 htmlType="submit"
                 type="primary"
@@ -412,10 +550,10 @@ const MainPage = () => {
               >
                 Dừng quét
               </Button>}
-              {isScanning &&
-                <Progress percent={progress} />
-              }
             </Form>
+            {scanningFromBlock !== undefined && scanningToBlock !== undefined &&
+              (<Text fontWeight={"bold"}>Đang quét từ block {scanningFromBlock} đến block {scanningToBlock}</Text>)
+            }
             <Text fontWeight={"bold"}>Kết quả quét</Text>
             <Table
               columns={[
@@ -448,8 +586,19 @@ const MainPage = () => {
                     </ul>
                   ),
                 },
+                {
+                  title: "Airdrop",
+                  render: (_, record) => {
+                    const isAirdropped = record.airdrop;
+                    return (
+                      <Tag color={isAirdropped ? "green" : "red"}>
+                        {isAirdropped ? "Đã airdrop" : "Chưa airdrop"}
+                      </Tag>
+                    );
+                  }
+                },
               ]}
-              dataSource={wallets}
+              dataSource={Object.values(wallets)}
             />
             <Button type="primary"
               onClick={exportWalletScan}
@@ -463,91 +612,7 @@ const MainPage = () => {
           label: "Airdrop",
           children: <Stack flex={1}>
             <Text fontWeight={"bold"}>Lệnh chuyển tiền</Text>
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Text>Nhập private key</Text>
-              <Stack
-                onClick={() => {
-                  let input = document.createElement("input");
-                  input.hidden = true;
-                  input.type = "file";
-                  input.accept = ".txt";
-                  input.onchange = (e: any) => {
-                    const file = e.target?.files?.item(0);
-                    importPrivateKeys(file);
-                    input.remove();
-                  };
-                  input.click();
-                }}
-                w={'300px'}
-                h={"50px"}
-                justifyContent="center"
-                alignItems="center"
-                borderRadius="lg"
-                overflow="hidden"
-                boxShadow="5px 5px 5px 5px rgba(0,0,0,0.3)"
-                _hover={{
-                  bg: "#0D166D",
-                }}
-                border="2px dashed gray"
-                bg="#0D164D"
-                style={{
-                  aspectRatio: "2.5",
-                }}
-                cursor="pointer"
-                onDragEnter={onDragEnter}
-                onDragOver={onDragOver}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const file = e.dataTransfer.files.item(0);
-                  if (!file || file.type !== "text/plain") {
-                    alert("Vui lòng chọn file .txt chứa private key");
-                    return;
-                  }
-                  importPrivateKeys(file);
-                }}
-              >
-                {privateKeysFile ? (
-                  <Text color={"white"}>{privateKeysFile.name}</Text>
-                ) : (
-                  <Text color={"white"}>Chọn file chứa private key</Text>
-                )}
-              </Stack>
-              {privateKeys.length > 0 && <Button
-                onClick={() => exportWalletAddresses()}
-                type="primary"
-              >
-                Xuất địa chỉ ví
-              </Button>}
-            </Flex>
-            <Text>Danh sách ví</Text>
-            <Table
-              columns={[
-                {
-                  title: 'STT',
-                  dataIndex: 'idx',
-                  width: 50,
-                },
-                {
-                  title: 'Địa chỉ',
-                  dataIndex: 'address'
-                },
-                {
-                  title: 'Số dư',
-                  dataIndex: 'balance'
-                }
-              ]}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-              }}
-              dataSource={privateKeys.map((key, idx) => ({
-                idx: idx + 1,
-                address: tryPrivateKeyToAddress(key),
-                balance: formatEtherWithDecimals(getWalletBalance(key))
-              }))}
-            />
+
             <Flex gap={"5px"} alignItems={"center"}>
               <Text>Nhập delay giữa các lần chuyển (giây)</Text>
               <Input
@@ -602,15 +667,7 @@ const MainPage = () => {
                 defaultValue={1}
               />
             </Flex>
-            <Flex gap={"5px"} alignItems={"center"}>
-              <Text>Số thứ tự ví</Text>
-              <Input
-                id="walletIndex"
-                placeholder="Chọn ví theo thứ tự"
-                type="number"
-                defaultValue={1}
-              />
-            </Flex>
+
             <Button
               onClick={() => {
                 const stepCount = Math.min(parseInt($("#stepCount").val() as string), 1);

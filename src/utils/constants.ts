@@ -20,26 +20,6 @@ const PANCAKE_ADDRESS = {
       Symbol: "BNB",
     },
   },
-  BASE: {
-    Mainnet: {
-      Router: "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb",
-      Factory: "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
-      WETH: "0x4200000000000000000000000000000000000006",
-      RPC: "https://8453.rpc.thirdweb.com/cce88ba586b9a9772e27e52376f7f39aa9fcaacc6097af98866edc47fab20cbfdc4a85d41ea11f49148cfc9fb25499d93248ef1080eec4978bc4b978b9d6770b",
-      Explorer: "https://basescan.org",
-      Name: "BASE",
-      Symbol: "ETH",
-    },
-    Testnet: {
-      Router: "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb",
-      Factory: "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
-      WETH: "0x4200000000000000000000000000000000000006",
-      RPC: "https://84532.rpc.thirdweb.com/cce88ba586b9a9772e27e52376f7f39aa9fcaacc6097af98866edc47fab20cbfdc4a85d41ea11f49148cfc9fb25499d93248ef1080eec4978bc4b978b9d6770b",
-      Explorer: "https://sepolia.basescan.org",
-      Name: "Sepolia BASE Testnet",
-      Symbol: "ETH",
-    },
-  },
 };
 
 const TOKEN_ADDRESS = [
@@ -57,14 +37,15 @@ const ENVIRONMENT_TYPE = {
 
 const ENVIRONMENT: string = ENVIRONMENT_TYPE.Mainnet;
 const DEFAULT_PAGINATE_SIZE = 10;
-const Shell: {
+const electronAPI: {
   openExternal: (url: string) => void;
   setProcessBar: (value: number) => void;
-} = (window as any).Shell;
+  saveFile: (content: string) => void;
+} = (window as any).electronAPI;
 export {
   PANCAKE_ADDRESS,
   ENVIRONMENT as ENVIROMENT,
-  Shell,
+  electronAPI,
   ZERO_ADDRESS,
   ENVIRONMENT_TYPE,
   DEFAULT_PAGINATE_SIZE, TOKEN_ADDRESS
