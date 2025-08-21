@@ -13,8 +13,8 @@ import {
 import { StoreProvider } from 'easy-peasy'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import MainPage from '../components/main-page'
-import { StorePayload, getStore } from '../redux/store'
 import useStorage from '../hooks/useStorage'
+import { StorePayload, getStore } from '../redux/store'
 
 const Main = () => {
     const isLoadCacheDone = useRef(false)
@@ -119,6 +119,7 @@ const Main = () => {
             <TabList>
                 {storeTabTitles.map((v, i) => (
                     <Tab
+                        key={v.toLowerCase()}
                         _selected={{ color: 'white', bg: 'green' }}
                         minW={'200px'}
                         justifyContent={'space-between'}
@@ -143,7 +144,7 @@ const Main = () => {
             <TabPanels>
                 {isLoadCacheDone.current &&
                     allStore.map((store) => (
-                        <StoreProvider store={store.data}>
+                        <StoreProvider key={store.id} store={store.data}>
                             <TabPanel>
                                 <VStack flex={1} bg={'#EDF2F7'} p="6" w={'100%'}>
                                     <HStack flex={1} w={'100%'} alignItems={'start'}>

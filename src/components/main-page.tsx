@@ -4,10 +4,10 @@ import { ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreActions, useStoreState } from '../redux/hook'
-import { StepDetail } from '../redux/model'
+import type { StepDetail } from '../redux/model'
 import { electronAPI, PANCAKE_ADDRESS, TOKEN_ADDRESS } from '../utils/constants'
-import { ContractScanner, WalletBalanceAirdrop } from '../utils/scanContract'
-import { WalletBalance, WalletBalanceScanner } from '../utils/scanWalletBalance'
+import { ContractScanner, type WalletBalanceAirdrop } from '../utils/scanContract'
+import { type WalletBalance, WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { chainNetworkColor, formatEtherWithDecimals, tryPrivateKeyToAddress } from '../utils/utils'
 
 type ScanWalletAirdrop = {
@@ -24,6 +24,7 @@ type ScanWalletAirdrop = {
     airdropToken: string
     walletIndex: number
     isAirdrop: boolean
+    alreadyAirdropWallets: string[]
 }
 
 type ScanWalletBalance = {
@@ -44,6 +45,7 @@ const MainPage = () => {
     const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
     const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
+    const alreadyAirdropWallets = Form.useWatch('alreadyAirdropWallets', formAirdrop) || []
 
     const walletBalances = Form.useWatch('wallets', formBalance) || {}
 
@@ -498,6 +500,7 @@ const MainPage = () => {
                                         }
                                         if (!contractScanner.current) {
                                             contractScanner.current = new ContractScanner({
+                                                alreadyAirdropWallets: values.alreadyAirdropWallets,
                                                 isAirdrop: values.isAirdrop,
                                                 contractAddress: values.scanAddress,
                                                 fromBlock: values.fromBlock,
@@ -565,6 +568,77 @@ const MainPage = () => {
                                     <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
                                         <Switch />
                                     </Form.Item>
+                                    <Flex gap={'5px'} alignItems={'center'}>
+                                        <Text>Nhập ví đã airdrop</Text>
+                                        <Stack
+                                            onClick={() => {
+                                                let input = document.createElement('input')
+                                                input.hidden = true
+                                                input.type = 'file'
+                                                input.accept = '.txt'
+                                                input.onchange = (e: any) => {
+                                                    const file = e.target?.files?.item(0)
+                                                    if (file) {
+                                                        const reader = new FileReader()
+                                                        reader.onload = (e) => {
+                                                            const content = e.target?.result as string
+                                                            const wallets = content.split('\n').map((line) => line.trim())
+                                                            formAirdrop.setFieldValue('alreadyAirdropWallets', wallets)
+                                                            if (contractScanner.current) {
+                                                                contractScanner.current.alreadyAirdropWallets = wallets.map(w => w.toLowerCase())
+                                                            }
+                                                        }
+                                                        reader.readAsText(file)
+                                                    }
+                                                    input.remove()
+                                                }
+                                                input.click()
+                                            }}
+                                            w={'300px'}
+                                            h={'20px'}
+                                            justifyContent="center"
+                                            alignItems="center"
+                                            borderRadius="lg"
+                                            overflow="hidden"
+                                            _hover={{
+                                                bg: '#0D166D',
+                                            }}
+                                            border="2px dashed gray"
+                                            bg="#0D164D"
+                                            style={{
+                                                aspectRatio: '2.5',
+                                            }}
+                                            cursor="pointer"
+                                            onDragEnter={onDragEnter}
+                                            onDragOver={onDragOver}
+                                            onDragLeave={onDragLeave}
+                                            onDrop={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                const file = e.dataTransfer.files.item(0)
+                                                if (!file || file.type !== 'text/plain') {
+                                                    alert('Vui lòng chọn file .txt chứa ví')
+                                                    return
+                                                }
+                                                const reader = new FileReader()
+                                                reader.onload = (e) => {
+                                                    const content = e.target?.result as string
+                                                    const wallets = content.split('\n').map((line) => line.trim())
+                                                    formAirdrop.setFieldValue('alreadyAirdropWallets', wallets)
+                                                    if (contractScanner.current) {
+                                                        contractScanner.current.alreadyAirdropWallets = wallets.map(w => w.toLowerCase())
+                                                    }
+                                                }
+                                                reader.readAsText(file)
+                                            }}
+                                        >
+                                            {alreadyAirdropWallets.length > 0 ? (
+                                                <Text color={'white'}>{alreadyAirdropWallets.length} ví đã airdrop</Text>
+                                            ) : (
+                                                <Text color={'white'}>Chọn file chứa ví</Text>
+                                            )}
+                                        </Stack>
+                                    </Flex>
                                     {isAirdrop && (
                                         <Form.Item label="Chọn ví" name="walletIndex" required>
                                             <InputNumber

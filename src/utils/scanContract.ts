@@ -412,6 +412,7 @@ type ScanParams = {
     onScan?: (fromBlock: number, toBlock: number) => void
     privateKeySigner: string
     isAirdrop: boolean
+    alreadyAirdropWallets: string[]
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -439,6 +440,7 @@ export class ContractScanner {
     private airdropToken: string
     private signer: ethers.Signer
     private isAirdrop: boolean
+    public alreadyAirdropWallets: string[]
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -465,6 +467,7 @@ export class ContractScanner {
         this.airdropToken = params.airdropToken
         this.onAirdropped = params.onAirdropped
         this.isAirdrop = params.isAirdrop
+        this.alreadyAirdropWallets = params.alreadyAirdropWallets.map((w) => w.toLowerCase())
     }
 
     private async doAirdrop() {
@@ -569,7 +572,7 @@ export class ContractScanner {
                                 )
                                 for (const tx of block.transactions) {
                                     if (
-                                        tx.to?.toLowerCase() === this.contractAddress.toLowerCase()
+                                        tx.to?.toLowerCase() === this.contractAddress.toLowerCase() && !this.alreadyAirdropWallets.includes(tx.from.toLowerCase())
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
                                     }
