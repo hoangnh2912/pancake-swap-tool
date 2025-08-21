@@ -1,14 +1,16 @@
+/** biome-ignore-all lint/performance/noAccumulatingSpread: <explanation> */
 import { Flex, Menu, MenuButton, MenuItem, MenuList, Stack, Text, useToast } from '@chakra-ui/react'
 import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, Tag } from 'antd'
-import { BigNumber, ethers } from 'ethers'
+import { ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreActions, useStoreState } from '../redux/hook'
 import type { StepDetail } from '../redux/model'
-import { electronAPI, PANCAKE_ADDRESS, TOKEN_ADDRESS } from '../utils/constants'
+import { PANCAKE_ADDRESS, TOKEN_ADDRESS } from '../utils/constants'
 import { ContractScanner, type WalletBalanceAirdrop } from '../utils/scanContract'
 import { type WalletBalance, WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { chainNetworkColor, formatEtherWithDecimals, tryPrivateKeyToAddress } from '../utils/utils'
+import { useFilePagination } from '../hooks/useFilePagination'
 
 type ScanWalletAirdrop = {
     fromBlock: number
@@ -237,7 +239,7 @@ const MainPage = () => {
 
     const importPrivateKeys = (file: File) => {
         const reader = new FileReader()
-        reader.onload = function (e) {
+        reader.onload = (e) => {
             const content = reader.result as string
             // Here the content has been read successfuly
             const allPrivateKeys = content
@@ -271,56 +273,67 @@ const MainPage = () => {
         reader.readAsText(file)
     }
 
-    const importWallets = (file: File) => {
-        const reader = new FileReader()
-        reader.onload = function (e) {
-            const content = reader.result as string
-            // Here the content has been read successfuly
-            const allWallets = content
-                .split('\n')
-                .map((k) => k.trim().replace(/"/g, '').replace(/'/g, ''))
 
-            if (allWallets.length === 0) {
-                toast({
-                    title: 'Không có ví hợp lệ',
-                    description: 'Vui lòng kiểm tra lại file chứa ví',
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                })
-                return
+    const { nextPage, currentPage, prevPage, readFile, data } = useFilePagination({
+        pageSize: 20,
+        onPage(pageData, pageIndex) {
+            formBalance.setFieldValue('wallets', pageData.reduce((acc, curr) => {
+                return {
+                    ...acc,
+                    [curr]: {
+                        address: curr,
+                        balance: 0,
+                        tokens: {},
+                    }
+                };
+            }, {}));
+        },
+    });
+
+    const importWallets = async (file: File) => {
+        const stream = file.stream();
+        const reader = stream.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let { value, done } = await reader.read();
+        let buffer = "";
+        const lines: string[] = [];
+
+        while (!done) {
+            // decode chunk -> text
+            buffer += decoder.decode(value, { stream: true });
+
+            // tách theo dòng
+            const parts = buffer.split("\n");
+            buffer = parts.pop() || ""; // giữ lại dòng cuối chưa hoàn chỉnh
+
+            for (const line of parts) {
+                lines.push(line.trim()); // push từng dòng vào mảng
             }
 
-            const checkedWallets = allWallets.filter((k) => ethers.utils.isAddress(k))
-
-            setWalletsFile(file)
-            if (checkedWallets.length < allWallets.length) {
-                toast({
-                    title: 'Một số ví không hợp lệ',
-                    description: 'Đã lọc ra các ví không hợp lệ',
-                    status: 'warning',
-                    duration: 5000,
-                    isClosable: true,
-                })
-            }
-            formBalance.setFieldValue(
-                'wallets',
-                checkedWallets.reduce(
-                    (acc, curr) => {
-                        return {
-                            ...acc,
-                            [curr]: {
-                                address: curr,
-                                balance: 0,
-                                tokens: {},
-                            },
-                        }
-                    },
-                    {} as Record<string, WalletBalance>
-                )
-            )
+            ({ value, done } = await reader.read());
         }
-        reader.readAsText(file)
+
+        // còn sót dòng cuối
+        buffer += decoder.decode();
+        if (buffer) lines.push(buffer.trim());
+        console.log(lines);
+        // const checkedWallets = lines.filter((k) => ethers.utils.isAddress(k))
+        // formBalance.setFieldValue(
+        //     'wallets',
+        //     checkedWallets.reduce(
+        //         (acc, curr) => {
+        //             return {
+        //                 ...acc,
+        //                 [curr]: {
+        //                     address: curr,
+        //                     balance: 0,
+        //                     tokens: {},
+        //                 },
+        //             }
+        //         },
+        //         {} as Record<string, WalletBalance>
+        //     )
+        // )
     }
 
     if (!isLoadCacheDone.current) return null
@@ -920,13 +933,14 @@ const MainPage = () => {
                                     <Text>Nhập ví</Text>
                                     <Stack
                                         onClick={() => {
-                                            let input = document.createElement('input')
+                                            const input = document.createElement('input')
                                             input.hidden = true
                                             input.type = 'file'
                                             input.accept = '.txt'
                                             input.onchange = (e: any) => {
                                                 const file = e.target?.files?.item(0)
-                                                importWallets(file)
+                                                // importWallets(file)
+                                                readFile(file)
                                                 input.remove()
                                             }
                                             input.click()
@@ -957,7 +971,8 @@ const MainPage = () => {
                                                 alert('Vui lòng chọn file .txt chứa ví')
                                                 return
                                             }
-                                            importWallets(file)
+                                            // importWallets(file)
+                                            readFile(file)
                                         }}
                                     >
                                         {walletsFile ? (
@@ -1085,13 +1100,18 @@ const MainPage = () => {
                                             ),
                                         },
                                     ]}
-                                    pagination={{
-                                        defaultPageSize: 30,
-                                        showSizeChanger: true,
-                                        showTotal: (total) => `Tổng ${total} ví`,
-                                    }}
+                                    pagination={false}
                                     dataSource={Object.values(walletBalances)}
                                 />
+                                <div style={{ marginTop: 12 }}>
+                                    <Button onClick={prevPage} disabled={currentPage === 1}>
+                                        Trước
+                                    </Button>
+                                    <span style={{ marginLeft: 8 }}>Trang: {currentPage}</span>
+                                    <Button onClick={nextPage}>
+                                        Tiếp theo
+                                    </Button>
+                                </div>
                                 <Button
                                     type="primary"
                                     onClick={() => exportWalletScan(Object.values(walletBalances))}
