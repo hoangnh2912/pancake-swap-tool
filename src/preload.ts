@@ -10,3 +10,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.send("set-progress-bar", value),
   saveFile: (data: string) => ipcRenderer.send("save-file", data),
 });
+
+// Buffer, TypedArray, or DataView

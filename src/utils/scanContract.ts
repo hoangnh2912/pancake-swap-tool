@@ -391,7 +391,7 @@ const AIRDROP_ABI = [
         "type": "function"
     }
 ]
-export type WalletBalance = {
+export type WalletBalanceAirdrop = {
     address: string;
     native: string;
     tokens: Record<string, string>;
@@ -407,8 +407,8 @@ type ScanParams = {
     airdropToken: string;
     tokens: Record<string, string>;
     options?: { blockChunk?: number; concurrency?: number; interval?: number };
-    onWallet?: (wallet: WalletBalance) => void;
-    onAirdropped?: (wallet: WalletBalance) => void;
+    onWallet?: (wallet: WalletBalanceAirdrop) => void;
+    onAirdropped?: (wallet: WalletBalanceAirdrop) => void;
     storeId: string;
     onScan?: (fromBlock: number, toBlock: number) => void;
     privateKeySigner: string;
@@ -422,8 +422,8 @@ export class ContractScanner {
     private contractAddress: string;
     private tokens: Record<string, string>;
     private options: { blockChunk: number; concurrency: number; interval: number };
-    private onWallet?: (wallet: WalletBalance) => void;
-    private onAirdropped?: (wallet: WalletBalance) => void;
+    private onWallet?: (wallet: WalletBalanceAirdrop) => void;
+    private onAirdropped?: (wallet: WalletBalanceAirdrop) => void;
     private onScan?: (fromBlock: number, toBlock: number) => void;
     private airdropContract: ethers.Contract;
     private airdropTokenContract: ethers.Contract;
@@ -432,7 +432,7 @@ export class ContractScanner {
     private stopped = false;
     public isScanning = false;
     private currentBlock = 0;
-    private walletsBuffer: WalletBalance[] = [];
+    private walletsBuffer: WalletBalanceAirdrop[] = [];
     private airdropAmount: number;
     private airdropToken: string;
     private signer: ethers.Signer;
@@ -527,6 +527,7 @@ export class ContractScanner {
     }
 
     async start() {
+        if (this.isScanning) return;
         console.log("start scan");
         this.stopped = false;
         this.isScanning = true;
@@ -594,7 +595,7 @@ export class ContractScanner {
                                 );
 
                                 if (hasNative || hasToken) {
-                                    const wallet: WalletBalance = {
+                                    const wallet: WalletBalanceAirdrop = {
                                         address: addr,
                                         native: nativeFormatted,
                                         tokens: tokensBalance,

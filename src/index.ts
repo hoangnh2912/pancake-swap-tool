@@ -45,8 +45,9 @@ const createWindow = (): void => {
   });
 
   ipcMain.on("save-file", (event, data) => {
-    const filePath = path.join(__dirname, "output.txt");
-    fs.writeFileSync(filePath, data, "utf8");
+    const { content, filename } = JSON.parse(data);
+    const filePath = path.join(__dirname, filename);
+    fs.writeFileSync(filePath, content, "utf8");
     console.log("File saved:", filePath);
   });
 
