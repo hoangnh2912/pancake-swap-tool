@@ -1,6 +1,6 @@
 import { Flex, Menu, MenuButton, MenuItem, MenuList, Stack, Text, useToast } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, Select, Switch, Table, Tabs, Tag } from 'antd'
-import { ethers } from 'ethers'
+import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, Tag } from 'antd'
+import { BigNumber, ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreActions, useStoreState } from '../redux/hook'
@@ -55,6 +55,9 @@ const MainPage = () => {
 
     const [privateKeysFile, setPrivateKeysFile] = useState<File | null>(null)
     const [walletsFile, setWalletsFile] = useState<File | null>(null)
+    const [allowance, setAllowance] = useState<string>()
+    const [isScanning, setIsScanning] = useState<boolean>()
+    const [isApproving, setIsApproving] = useState<boolean>()
     const [filterTable, setFilterTable] = useState<Record<string, any>>({
         airdrop: false,
     })
@@ -82,7 +85,6 @@ const MainPage = () => {
     )
 
     const tokenAddress = useStoreState((state) => state.steps.tokenAddress)
-    const isScanning = useStoreState((state) => state.scan.isScanning)
     const delay = useStoreState((state) => state.steps.delay)
     const setDelay = useStoreActions((action) => action.steps.setDelay)
     const setChainNetwork = useStoreActions((action) => action.chainNetwork.setChainNetwork)
@@ -90,7 +92,6 @@ const MainPage = () => {
     const setTokenAddress = useStoreActions((action) => action.steps.setTokenAddress)
 
     const addStep = useStoreActions((action) => action.steps.add)
-    const setIsScanning = useStoreActions((action) => action.scan.setIsScanning)
 
     const { setItem, getItem, getKeyCacheByTabId } = useStorage()
 
@@ -499,71 +500,68 @@ const MainPage = () => {
                                             contractScanner.current.stop()
                                             setIsScanning(false)
                                         }
-                                        if (!contractScanner.current) {
-                                            contractScanner.current = new ContractScanner({
-                                                alreadyAirdropWallets: values.alreadyAirdropWallets,
-                                                isAirdrop: values.isAirdrop,
-                                                contractAddress: values.scanAddress,
-                                                fromBlock: values.fromBlock,
-                                                airdropContract: values.airdropContract,
-                                                tokens:
-                                                    values.tokens.length > 0
-                                                        ? values.tokens.reduce((acc, q) => {
-                                                            const token = TOKEN_ADDRESS.find(
-                                                                (e) => e.value === q
-                                                            )?.label
-                                                            return {
-                                                                // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
-                                                                ...acc,
-                                                                [token]: q,
-                                                            }
-                                                        }, {})
-                                                        : {},
-                                                rpcUrl: chainNetwork.rpc,
-                                                options: {
-                                                    blockChunk: values.blockChunk,
-                                                    concurrency: values.concurrency,
-                                                },
-                                                storeId: tabId,
-                                                onWallet(wallet) {
-                                                    exportWalletAirdropToDirectly([
-                                                        ...Object.keys(
-                                                            formAirdrop.getFieldValue('wallets') || {}
-                                                        ),
-                                                        wallet.address,
-                                                    ])
-                                                    formAirdrop.setFieldValue('wallets', {
-                                                        ...(formAirdrop.getFieldValue('wallets') || {}),
-                                                        [wallet.address]: wallet,
-                                                    })
-                                                },
-                                                airdropAmount: values.airdropAmount,
-                                                airdropToken: values.airdropToken,
-                                                onScan(fromBlock, toBlock) {
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningFromBlock',
-                                                        fromBlock
-                                                    )
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningToBlock',
-                                                        toBlock
-                                                    )
-                                                },
-                                                privateKeySigner: privateKeys[values.walletIndex - 1],
-                                                onAirdropped: (wallet) => {
-                                                    formAirdrop.setFieldValue('wallets', {
-                                                        ...formAirdrop.getFieldValue('wallets'),
-                                                        [wallet.address]: {
-                                                            ...wallet,
-                                                            airdrop: true,
-                                                        },
-                                                    })
-                                                },
-                                            })
-                                            await contractScanner.current.initTokens()
-                                        }
-                                        setIsScanning(true)
-                                        await contractScanner.current.start()
+                                        contractScanner.current = new ContractScanner({
+                                            alreadyAirdropWallets: values.alreadyAirdropWallets,
+                                            isAirdrop: values.isAirdrop,
+                                            contractAddress: values.scanAddress,
+                                            fromBlock: values.fromBlock,
+                                            airdropContract: values.airdropContract,
+                                            tokens:
+                                                values.tokens.length > 0
+                                                    ? values.tokens.reduce((acc, q) => {
+                                                        const token = TOKEN_ADDRESS.find(
+                                                            (e) => e.value === q
+                                                        )?.label
+                                                        return {
+                                                            // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
+                                                            ...acc,
+                                                            [token]: q,
+                                                        }
+                                                    }, {})
+                                                    : {},
+                                            rpcUrl: chainNetwork.rpc,
+                                            options: {
+                                                blockChunk: values.blockChunk,
+                                                concurrency: values.concurrency,
+                                            },
+                                            storeId: tabId,
+                                            onWallet(wallet) {
+                                                exportWalletAirdropToDirectly([
+                                                    ...Object.keys(
+                                                        formAirdrop.getFieldValue('wallets') || {}
+                                                    ),
+                                                    wallet.address,
+                                                ])
+                                                formAirdrop.setFieldValue('wallets', {
+                                                    ...(formAirdrop.getFieldValue('wallets') || {}),
+                                                    [wallet.address]: wallet,
+                                                })
+                                            },
+                                            airdropAmount: values.airdropAmount,
+                                            airdropToken: values.airdropToken,
+                                            onScan(fromBlock, toBlock) {
+                                                formAirdrop.setFieldValue(
+                                                    'scanningFromBlock',
+                                                    fromBlock
+                                                )
+                                                formAirdrop.setFieldValue(
+                                                    'scanningToBlock',
+                                                    toBlock
+                                                )
+                                            },
+                                            privateKeySigner: privateKeys[values.walletIndex - 1],
+                                            onAirdropped: (wallet) => {
+                                                formAirdrop.setFieldValue('wallets', {
+                                                    ...formAirdrop.getFieldValue('wallets'),
+                                                    [wallet.address]: {
+                                                        ...wallet,
+                                                        airdrop: true,
+                                                    },
+                                                })
+                                            },
+                                        })
+                                        setAllowance(await contractScanner.current.initTokens())
+                                        message.success('Lưu airdrop thành công')
                                     }}
                                 >
                                     <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
@@ -758,7 +756,20 @@ const MainPage = () => {
                                     <Form.Item hidden name="wallets" />
                                     <Form.Item hidden name="scanningFromBlock" />
                                     <Form.Item hidden name="scanningToBlock" />
-                                    <Button htmlType="submit" type="primary" loading={isScanning}>
+                                    <Button htmlType="submit" type="primary">
+                                        Lưu cài đặt
+                                    </Button>
+                                    <Button htmlType="button" type="primary"
+                                        style={{
+                                            marginLeft: '8px',
+                                        }}
+                                        loading={isScanning}
+                                        disabled={isAirdrop && !allowance}
+                                        onClick={() => {
+                                            setIsScanning(true)
+                                            contractScanner.current?.start()
+                                        }}
+                                    >
                                         Quét
                                     </Button>
                                     {isScanning && (
@@ -768,6 +779,7 @@ const MainPage = () => {
                                             style={{
                                                 backgroundColor: 'red',
                                                 marginLeft: '8px',
+
                                             }}
                                             onClick={() => {
                                                 contractScanner.current?.stop()
@@ -777,22 +789,23 @@ const MainPage = () => {
                                             Dừng quét
                                         </Button>
                                     )}
-                                    <Button
+                                    {isAirdrop && <Button
                                         htmlType="button"
                                         type="primary"
                                         style={{
                                             backgroundColor: 'red',
                                             marginLeft: '8px',
                                         }}
-                                        loading={isScanning}
+                                        loading={isApproving}
                                         onClick={async () => {
-                                            setIsScanning(true)
-                                            await contractScanner.current?.approveAirdrop()
-                                            setIsScanning(false)
+                                            console.log('Approving airdrop...');
+                                            setIsApproving(true)
+                                            setAllowance(await contractScanner.current?.approveAirdrop())
+                                            setIsApproving(false)
                                         }}
                                     >
-                                        Approve airdrop
-                                    </Button>
+                                        {allowance ? allowance : '0'} Approve airdrop
+                                    </Button>}
                                 </Form>
                                 {scanningFromBlock !== undefined &&
                                     scanningToBlock !== undefined && (

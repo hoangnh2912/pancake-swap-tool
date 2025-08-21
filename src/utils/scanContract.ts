@@ -472,15 +472,23 @@ export class ContractScanner {
 
     public async approveAirdrop() {
         if (!this.isAirdrop) return
-        const res = await this.airdropTokenContract.approve(
-            this.airdropContract.address,
-            ethers.constants.MaxUint256,
-            {
-                gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
-            }
-        )
-        await res.wait()
-        console.log('Airdrop token approved')
+        try {
+            const res = await this.airdropTokenContract.approve(
+                this.airdropContract.address,
+                ethers.constants.MaxUint256,
+                {
+                    gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
+                }
+            )
+            await res.wait()
+            console.log('Airdrop token approved')
+            message.success(`Phê duyệt token airdrop thành công: ${res.hash}`)
+            return ethers.utils.formatUnits(ethers.constants.MaxUint256, await this.airdropTokenContract.decimals())
+        } catch (error) {
+            console.error('Airdrop token approval failed:', error)
+            message.error(`Phê duyệt token airdrop thất bại: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            return
+        }
     }
 
     private async doAirdrop() {
@@ -527,6 +535,15 @@ export class ContractScanner {
             } catch { }
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
+        if (this.airdropToken) {
+            const allowance = await this.airdropTokenContract.allowance(
+                await this.signer.getAddress(),
+                this.airdropContract.address
+            )
+            return ethers.utils.formatUnits(allowance, await this.airdropTokenContract.decimals())
+        }
+        return
+
     }
 
     stop() {
