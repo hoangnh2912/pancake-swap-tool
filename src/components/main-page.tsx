@@ -492,6 +492,7 @@ const MainPage = () => {
                                         airdropToken: '0x82a28b2c3e48f25ddf1bef3e27c65838b566423d',
                                         walletIndex: 1,
                                         tokens: [],
+                                        alreadyAirdropWallets: [],
                                     }}
                                     onFinish={async (values) => {
                                         if (contractScanner.current) {
@@ -753,6 +754,7 @@ const MainPage = () => {
                                             options={TOKEN_ADDRESS}
                                         />
                                     </Form.Item>
+                                    <Form.Item hidden name="alreadyAirdropWallets" />
                                     <Form.Item hidden name="wallets" />
                                     <Form.Item hidden name="scanningFromBlock" />
                                     <Form.Item hidden name="scanningToBlock" />
