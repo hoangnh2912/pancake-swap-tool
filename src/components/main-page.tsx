@@ -8,7 +8,7 @@ import {
   Text,
   useToast
 } from "@chakra-ui/react";
-import { Button, Form, Input, InputNumber, Progress, Select, Table, Tabs, Tag } from "antd";
+import { Button, Form, Input, InputNumber, Select, Table, Tabs, Tag } from "antd";
 import { ethers } from "ethers";
 import $ from "jquery";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,7 +16,6 @@ import useStorage from "../hooks/useStorage";
 import { useStoreActions, useStoreState } from "../redux/hook";
 import { StepDetail } from "../redux/model";
 import {
-  electronAPI,
   PANCAKE_ADDRESS,
   TOKEN_ADDRESS,
   ZERO_ADDRESS
@@ -57,6 +56,9 @@ const MainPage = () => {
   ]);
 
   const [privateKeysFile, setPrivateKeysFile] = useState<File | null>(null);
+  const [filterTable, setFilterTable] = useState<Record<string, any>>({
+    airdrop: false,
+  });
 
   const tabId = useStoreState((state) => state.tabId);
   const pairData = useStoreState((state) => state.steps.pairData);
@@ -192,10 +194,10 @@ const MainPage = () => {
     const addresses = Object.values(wallets).map((wallet, idx) => ({
       index: idx + 1,
       address: wallet.address,
-      balance: `${wallet.native} ${chainNetwork.symbol}`,
+      balance: `${chainNetwork.symbol}: ${wallet.native}`,
       tokens: wallet.tokens,
     }));
-    const blob = new Blob([addresses.map(e => `${e.index + 1} ${e.address} ${e.balance} ${Object.entries(e.tokens).map(([k, v]) => `${k}: ${v}`).join(", ")}`).join("\n")], { type: "text/plain" });
+    const blob = new Blob([addresses.map(e => `${e.index} ${e.address} ${e.balance} ${Object.entries(e.tokens).map(([k, v]) => `${k}: ${v}`).join(", ")}`).join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -406,13 +408,13 @@ const MainPage = () => {
             <Form form={form}
               initialValues={{
                 scanAddress: "0xb300000b72DEAEb607a12d5f54773D1C19c7028d", // USDT contract address
-                airdropContract: "0x00", // Airdrop contract address
+                airdropContract: "0xA235bA05F6436dFAD445F2585f520b2eF394b36E", // Airdrop contract address
                 blockChunk: 1000,
                 concurrency: 1,
                 airdropAmount: 1,
-                airdropToken: TOKEN_ADDRESS[0].value,
+                airdropToken: '0x82a28b2c3e48f25ddf1bef3e27c65838b566423d',
                 walletIndex: 1,
-                tokens: [TOKEN_ADDRESS[0]]
+                tokens: []
               }}
               onFinish={async (values) => {
                 contractScanner.current = new ContractScanner({
@@ -433,10 +435,10 @@ const MainPage = () => {
                   },
                   storeId: tabId,
                   onWallet(wallet) {
-                    form.setFieldValue("wallets", [
-                      ...(form.getFieldValue("wallets") || []),
-                      wallet
-                    ]);
+                    form.setFieldValue("wallets", {
+                      ...(form.getFieldValue("wallets")),
+                      [wallet.address]: wallet
+                    });
                   },
                   airdropAmount: values.airdropAmount,
                   airdropToken: values.airdropToken,
@@ -445,11 +447,19 @@ const MainPage = () => {
                     form.setFieldValue("scanningToBlock", toBlock);
                   },
                   privateKeySigner: privateKeys[values.walletIndex - 1],
+                  onAirdropped: (wallet) => {
+                    form.setFieldValue("wallets", {
+                      ...(form.getFieldValue("wallets")),
+                      [wallet.address]: {
+                        ...wallet,
+                        airdrop: true
+                      }
+                    });
+                  }
                 });
                 await contractScanner.current.initTokens();
                 setIsScanning(true);
                 await contractScanner.current.start();
-                setIsScanning(false);
               }}>
               <Form.Item label="Chọn ví" name="walletIndex"
                 required
@@ -588,6 +598,19 @@ const MainPage = () => {
                 {
                   title: "Airdrop",
                   align: "center",
+                  filters: [
+                    {
+                      text: "Đã airdrop",
+                      value: true
+                    },
+                    {
+                      text: "Chưa airdrop",
+                      value: false
+                    }
+                  ],
+                  dataIndex: "airdrop",
+                  filterMultiple: false,
+                  key: "airdrop",
                   render: (_, record) => {
                     const isAirdropped = record.airdrop;
                     return (
@@ -598,7 +621,16 @@ const MainPage = () => {
                   }
                 },
               ]}
-              dataSource={Object.values(wallets)}
+              onChange={(_, filter) => {
+                setFilterTable(prev => filter.airdrop && filter.airdrop.length > 0 ? {
+                  ...prev,
+                  airdrop: filter.airdrop[0]
+                } : {
+                  ...prev,
+                  airdrop: undefined
+                });
+              }}
+              dataSource={Object.values(wallets).filter(e => filterTable.airdrop ? e.airdrop === filterTable.airdrop : true)}
             />
             <Button type="primary"
               onClick={exportWalletScan}

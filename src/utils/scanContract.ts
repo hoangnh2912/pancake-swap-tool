@@ -271,6 +271,7 @@ type ScanParams = {
     tokens: Record<string, string>;
     options?: { blockChunk?: number; concurrency?: number; interval?: number };
     onWallet?: (wallet: WalletBalance) => void;
+    onAirdropped?: (wallet: WalletBalance) => void;
     storeId: string;
     onScan?: (fromBlock: number, toBlock: number) => void;
     privateKeySigner: string;
@@ -284,6 +285,7 @@ export class ContractScanner {
     private tokens: Record<string, string>;
     private options: { blockChunk: number; concurrency: number; interval: number };
     private onWallet?: (wallet: WalletBalance) => void;
+    private onAirdropped?: (wallet: WalletBalance) => void;
     private onScan?: (fromBlock: number, toBlock: number) => void;
     private airdropContract: ethers.Contract;
     private airdropTokenContract: ethers.Contract;
@@ -322,13 +324,11 @@ export class ContractScanner {
         );
         this.airdropAmount = params.airdropAmount;
         this.airdropToken = params.airdropToken;
+        this.onAirdropped = params.onAirdropped;
     }
     private async doAirdrop() {
         if (this.walletsBuffer.length === 0) return;
-        const receivers = await Promise.all(this.walletsBuffer.map(async w => ({
-            address: w.address,
-            isAirdrop: await this.airdropContract.sended(w.address, this.airdropToken)
-        })));
+        const receivers = this.walletsBuffer.map(w => w.address);
         try {
             const approved = await this.airdropTokenContract.allowance(this.airdropContract.address, this.airdropToken);
             if (approved.lt(ethers.utils.parseUnits(this.airdropAmount.toString(), 18))) {
@@ -340,16 +340,17 @@ export class ContractScanner {
             const decimals = await this.airdropTokenContract.decimals();
             const tx = await this.airdropContract.sendMultiERC20(
                 this.airdropToken,
-                receivers.filter(r => !r.isAirdrop).map(r => r.address),
+                receivers,
                 ethers.utils.parseUnits(this.airdropAmount.toString(), decimals)
             );
             await tx.wait();
             console.log("Airdrop done:", tx.hash);
+            this.walletsBuffer.forEach(wallet => this.onAirdropped?.(wallet));
+            this.walletsBuffer = []; // clear after sending
         } catch (err) {
             console.error("Airdrop failed:", err);
         }
 
-        this.walletsBuffer = []; // clear sau khi gửi
     }
     async initTokens() {
         console.log("init tokens");
@@ -394,47 +395,32 @@ export class ContractScanner {
                     const end = Math.min(this.currentBlock + blockChunk - 1, latest);
                     console.log(`Scanning [${this.currentBlock}-${end}]`);
                     this.onScan?.(this.currentBlock, end);
-                    let logs: ethers.providers.Log[] = [];
-                    try {
-                        logs = await this.provider.getLogs({
-                            address: this.contractAddress,
-                            fromBlock: this.currentBlock,
-                            toBlock: end,
-                        });
-                    } catch (e) {
-                        console.warn(
-                            `getLogs failed [${this.currentBlock}-${end}]: ${(e as Error).message}`
-                        );
-                    }
-
                     const counterparties = new Set<string>();
                     const txLimit = pLimit(concurrency);
 
                     await Promise.all(
-                        logs.map((log) =>
+                        new Array(end - this.currentBlock + 1).fill(0).map((_, i) =>
                             txLimit(async () => {
-                                const tx = await this.provider.getTransaction(log.transactionHash);
-                                if (
-                                    tx &&
-                                    tx.to &&
-                                    tx.to.toLowerCase() === this.contractAddress.toLowerCase()
-                                ) {
-                                    counterparties.add(tx.from.toLowerCase());
+                                const block = await this.provider.getBlockWithTransactions(this.currentBlock + i);
+                                for (const tx of block.transactions) {
+                                    if (tx.to?.toLowerCase() === this.contractAddress.toLowerCase()) {
+                                        counterparties.add(tx.from.toLowerCase());
+                                    }
                                 }
                             })
                         )
                     );
-
                     console.log(
-                        `Scanned [${this.currentBlock}-${end}] +${logs.length} logs, found ${counterparties.size} addresses`
+                        `Scanned [${this.currentBlock}-${end}] found ${counterparties.size} addresses`
                     );
-
                     // Balance scan
                     const balLimit = pLimit(concurrency);
                     await Promise.all(
                         Array.from(counterparties).map((addr) =>
                             balLimit(async () => {
                                 if (this.stopped) return;
+                                const isAirdropped = await this.airdropContract.sended(addr, this.airdropToken);
+                                if (isAirdropped) return
                                 const nativeWei = await this.provider.getBalance(addr);
                                 const tokensBalance: Record<string, string> = {};
 
@@ -457,7 +443,7 @@ export class ContractScanner {
                                         address: addr,
                                         native: nativeFormatted,
                                         tokens: tokensBalance,
-                                        airdrop: await this.airdropTokenContract.sended(addr, this.airdropToken),
+                                        airdrop: false,
                                     };
                                     this.walletsBuffer.push(wallet);
                                     this.onWallet?.(wallet);
