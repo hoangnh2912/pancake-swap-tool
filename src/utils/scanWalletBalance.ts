@@ -1,434 +1,444 @@
-import { ethers } from "ethers";
-import pLimit from "p-limit";
+import { ethers } from 'ethers'
+import pLimit from 'p-limit'
 
 const ERC20_ABI = [
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "uint256",
-                "name": "initialSupply",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'initialSupply',
+                type: 'uint256',
+            },
         ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+        stateMutability: 'nonpayable',
+        type: 'constructor',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
+                internalType: 'address',
+                name: 'spender',
+                type: 'address',
             },
             {
-                "internalType": "uint256",
-                "name": "allowance",
-                "type": "uint256"
+                internalType: 'uint256',
+                name: 'allowance',
+                type: 'uint256',
             },
             {
-                "internalType": "uint256",
-                "name": "needed",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'needed',
+                type: 'uint256',
+            },
         ],
-        "name": "ERC20InsufficientAllowance",
-        "type": "error"
+        name: 'ERC20InsufficientAllowance',
+        type: 'error',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
+                internalType: 'address',
+                name: 'sender',
+                type: 'address',
             },
             {
-                "internalType": "uint256",
-                "name": "balance",
-                "type": "uint256"
+                internalType: 'uint256',
+                name: 'balance',
+                type: 'uint256',
             },
             {
-                "internalType": "uint256",
-                "name": "needed",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'needed',
+                type: 'uint256',
+            },
         ],
-        "name": "ERC20InsufficientBalance",
-        "type": "error"
+        name: 'ERC20InsufficientBalance',
+        type: 'error',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "approver",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'approver',
+                type: 'address',
+            },
         ],
-        "name": "ERC20InvalidApprover",
-        "type": "error"
+        name: 'ERC20InvalidApprover',
+        type: 'error',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "receiver",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'receiver',
+                type: 'address',
+            },
         ],
-        "name": "ERC20InvalidReceiver",
-        "type": "error"
+        name: 'ERC20InvalidReceiver',
+        type: 'error',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'sender',
+                type: 'address',
+            },
         ],
-        "name": "ERC20InvalidSender",
-        "type": "error"
+        name: 'ERC20InvalidSender',
+        type: 'error',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'spender',
+                type: 'address',
+            },
         ],
-        "name": "ERC20InvalidSpender",
-        "type": "error"
+        name: 'ERC20InvalidSpender',
+        type: 'error',
     },
     {
-        "anonymous": false,
-        "inputs": [
+        anonymous: false,
+        inputs: [
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
+                indexed: true,
+                internalType: 'address',
+                name: 'owner',
+                type: 'address',
             },
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
+                indexed: true,
+                internalType: 'address',
+                name: 'spender',
+                type: 'address',
             },
             {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
+                indexed: false,
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        "name": "Approval",
-        "type": "event"
+        name: 'Approval',
+        type: 'event',
     },
     {
-        "anonymous": false,
-        "inputs": [
+        anonymous: false,
+        inputs: [
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
+                indexed: true,
+                internalType: 'address',
+                name: 'from',
+                type: 'address',
             },
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
+                indexed: true,
+                internalType: 'address',
+                name: 'to',
+                type: 'address',
             },
             {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
+                indexed: false,
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        "name": "Transfer",
-        "type": "event"
+        name: 'Transfer',
+        type: 'event',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
+                internalType: 'address',
+                name: 'owner',
+                type: 'address',
             },
             {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'spender',
+                type: 'address',
+            },
         ],
-        "name": "allowance",
-        "outputs": [
+        name: 'allowance',
+        outputs: [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
+                internalType: 'address',
+                name: 'spender',
+                type: 'address',
             },
             {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        "name": "approve",
-        "outputs": [
+        name: 'approve',
+        outputs: [
             {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
+                internalType: 'bool',
+                name: '',
+                type: 'bool',
+            },
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        stateMutability: 'nonpayable',
+        type: 'function',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
+                internalType: 'address',
+                name: 'account',
+                type: 'address',
+            },
         ],
-        "name": "balanceOf",
-        "outputs": [
+        name: 'balanceOf',
+        outputs: [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [],
-        "name": "decimals",
-        "outputs": [
+        inputs: [],
+        name: 'decimals',
+        outputs: [
             {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
+                internalType: 'uint8',
+                name: '',
+                type: 'uint8',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [],
-        "name": "name",
-        "outputs": [
+        inputs: [],
+        name: 'name',
+        outputs: [
             {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
+                internalType: 'string',
+                name: '',
+                type: 'string',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [],
-        "name": "symbol",
-        "outputs": [
+        inputs: [],
+        name: 'symbol',
+        outputs: [
             {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
+                internalType: 'string',
+                name: '',
+                type: 'string',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [],
-        "name": "totalSupply",
-        "outputs": [
+        inputs: [],
+        name: 'totalSupply',
+        outputs: [
             {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
         ],
-        "stateMutability": "view",
-        "type": "function"
+        stateMutability: 'view',
+        type: 'function',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
+                internalType: 'address',
+                name: 'to',
+                type: 'address',
             },
             {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        "name": "transfer",
-        "outputs": [
+        name: 'transfer',
+        outputs: [
             {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
+                internalType: 'bool',
+                name: '',
+                type: 'bool',
+            },
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        stateMutability: 'nonpayable',
+        type: 'function',
     },
     {
-        "inputs": [
+        inputs: [
             {
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
+                internalType: 'address',
+                name: 'from',
+                type: 'address',
             },
             {
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
+                internalType: 'address',
+                name: 'to',
+                type: 'address',
             },
             {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        "name": "transferFrom",
-        "outputs": [
+        name: 'transferFrom',
+        outputs: [
             {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
+                internalType: 'bool',
+                name: '',
+                type: 'bool',
+            },
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
+        stateMutability: 'nonpayable',
+        type: 'function',
+    },
 ]
 
 export type WalletBalance = {
-    address: string;
-    native: string;
-    tokens: Record<string, string>;
-};
+    address: string
+    native: string
+    tokens: Record<string, string>
+}
 
 type ScanParams = {
-    rpcUrl: string;
-    tokens: Record<string, string>;
-    options?: { blockChunk?: number; concurrency?: number; interval?: number };
-    onWallet?: (wallet: WalletBalance) => void;
-    storeId: string;
+    rpcUrl: string
+    tokens: Record<string, string>
+    options?: { concurrency?: number; interval?: number }
+    onWallet?: (wallet: WalletBalance) => void
+    storeId: string
     wallets: Record<string, WalletBalance>
-};
+}
 
 export class WalletBalanceScanner {
-    private provider: ethers.providers.JsonRpcProvider;
-    private tokens: Record<string, string>;
-    private options: { concurrency: number; interval: number };
-    private onWallet?: (wallet: WalletBalance) => void;
-    private erc20s: Record<string, { contract: ethers.Contract; decimals: number; symbol: string }> = {};
-    private stopped = false;
-    public isScanning = false;
-    private wallets: Record<string, WalletBalance> = {};
-    private currentAddress?: IteratorResult<string>
+    private provider: ethers.providers.JsonRpcProvider
+    private tokens: Record<string, string>
+    private options: { concurrency: number; interval: number }
+    private onWallet?: (wallet: WalletBalance) => void
+    private erc20s: Record<
+        string,
+        { contract: ethers.Contract; decimals: number; symbol: string }
+    > = {}
+    private stopped = false
+    public isScanning = false
+    private wallets: Record<string, WalletBalance> = {}
 
     constructor(params: ScanParams) {
-        this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
-        this.tokens = params.tokens;
+        this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
+        this.tokens = params.tokens
         this.options = {
             concurrency: params.options?.concurrency ?? 8,
-            interval: params.options?.interval ?? 5000, // ms giữa mỗi vòng quét
-        };
-        this.wallets = params.wallets;
-        this.onWallet = params.onWallet;
+            interval: params.options?.interval ?? 5000, // ms
+        }
+        this.wallets = params.wallets
+        this.onWallet = params.onWallet
     }
 
     async initTokens() {
-        console.log("init tokens");
+        console.log('init tokens')
         for (const [sym, addr] of Object.entries(this.tokens)) {
-            if (!ethers.utils.isAddress(addr)) continue;
-            const c = new ethers.Contract(addr, ERC20_ABI, this.provider);
-            let decimals = 18;
-            let symbol = sym;
+            if (!ethers.utils.isAddress(addr)) continue
+            const c = new ethers.Contract(addr, ERC20_ABI, this.provider)
+            let decimals = 18
+            let symbol = sym
             try {
-                decimals = await c.decimals();
+                decimals = await c.decimals()
             } catch { }
             try {
-                symbol = await c.symbol();
+                symbol = await c.symbol()
             } catch { }
-            this.erc20s[sym] = { contract: c, decimals, symbol };
+            this.erc20s[sym] = { contract: c, decimals, symbol }
         }
     }
 
     stop() {
-        console.log("stop scan");
-        this.stopped = true;
-        this.isScanning = false;
+        console.log('stop scan')
+        this.stopped = true
+        this.isScanning = false
+    }
+
+    private async fetchBalance(addr: string): Promise<WalletBalance | null> {
+        try {
+            const nativeWei = await this.provider.getBalance(addr)
+            const tokensBalance: Record<string, string> = {}
+
+            for (const [sym, t] of Object.entries(this.erc20s)) {
+                let bn = ethers.constants.Zero
+                try {
+                    bn = await t.contract.balanceOf(addr)
+                } catch { }
+                tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
+            }
+
+            const nativeFormatted = ethers.utils.formatEther(nativeWei)
+            const hasNative = !nativeWei.isZero()
+            const hasToken = Object.values(tokensBalance).some(
+                (v) => Number.parseFloat(v) > 0
+            )
+
+            if (hasNative || hasToken) {
+                return { address: addr, native: nativeFormatted, tokens: tokensBalance }
+            }
+        } catch (err) {
+            console.error(`Error fetching ${addr}:`, (err as Error).message)
+        }
+        return null
     }
 
     async start() {
         if (this.isScanning) return
-        console.log("start scan");
-        this.stopped = false;
-        this.isScanning = true;
-        const concurrency = this.options.concurrency;
-        const counterparties = new Set<string>();
-        for (const wallet of Object.values(this.wallets)) {
-            counterparties.add(wallet.address);
-        }
-        this.currentAddress = counterparties.values().next();
-        while (!this.stopped && !this.currentAddress.done) {
-            try {
-                const addr = this.currentAddress.value;
-                const nativeWei = await this.provider.getBalance(addr);
-                const tokensBalance: Record<string, string> = {};
+        console.log('start scan')
+        this.stopped = false
+        this.isScanning = true
+        console.log('this.wallets', Object.values(this.wallets).length);
 
-                for (const [sym, t] of Object.entries(this.erc20s)) {
-                    let bn = ethers.constants.Zero;
-                    try {
-                        bn = await t.contract.balanceOf(addr);
-                    } catch { }
-                    tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals);
+        const addresses = Object.values(this.wallets).map((w) => w.address)
+        const balLimit = pLimit(this.options.concurrency)
+
+        for (const addr of addresses) {
+            if (this.stopped) break
+            const wallet = await balLimit(() => this.fetchBalance(addr))
+            if (wallet) {
+                this.wallets = {
+                    ...(({ [addr]: _, ...rest }) => rest)(this.wallets),
                 }
-
-                const nativeFormatted = ethers.utils.formatEther(nativeWei);
-                const hasNative = !nativeWei.isZero();
-                const hasToken = Object.values(tokensBalance).some(
-                    (v) => parseFloat(v) > 0
-                );
-
-                if (hasNative || hasToken) {
-                    const wallet: WalletBalance = {
-                        address: addr,
-                        native: nativeFormatted,
-                        tokens: tokensBalance,
-                    };
-                    delete this.wallets[addr];
-                    this.onWallet?.(wallet);
-                }
-            } catch (err) {
-                console.error("Loop error:", (err as Error).message);
+                this.onWallet?.(wallet)
             }
-            this.currentAddress = counterparties.values().next();
         }
-        console.log("Scanner stopped");
-        this.isScanning = false;
+
+        // sau 1 vòng quét nếu vẫn còn ví -> lặp lại
+        if (!this.stopped && Object.keys(this.wallets).length > 0) {
+            setTimeout(() => this.start(), this.options.interval)
+        } else {
+            this.stop()
+        }
     }
 }

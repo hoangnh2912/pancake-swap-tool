@@ -1,30 +1,30 @@
 const useStorage = () => {
-  const setItem = (key: string, value: Object) => {
-    localStorage.setItem(key, JSON.stringify(value));
-  };
-
-  const getItem = <T>(key: string) => {
-    try {
-      return JSON.parse(localStorage.getItem(key)) as T;
-    } catch (error) {
-      return null;
+    const setItem = (key: string, value: Object) => {
+        localStorage.setItem(key, JSON.stringify(value))
     }
-  };
 
-  const getKeyCacheByTabId = (tabId: string) => {
-    return `cache-${tabId}`;
-  };
+    const getItem = <T>(key: string) => {
+        try {
+            return JSON.parse(localStorage.getItem(key)) as T
+        } catch (error) {
+            return null
+        }
+    }
 
-  const removeItem = (key: string) => {
-    localStorage.removeItem(key);
-  };
+    const getKeyCacheByTabId = (tabId: string) => {
+        return `cache-${tabId}`
+    }
 
-  return {
-    setItem,
-    getItem,
-    removeItem,
-    getKeyCacheByTabId,
-  };
-};
+    const removeItem = (key: string) => {
+        localStorage.removeItem(key)
+    }
 
-export default useStorage;
+    return {
+        setItem,
+        getItem,
+        removeItem,
+        getKeyCacheByTabId,
+    }
+}
+
+export default useStorage
