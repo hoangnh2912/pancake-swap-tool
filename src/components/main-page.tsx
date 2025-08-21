@@ -217,21 +217,21 @@ const MainPage = () => {
     }
 
     const exportWalletAirdropToDirectly = (allWallet: string[]) => {
-        electronAPI?.saveFile(
-            JSON.stringify({
-                filename: `wallet_airdrop_${tabId}.txt`,
-                content: allWallet.join('\n'),
-            })
-        )
+        // electronAPI?.saveFile(
+        //     JSON.stringify({
+        //         filename: `wallet_airdrop_${tabId}.txt`,
+        //         content: allWallet.join('\n'),
+        //     })
+        // )
     }
 
     const exportWalletBalanceToDirectly = (allWallet: string[]) => {
-        electronAPI?.saveFile(
-            JSON.stringify({
-                filename: `wallet_balance_${tabId}.txt`,
-                content: allWallet.join('\n'),
-            })
-        )
+        // electronAPI?.saveFile(
+        //     JSON.stringify({
+        //         filename: `wallet_balance_${tabId}.txt`,
+        //         content: allWallet.join('\n'),
+        //     })
+        // )
     }
 
     const importPrivateKeys = (file: File) => {
@@ -777,6 +777,22 @@ const MainPage = () => {
                                             Dừng quét
                                         </Button>
                                     )}
+                                    <Button
+                                        htmlType="button"
+                                        type="primary"
+                                        style={{
+                                            backgroundColor: 'red',
+                                            marginLeft: '8px',
+                                        }}
+                                        loading={isScanning}
+                                        onClick={async () => {
+                                            setIsScanning(true)
+                                            await contractScanner.current?.approveAirdrop()
+                                            setIsScanning(false)
+                                        }}
+                                    >
+                                        Approve airdrop
+                                    </Button>
                                 </Form>
                                 {scanningFromBlock !== undefined &&
                                     scanningToBlock !== undefined && (

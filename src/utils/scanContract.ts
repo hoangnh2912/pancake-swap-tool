@@ -470,6 +470,19 @@ export class ContractScanner {
         this.alreadyAirdropWallets = params.alreadyAirdropWallets.map((w) => w.toLowerCase())
     }
 
+    public async approveAirdrop() {
+        if (!this.isAirdrop) return
+        const res = await this.airdropTokenContract.approve(
+            this.airdropContract.address,
+            ethers.constants.MaxUint256,
+            {
+                gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
+            }
+        )
+        await res.wait()
+        console.log('Airdrop token approved')
+    }
+
     private async doAirdrop() {
         if (!this.isAirdrop) return
         if (this.walletsBuffer.length === 0) return
@@ -477,23 +490,6 @@ export class ContractScanner {
         const receivers = this.walletsBuffer.map((w) => w.address)
         try {
             const decimals = await this.airdropTokenContract.decimals()
-            const approved = await this.airdropTokenContract.allowance(
-                this.airdropContract.address,
-                this.airdropToken
-            )
-            console.log('approved:', approved)
-            if (approved.lt(ethers.utils.parseUnits(this.airdropAmount.toString(), decimals))) {
-                console.log('Approving airdrop token...')
-                const res = await this.airdropTokenContract.approve(
-                    this.airdropContract.address,
-                    ethers.constants.MaxUint256,
-                    {
-                        gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
-                    }
-                )
-                await res.wait()
-                console.log('Airdrop token approved')
-            }
             console.log(`Airdrop ${receivers.length} wallets...`)
             const tx = await this.airdropContract.sendMultiERC20(
                 this.airdropToken,
