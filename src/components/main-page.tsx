@@ -630,6 +630,11 @@ const MainPage = () => {
                   airdrop: undefined
                 });
               }}
+              pagination={{
+                defaultPageSize: 30,
+                showSizeChanger: true,
+                showTotal: (total) => `Tổng ${total} ví`
+              }}
               dataSource={Object.values(wallets).filter(e => filterTable.airdrop ? e.airdrop === filterTable.airdrop : true)}
             />
             <Button type="primary"

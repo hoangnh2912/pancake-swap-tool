@@ -21,8 +21,7 @@ const createWindow = (): void => {
   mainWindow = new BrowserWindow({
     center: true,
     webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
+      contextIsolation: true,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
     width: 1280,

@@ -1,3 +1,4 @@
+import { message } from "antd/es";
 import { ethers } from "ethers";
 import pLimit from "p-limit";
 
@@ -328,10 +329,12 @@ export class ContractScanner {
     }
     private async doAirdrop() {
         if (this.walletsBuffer.length === 0) return;
+        message.info(`Bắt đầu airdrop cho ${this.walletsBuffer.length} ví`);
         const receivers = this.walletsBuffer.map(w => w.address);
         try {
             const approved = await this.airdropTokenContract.allowance(this.airdropContract.address, this.airdropToken);
             if (approved.lt(ethers.utils.parseUnits(this.airdropAmount.toString(), 18))) {
+                console.log('Approving airdrop token...');
                 const res = await this.airdropTokenContract.approve(this.airdropContract.address, ethers.constants.MaxUint256);
                 await res.wait();
                 console.log("Airdrop token approved");
@@ -345,9 +348,11 @@ export class ContractScanner {
             );
             await tx.wait();
             console.log("Airdrop done:", tx.hash);
+            message.success(`Airdrop thành công: ${tx.hash}, cho ${this.walletsBuffer.length} ví`);
             this.walletsBuffer.forEach(wallet => this.onAirdropped?.(wallet));
             this.walletsBuffer = []; // clear after sending
         } catch (err) {
+            message.error(`Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`);
             console.error("Airdrop failed:", err);
         }
 
@@ -394,6 +399,7 @@ export class ContractScanner {
                 while (this.currentBlock <= latest && !this.stopped) {
                     const end = Math.min(this.currentBlock + blockChunk - 1, latest);
                     console.log(`Scanning [${this.currentBlock}-${end}]`);
+                    message.info(`Bắt đầu quét từ block ${this.currentBlock} đến ${end}`);
                     this.onScan?.(this.currentBlock, end);
                     const counterparties = new Set<string>();
                     const txLimit = pLimit(concurrency);
@@ -413,6 +419,7 @@ export class ContractScanner {
                     console.log(
                         `Scanned [${this.currentBlock}-${end}] found ${counterparties.size} addresses`
                     );
+                    message.info(`Quét từ block ${this.currentBlock} đến ${end}, tìm thấy ${counterparties.size} ví, đang tiến hành quét balance`);
                     // Balance scan
                     const balLimit = pLimit(concurrency);
                     await Promise.all(
