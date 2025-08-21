@@ -4,6 +4,103 @@ import pLimit from "p-limit";
 
 const ERC20_ABI = [
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "initialSupply",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "allowance",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "needed",
+                "type": "uint256"
+            }
+        ],
+        "name": "ERC20InsufficientAllowance",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "balance",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "needed",
+                "type": "uint256"
+            }
+        ],
+        "name": "ERC20InsufficientBalance",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "approver",
+                "type": "address"
+            }
+        ],
+        "name": "ERC20InvalidApprover",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "receiver",
+                "type": "address"
+            }
+        ],
+        "name": "ERC20InvalidReceiver",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            }
+        ],
+        "name": "ERC20InvalidSender",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "spender",
+                "type": "address"
+            }
+        ],
+        "name": "ERC20InvalidSpender",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -115,6 +212,45 @@ const ERC20_ABI = [
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
             }
         ],
         "stateMutability": "view",
@@ -276,6 +412,7 @@ type ScanParams = {
     storeId: string;
     onScan?: (fromBlock: number, toBlock: number) => void;
     privateKeySigner: string;
+    isAirdrop: boolean;
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -299,6 +436,7 @@ export class ContractScanner {
     private airdropAmount: number;
     private airdropToken: string;
     private signer: ethers.Signer;
+    private isAirdrop: boolean;
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
@@ -309,42 +447,50 @@ export class ContractScanner {
             concurrency: params.options?.concurrency ?? 8,
             interval: params.options?.interval ?? 5000, // ms giữa mỗi vòng quét
         };
-        this.signer = new ethers.Wallet(params.privateKeySigner, this.provider);
+        this.signer = params.privateKeySigner ? new ethers.Wallet(params.privateKeySigner, this.provider) : undefined;
         this.onWallet = params.onWallet;
         this.onScan = params.onScan;
         this.currentBlock = params.fromBlock ?? 0;
-        this.airdropContract = new ethers.Contract(
+        this.airdropContract = params.airdropContract ? new ethers.Contract(
             params.airdropContract,
             AIRDROP_ABI,
             this.signer
-        );
-        this.airdropTokenContract = new ethers.Contract(
+        ) : undefined;
+        this.airdropTokenContract = params.airdropToken ? new ethers.Contract(
             params.airdropToken,
             ERC20_ABI,
             this.signer
-        );
+        ) : undefined;
         this.airdropAmount = params.airdropAmount;
         this.airdropToken = params.airdropToken;
         this.onAirdropped = params.onAirdropped;
+        this.isAirdrop = params.isAirdrop;
     }
+
     private async doAirdrop() {
+        if (!this.isAirdrop) return;
         if (this.walletsBuffer.length === 0) return;
         message.info(`Bắt đầu airdrop cho ${this.walletsBuffer.length} ví`);
         const receivers = this.walletsBuffer.map(w => w.address);
         try {
+            const decimals = await this.airdropTokenContract.decimals();
             const approved = await this.airdropTokenContract.allowance(this.airdropContract.address, this.airdropToken);
-            if (approved.lt(ethers.utils.parseUnits(this.airdropAmount.toString(), 18))) {
+            console.log('approved:', approved);
+            if (approved.lt(ethers.utils.parseUnits(this.airdropAmount.toString(), decimals))) {
                 console.log('Approving airdrop token...');
-                const res = await this.airdropTokenContract.approve(this.airdropContract.address, ethers.constants.MaxUint256);
+                const res = await this.airdropTokenContract.approve(this.airdropContract.address, ethers.constants.MaxUint256, {
+                    gasPrice: ethers.utils.parseUnits("0.1", "gwei"),
+                });
                 await res.wait();
                 console.log("Airdrop token approved");
             }
             console.log(`Airdrop ${receivers.length} wallets...`);
-            const decimals = await this.airdropTokenContract.decimals();
             const tx = await this.airdropContract.sendMultiERC20(
                 this.airdropToken,
                 receivers,
-                ethers.utils.parseUnits(this.airdropAmount.toString(), decimals)
+                ethers.utils.parseUnits(this.airdropAmount.toString(), decimals), {
+                gasPrice: ethers.utils.parseUnits("0.1", "gwei"),
+            }
             );
             await tx.wait();
             console.log("Airdrop done:", tx.hash);
@@ -426,8 +572,10 @@ export class ContractScanner {
                         Array.from(counterparties).map((addr) =>
                             balLimit(async () => {
                                 if (this.stopped) return;
-                                const isAirdropped = await this.airdropContract.sended(addr, this.airdropToken);
-                                if (isAirdropped) return
+                                if (this.isAirdrop) {
+                                    const isAirdropped = await this.airdropContract.sended(addr, this.airdropToken);
+                                    if (isAirdropped) return;
+                                }
                                 const nativeWei = await this.provider.getBalance(addr);
                                 const tokensBalance: Record<string, string> = {};
 

@@ -8,7 +8,7 @@ import {
   Text,
   useToast
 } from "@chakra-ui/react";
-import { Button, Form, Input, InputNumber, Select, Table, Tabs, Tag } from "antd";
+import { Button, Form, Input, InputNumber, Select, Switch, Table, Tabs, Tag } from "antd";
 import { ethers } from "ethers";
 import $ from "jquery";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,6 +41,7 @@ type ScanWallet = {
   airdropAmount: number;
   airdropToken: string;
   walletIndex: number;
+  isAirdrop: boolean;
 }
 
 const MainPage = () => {
@@ -51,6 +52,7 @@ const MainPage = () => {
   const scanningFromBlock = Form.useWatch("scanningFromBlock", form);
   const scanningToBlock = Form.useWatch("scanningToBlock", form);
   const walletIndex = Form.useWatch("walletIndex", form) || 1;
+  const isAirdrop = !!Form.useWatch("isAirdrop", form);
   const [privateKeys, setPrivateKeys] = useState([
     "4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042",
   ]);
@@ -417,7 +419,13 @@ const MainPage = () => {
                 tokens: []
               }}
               onFinish={async (values) => {
+                if (contractScanner.current) {
+                  contractScanner.current.stop();
+                  setIsScanning(false);
+                  delete contractScanner.current;
+                }
                 contractScanner.current = new ContractScanner({
+                  isAirdrop: values.isAirdrop,
                   contractAddress: values.scanAddress,
                   fromBlock: values.fromBlock,
                   airdropContract: values.airdropContract,
@@ -461,14 +469,17 @@ const MainPage = () => {
                 setIsScanning(true);
                 await contractScanner.current.start();
               }}>
-              <Form.Item label="Chọn ví" name="walletIndex"
+              <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
+                <Switch />
+              </Form.Item>
+              {isAirdrop && <Form.Item label="Chọn ví" name="walletIndex"
                 required
               >
                 <InputNumber
                   placeholder="Chọn ví theo thứ tự"
                   defaultValue={1}
                 />
-              </Form.Item>
+              </Form.Item>}
               {walletIndex && privateKeys.length > 0 && privateKeys[walletIndex - 1] && <Text
                 style={{
                   marginBottom: '10px',
@@ -487,33 +498,37 @@ const MainPage = () => {
                   placeholder="Nhập địa chỉ quét"
                 />
               </Form.Item>
-              <Form.Item label="Địa chỉ airdrop" name="airdropContract" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
-                validator: async (_, value) => {
-                  if (!ethers.utils.isAddress(value)) {
-                    return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+
+              {isAirdrop && <>
+                <Form.Item label="Địa chỉ airdrop" name="airdropContract" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
+                  validator: async (_, value) => {
+                    if (!ethers.utils.isAddress(value)) {
+                      return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+                    }
                   }
-                }
-              }]}>
-                <Input
-                  placeholder="Nhập địa chỉ airdrop"
-                />
-              </Form.Item>
-              <Form.Item label="Địa chỉ token airdrop" name="airdropToken" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
-                validator: async (_, value) => {
-                  if (!ethers.utils.isAddress(value)) {
-                    return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+                }]}>
+                  <Input
+                    placeholder="Nhập địa chỉ airdrop"
+                  />
+                </Form.Item>
+                <Form.Item label="Địa chỉ token airdrop" name="airdropToken" rules={[{ required: true, message: "Vui lòng nhập địa chỉ quét" }, {
+                  validator: async (_, value) => {
+                    if (!ethers.utils.isAddress(value)) {
+                      return Promise.reject(new Error("Địa chỉ quét không hợp lệ"));
+                    }
                   }
-                }
-              }]}>
-                <Input
-                  placeholder="Nhập địa chỉ token airdrop"
-                />
-              </Form.Item>
-              <Form.Item label="Số lượng airdrop" name="airdropAmount" >
-                <InputNumber
-                  placeholder="Nhập số lượng airdrop"
-                />
-              </Form.Item>
+                }]}>
+                  <Input
+                    placeholder="Nhập địa chỉ token airdrop"
+                  />
+                </Form.Item>
+                <Form.Item label="Số lượng airdrop" name="airdropAmount" >
+                  <InputNumber
+                    placeholder="Nhập số lượng airdrop"
+                  />
+                </Form.Item>
+              </>}
+
               <Form.Item label="Kích thước quét block" name="blockChunk">
                 <InputNumber
                   min={1}
