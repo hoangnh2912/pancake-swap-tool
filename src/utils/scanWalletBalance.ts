@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import pLimit from 'p-limit'
+import { electronAPI } from './constants'
 
 const ERC20_ABI = [
     {
@@ -333,23 +334,19 @@ type ScanParams = {
     rpcUrl: string
     tokens: Record<string, string>
     options?: { concurrency?: number; interval?: number }
-    onWallet?: (wallet: WalletBalance) => void
     storeId: string
-    wallets: Record<string, WalletBalance>
 }
 
 export class WalletBalanceScanner {
     private provider: ethers.providers.JsonRpcProvider
     private tokens: Record<string, string>
     private options: { concurrency: number; interval: number }
-    private onWallet?: (wallet: WalletBalance) => void
     private erc20s: Record<
         string,
         { contract: ethers.Contract; decimals: number; symbol: string }
     > = {}
     private stopped = false
     public isScanning = false
-    private wallets: Record<string, WalletBalance> = {}
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -358,8 +355,6 @@ export class WalletBalanceScanner {
             concurrency: params.options?.concurrency ?? 8,
             interval: params.options?.interval ?? 5000, // ms
         }
-        this.wallets = params.wallets
-        this.onWallet = params.onWallet
     }
 
     async initTokens() {
@@ -371,10 +366,10 @@ export class WalletBalanceScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch { }
+            } catch {}
             try {
                 symbol = await c.symbol()
-            } catch { }
+            } catch {}
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
     }
@@ -394,15 +389,13 @@ export class WalletBalanceScanner {
                 let bn = ethers.constants.Zero
                 try {
                     bn = await t.contract.balanceOf(addr)
-                } catch { }
+                } catch {}
                 tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
             }
 
             const nativeFormatted = ethers.utils.formatEther(nativeWei)
             const hasNative = !nativeWei.isZero()
-            const hasToken = Object.values(tokensBalance).some(
-                (v) => Number.parseFloat(v) > 0
-            )
+            const hasToken = Object.values(tokensBalance).some((v) => Number.parseFloat(v) > 0)
 
             if (hasNative || hasToken) {
                 return { address: addr, native: nativeFormatted, tokens: tokensBalance }
@@ -418,27 +411,18 @@ export class WalletBalanceScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
-        console.log('this.wallets', Object.values(this.wallets).length);
-
-        const addresses = Object.values(this.wallets).map((w) => w.address)
+        const addresses = await electronAPI.readSheet('Balance')
         const balLimit = pLimit(this.options.concurrency)
 
         for (const addr of addresses) {
             if (this.stopped) break
             const wallet = await balLimit(() => this.fetchBalance(addr))
-            if (wallet) {
-                this.wallets = {
-                    ...(({ [addr]: _, ...rest }) => rest)(this.wallets),
-                }
-                this.onWallet?.(wallet)
-            }
+            await electronAPI.writeBalance(
+                wallet.address,
+                JSON.stringify(wallet.tokens),
+                wallet.native
+            )
         }
-
-        // sau 1 vòng quét nếu vẫn còn ví -> lặp lại
-        if (!this.stopped && Object.keys(this.wallets).length > 0) {
-            setTimeout(() => this.start(), this.options.interval)
-        } else {
-            this.stop()
-        }
+        this.stop()
     }
 }

@@ -19,7 +19,7 @@ const tryPrivateKeyToAddress = (privateKey: string) => {
     }
 }
 
-const formatEtherWithDecimals = (value: ethers.BigNumberish, decimals: number = 4) => {
+const formatEtherWithDecimals = (value: ethers.BigNumberish, decimals = 4) => {
     const valueString = ethers.utils.formatEther(value)
 
     if (valueString.split('.')[1].length <= decimals) {

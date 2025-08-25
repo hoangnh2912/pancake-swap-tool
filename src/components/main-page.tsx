@@ -1,38 +1,32 @@
-/** biome-ignore-all lint/performance/noAccumulatingSpread: <explanation> */
 import { Flex, Menu, MenuButton, MenuItem, MenuList, Stack, Text, useToast } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, Tag } from 'antd'
+import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, } from 'antd'
 import { ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreActions, useStoreState } from '../redux/hook'
 import type { StepDetail } from '../redux/model'
 import { PANCAKE_ADDRESS, TOKEN_ADDRESS } from '../utils/constants'
-import { ContractScanner, type WalletBalanceAirdrop } from '../utils/scanContract'
+import { ContractScanner, } from '../utils/scanContract'
 import { type WalletBalance, WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { chainNetworkColor, formatEtherWithDecimals, tryPrivateKeyToAddress } from '../utils/utils'
-import { useFilePagination } from '../hooks/useFilePagination'
 
 type ScanWalletAirdrop = {
     fromBlock: number
     scanAddress: string
-    airdropContract: string
     concurrency: number
     blockChunk: number
     tokens: string[]
-    wallets: Record<string, WalletBalanceAirdrop>
     scanningFromBlock: number
     scanningToBlock: number
     airdropAmount: number
     airdropToken: string
     walletIndex: number
     isAirdrop: boolean
-    alreadyAirdropWallets: string[]
 }
 
 type ScanWalletBalance = {
     concurrency: number
     tokens: string[]
-    wallets: Record<string, WalletBalance>
 }
 
 const MainPage = () => {
@@ -42,12 +36,10 @@ const MainPage = () => {
     const contractScanner = useRef<ContractScanner | null>(null)
     const walletBalanceScanner = useRef<WalletBalanceScanner | null>(null)
 
-    const walletAirdrops = Form.useWatch('wallets', formAirdrop) || {}
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formAirdrop)
     const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
     const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
-    const alreadyAirdropWallets = Form.useWatch('alreadyAirdropWallets', formAirdrop) || []
 
     const walletBalances = Form.useWatch('wallets', formBalance) || {}
 
@@ -56,13 +48,9 @@ const MainPage = () => {
     ])
 
     const [privateKeysFile, setPrivateKeysFile] = useState<File | null>(null)
-    const [walletsFile, setWalletsFile] = useState<File | null>(null)
     const [allowance, setAllowance] = useState<string>()
     const [isScanning, setIsScanning] = useState<boolean>()
     const [isApproving, setIsApproving] = useState<boolean>()
-    const [filterTable, setFilterTable] = useState<Record<string, any>>({
-        airdrop: false,
-    })
 
     const tabId = useStoreState((state) => state.tabId)
     const stepData = useStoreState((state) => state.steps.data)
@@ -219,24 +207,6 @@ const MainPage = () => {
         URL.revokeObjectURL(url)
     }
 
-    const exportWalletAirdropToDirectly = (allWallet: string[]) => {
-        // electronAPI?.saveFile(
-        //     JSON.stringify({
-        //         filename: `wallet_airdrop_${tabId}.txt`,
-        //         content: allWallet.join('\n'),
-        //     })
-        // )
-    }
-
-    const exportWalletBalanceToDirectly = (allWallet: string[]) => {
-        // electronAPI?.saveFile(
-        //     JSON.stringify({
-        //         filename: `wallet_balance_${tabId}.txt`,
-        //         content: allWallet.join('\n'),
-        //     })
-        // )
-    }
-
     const importPrivateKeys = (file: File) => {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -271,69 +241,6 @@ const MainPage = () => {
             onSaveLocalCache()
         }
         reader.readAsText(file)
-    }
-
-
-    const { nextPage, currentPage, prevPage, readFile, data } = useFilePagination({
-        pageSize: 20,
-        onPage(pageData, pageIndex) {
-            formBalance.setFieldValue('wallets', pageData.reduce((acc, curr) => {
-                return {
-                    ...acc,
-                    [curr]: {
-                        address: curr,
-                        balance: 0,
-                        tokens: {},
-                    }
-                };
-            }, {}));
-        },
-    });
-
-    const importWallets = async (file: File) => {
-        const stream = file.stream();
-        const reader = stream.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let { value, done } = await reader.read();
-        let buffer = "";
-        const lines: string[] = [];
-
-        while (!done) {
-            // decode chunk -> text
-            buffer += decoder.decode(value, { stream: true });
-
-            // tách theo dòng
-            const parts = buffer.split("\n");
-            buffer = parts.pop() || ""; // giữ lại dòng cuối chưa hoàn chỉnh
-
-            for (const line of parts) {
-                lines.push(line.trim()); // push từng dòng vào mảng
-            }
-
-            ({ value, done } = await reader.read());
-        }
-
-        // còn sót dòng cuối
-        buffer += decoder.decode();
-        if (buffer) lines.push(buffer.trim());
-        console.log(lines);
-        // const checkedWallets = lines.filter((k) => ethers.utils.isAddress(k))
-        // formBalance.setFieldValue(
-        //     'wallets',
-        //     checkedWallets.reduce(
-        //         (acc, curr) => {
-        //             return {
-        //                 ...acc,
-        //                 [curr]: {
-        //                     address: curr,
-        //                     balance: 0,
-        //                     tokens: {},
-        //                 },
-        //             }
-        //         },
-        //         {} as Record<string, WalletBalance>
-        //     )
-        // )
     }
 
     if (!isLoadCacheDone.current) return null
@@ -498,15 +405,12 @@ const MainPage = () => {
                                     form={formAirdrop}
                                     initialValues={{
                                         scanAddress: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d', // USDT contract address
-                                        airdropContract:
-                                            '0xA235bA05F6436dFAD445F2585f520b2eF394b36E', // Airdrop contract address
                                         blockChunk: 1000,
                                         concurrency: 1,
                                         airdropAmount: 1,
                                         airdropToken: '0x82a28b2c3e48f25ddf1bef3e27c65838b566423d',
                                         walletIndex: 1,
                                         tokens: [],
-                                        alreadyAirdropWallets: [],
                                     }}
                                     onFinish={async (values) => {
                                         if (contractScanner.current) {
@@ -514,11 +418,9 @@ const MainPage = () => {
                                             setIsScanning(false)
                                         }
                                         contractScanner.current = new ContractScanner({
-                                            alreadyAirdropWallets: values.alreadyAirdropWallets,
                                             isAirdrop: values.isAirdrop,
                                             contractAddress: values.scanAddress,
                                             fromBlock: values.fromBlock,
-                                            airdropContract: values.airdropContract,
                                             tokens:
                                                 values.tokens.length > 0
                                                     ? values.tokens.reduce((acc, q) => {
@@ -526,7 +428,6 @@ const MainPage = () => {
                                                             (e) => e.value === q
                                                         )?.label
                                                         return {
-                                                            // biome-ignore lint/performance/noAccumulatingSpread: <explanation>
                                                             ...acc,
                                                             [token]: q,
                                                         }
@@ -538,18 +439,6 @@ const MainPage = () => {
                                                 concurrency: values.concurrency,
                                             },
                                             storeId: tabId,
-                                            onWallet(wallet) {
-                                                exportWalletAirdropToDirectly([
-                                                    ...Object.keys(
-                                                        formAirdrop.getFieldValue('wallets') || {}
-                                                    ),
-                                                    wallet.address,
-                                                ])
-                                                formAirdrop.setFieldValue('wallets', {
-                                                    ...(formAirdrop.getFieldValue('wallets') || {}),
-                                                    [wallet.address]: wallet,
-                                                })
-                                            },
                                             airdropAmount: values.airdropAmount,
                                             airdropToken: values.airdropToken,
                                             onScan(fromBlock, toBlock) {
@@ -563,15 +452,6 @@ const MainPage = () => {
                                                 )
                                             },
                                             privateKeySigner: privateKeys[values.walletIndex - 1],
-                                            onAirdropped: (wallet) => {
-                                                formAirdrop.setFieldValue('wallets', {
-                                                    ...formAirdrop.getFieldValue('wallets'),
-                                                    [wallet.address]: {
-                                                        ...wallet,
-                                                        airdrop: true,
-                                                    },
-                                                })
-                                            },
                                         })
                                         setAllowance(await contractScanner.current.initTokens())
                                         message.success('Lưu airdrop thành công')
@@ -580,77 +460,6 @@ const MainPage = () => {
                                     <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
                                         <Switch />
                                     </Form.Item>
-                                    <Flex gap={'5px'} alignItems={'center'}>
-                                        <Text>Nhập ví đã airdrop</Text>
-                                        <Stack
-                                            onClick={() => {
-                                                let input = document.createElement('input')
-                                                input.hidden = true
-                                                input.type = 'file'
-                                                input.accept = '.txt'
-                                                input.onchange = (e: any) => {
-                                                    const file = e.target?.files?.item(0)
-                                                    if (file) {
-                                                        const reader = new FileReader()
-                                                        reader.onload = (e) => {
-                                                            const content = e.target?.result as string
-                                                            const wallets = content.split('\n').map((line) => line.trim())
-                                                            formAirdrop.setFieldValue('alreadyAirdropWallets', wallets)
-                                                            if (contractScanner.current) {
-                                                                contractScanner.current.alreadyAirdropWallets = wallets.map(w => w.toLowerCase())
-                                                            }
-                                                        }
-                                                        reader.readAsText(file)
-                                                    }
-                                                    input.remove()
-                                                }
-                                                input.click()
-                                            }}
-                                            w={'300px'}
-                                            h={'20px'}
-                                            justifyContent="center"
-                                            alignItems="center"
-                                            borderRadius="lg"
-                                            overflow="hidden"
-                                            _hover={{
-                                                bg: '#0D166D',
-                                            }}
-                                            border="2px dashed gray"
-                                            bg="#0D164D"
-                                            style={{
-                                                aspectRatio: '2.5',
-                                            }}
-                                            cursor="pointer"
-                                            onDragEnter={onDragEnter}
-                                            onDragOver={onDragOver}
-                                            onDragLeave={onDragLeave}
-                                            onDrop={(e) => {
-                                                e.preventDefault()
-                                                e.stopPropagation()
-                                                const file = e.dataTransfer.files.item(0)
-                                                if (!file || file.type !== 'text/plain') {
-                                                    alert('Vui lòng chọn file .txt chứa ví')
-                                                    return
-                                                }
-                                                const reader = new FileReader()
-                                                reader.onload = (e) => {
-                                                    const content = e.target?.result as string
-                                                    const wallets = content.split('\n').map((line) => line.trim())
-                                                    formAirdrop.setFieldValue('alreadyAirdropWallets', wallets)
-                                                    if (contractScanner.current) {
-                                                        contractScanner.current.alreadyAirdropWallets = wallets.map(w => w.toLowerCase())
-                                                    }
-                                                }
-                                                reader.readAsText(file)
-                                            }}
-                                        >
-                                            {alreadyAirdropWallets.length > 0 ? (
-                                                <Text color={'white'}>{alreadyAirdropWallets.length} ví đã airdrop</Text>
-                                            ) : (
-                                                <Text color={'white'}>Chọn file chứa ví</Text>
-                                            )}
-                                        </Stack>
-                                    </Flex>
                                     {isAirdrop && (
                                         <Form.Item label="Chọn ví" name="walletIndex" required>
                                             <InputNumber
@@ -698,29 +507,6 @@ const MainPage = () => {
                                     {isAirdrop && (
                                         <>
                                             <Form.Item
-                                                label="Địa chỉ airdrop"
-                                                name="airdropContract"
-                                                rules={[
-                                                    {
-                                                        required: true,
-                                                        message: 'Vui lòng nhập địa chỉ quét',
-                                                    },
-                                                    {
-                                                        validator: async (_, value) => {
-                                                            if (!ethers.utils.isAddress(value)) {
-                                                                return Promise.reject(
-                                                                    new Error(
-                                                                        'Địa chỉ quét không hợp lệ'
-                                                                    )
-                                                                )
-                                                            }
-                                                        },
-                                                    },
-                                                ]}
-                                            >
-                                                <Input placeholder="Nhập địa chỉ airdrop" />
-                                            </Form.Item>
-                                            <Form.Item
                                                 label="Địa chỉ token airdrop"
                                                 name="airdropToken"
                                                 rules={[
@@ -765,7 +551,6 @@ const MainPage = () => {
                                             options={TOKEN_ADDRESS}
                                         />
                                     </Form.Item>
-                                    <Form.Item hidden name="alreadyAirdropWallets" />
                                     <Form.Item hidden name="wallets" />
                                     <Form.Item hidden name="scanningFromBlock" />
                                     <Form.Item hidden name="scanningToBlock" />
@@ -827,100 +612,6 @@ const MainPage = () => {
                                             {scanningToBlock}
                                         </Text>
                                     )}
-                                <Text fontWeight={'bold'}>Kết quả quét</Text>
-                                <Table
-                                    columns={[
-                                        {
-                                            title: 'STT',
-                                            width: 50,
-                                            render: (_, __, index) => index + 1,
-                                        },
-                                        {
-                                            title: 'Địa chỉ ví',
-                                            dataIndex: 'address',
-                                            key: 'address',
-                                        },
-                                        {
-                                            title: 'Số dư',
-                                            dataIndex: 'native',
-                                            key: 'native',
-                                            align: 'center',
-                                        },
-                                        {
-                                            title: 'Token',
-                                            dataIndex: 'tokens',
-                                            key: 'tokens',
-                                            align: 'center',
-                                            render: (tokens: Record<string, string>) => (
-                                                <ul>
-                                                    {Object.entries(tokens).map(
-                                                        ([symbol, balance]) => (
-                                                            <li key={symbol}>
-                                                                {symbol}: {balance}
-                                                            </li>
-                                                        )
-                                                    )}
-                                                </ul>
-                                            ),
-                                        },
-                                        {
-                                            title: 'Airdrop',
-                                            align: 'center',
-                                            filters: [
-                                                {
-                                                    text: 'Đã airdrop',
-                                                    value: true,
-                                                },
-                                                {
-                                                    text: 'Chưa airdrop',
-                                                    value: false,
-                                                },
-                                            ],
-                                            dataIndex: 'airdrop',
-                                            filterMultiple: false,
-                                            key: 'airdrop',
-                                            render: (_, record) => {
-                                                const isAirdropped = record.airdrop
-                                                return (
-                                                    <Tag color={isAirdropped ? 'green' : 'red'}>
-                                                        {isAirdropped
-                                                            ? 'Đã airdrop'
-                                                            : 'Chưa airdrop'}
-                                                    </Tag>
-                                                )
-                                            },
-                                        },
-                                    ]}
-                                    onChange={(_, filter) => {
-                                        setFilterTable((prev) =>
-                                            filter.airdrop && filter.airdrop.length > 0
-                                                ? {
-                                                    ...prev,
-                                                    airdrop: filter.airdrop[0],
-                                                }
-                                                : {
-                                                    ...prev,
-                                                    airdrop: undefined,
-                                                }
-                                        )
-                                    }}
-                                    pagination={{
-                                        defaultPageSize: 30,
-                                        showSizeChanger: true,
-                                        showTotal: (total) => `Tổng ${total} ví`,
-                                    }}
-                                    dataSource={Object.values(walletAirdrops).filter((e) =>
-                                        filterTable.airdrop
-                                            ? e.airdrop === filterTable.airdrop
-                                            : true
-                                    )}
-                                />
-                                <Button
-                                    type="primary"
-                                    onClick={() => exportWalletScan(Object.values(walletAirdrops))}
-                                >
-                                    Xuất kết quả quét
-                                </Button>
                             </Stack>
                         ),
                     },
@@ -929,59 +620,6 @@ const MainPage = () => {
                         label: 'Quét balance ví',
                         children: (
                             <Stack flex={1} gap={'5px'}>
-                                <Flex gap={'5px'} alignItems={'center'}>
-                                    <Text>Nhập ví</Text>
-                                    <Stack
-                                        onClick={() => {
-                                            const input = document.createElement('input')
-                                            input.hidden = true
-                                            input.type = 'file'
-                                            input.accept = '.txt'
-                                            input.onchange = (e: any) => {
-                                                const file = e.target?.files?.item(0)
-                                                // importWallets(file)
-                                                readFile(file)
-                                                input.remove()
-                                            }
-                                            input.click()
-                                        }}
-                                        w={'300px'}
-                                        h={'20px'}
-                                        justifyContent="center"
-                                        alignItems="center"
-                                        borderRadius="lg"
-                                        overflow="hidden"
-                                        _hover={{
-                                            bg: '#0D166D',
-                                        }}
-                                        border="2px dashed gray"
-                                        bg="#0D164D"
-                                        style={{
-                                            aspectRatio: '2.5',
-                                        }}
-                                        cursor="pointer"
-                                        onDragEnter={onDragEnter}
-                                        onDragOver={onDragOver}
-                                        onDragLeave={onDragLeave}
-                                        onDrop={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            const file = e.dataTransfer.files.item(0)
-                                            if (!file || file.type !== 'text/plain') {
-                                                alert('Vui lòng chọn file .txt chứa ví')
-                                                return
-                                            }
-                                            // importWallets(file)
-                                            readFile(file)
-                                        }}
-                                    >
-                                        {walletsFile ? (
-                                            <Text color={'white'}>{walletsFile.name}</Text>
-                                        ) : (
-                                            <Text color={'white'}>Chọn file chứa ví</Text>
-                                        )}
-                                    </Stack>
-                                </Flex>
                                 <Form
                                     form={formBalance}
                                     initialValues={{
@@ -1011,20 +649,7 @@ const MainPage = () => {
                                                 options: {
                                                     concurrency: values.concurrency,
                                                 },
-                                                wallets: walletBalances,
                                                 storeId: tabId,
-                                                onWallet(wallet) {
-                                                    exportWalletBalanceToDirectly([
-                                                        ...Object.keys(
-                                                            formBalance.getFieldValue('wallets') || {}
-                                                        ),
-                                                        wallet.address,
-                                                    ])
-                                                    formBalance.setFieldValue('wallets', {
-                                                        ...(formBalance.getFieldValue('wallets') || {}),
-                                                        [wallet.address]: wallet,
-                                                    })
-                                                },
                                             })
                                             await walletBalanceScanner.current.initTokens()
                                         }
@@ -1063,61 +688,6 @@ const MainPage = () => {
                                         </Button>
                                     )}
                                 </Form>
-                                <Text fontWeight={'bold'}>Kết quả quét</Text>
-                                <Table
-                                    columns={[
-                                        {
-                                            title: 'STT',
-                                            width: 50,
-                                            render: (_, __, index) => index + 1,
-                                        },
-                                        {
-                                            title: 'Địa chỉ ví',
-                                            dataIndex: 'address',
-                                            key: 'address',
-                                        },
-                                        {
-                                            title: 'Số dư',
-                                            dataIndex: 'native',
-                                            key: 'native',
-                                            align: 'center',
-                                        },
-                                        {
-                                            title: 'Token',
-                                            dataIndex: 'tokens',
-                                            key: 'tokens',
-                                            align: 'center',
-                                            render: (tokens: Record<string, string>) => (
-                                                <ul>
-                                                    {Object.entries(tokens).map(
-                                                        ([symbol, balance]) => (
-                                                            <li key={symbol}>
-                                                                {symbol}: {balance}
-                                                            </li>
-                                                        )
-                                                    )}
-                                                </ul>
-                                            ),
-                                        },
-                                    ]}
-                                    pagination={false}
-                                    dataSource={Object.values(walletBalances)}
-                                />
-                                <div style={{ marginTop: 12 }}>
-                                    <Button onClick={prevPage} disabled={currentPage === 1}>
-                                        Trước
-                                    </Button>
-                                    <span style={{ marginLeft: 8 }}>Trang: {currentPage}</span>
-                                    <Button onClick={nextPage}>
-                                        Tiếp theo
-                                    </Button>
-                                </div>
-                                <Button
-                                    type="primary"
-                                    onClick={() => exportWalletScan(Object.values(walletBalances))}
-                                >
-                                    Xuất kết quả quét
-                                </Button>
                             </Stack>
                         ),
                     },

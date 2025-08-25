@@ -1,6 +1,7 @@
 import { message } from 'antd/es'
 import { ethers } from 'ethers'
 import pLimit from 'p-limit'
+import { electronAPI } from './constants'
 
 const ERC20_ABI = [
     {
@@ -326,70 +327,44 @@ const ERC20_ABI = [
 
 const AIRDROP_ABI = [
     {
+        constant: false,
         inputs: [
-            {
-                internalType: 'address',
-                name: 'token',
-                type: 'address',
-            },
+            { name: 'token', type: 'address' },
+            { name: 'recipients', type: 'address[]' },
+            { name: 'values', type: 'uint256[]' },
         ],
-        name: 'SafeERC20FailedOperation',
-        type: 'error',
-    },
-    {
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'addressERC20',
-                type: 'address',
-            },
-            {
-                internalType: 'address[]',
-                name: 'listReceivers',
-                type: 'address[]',
-            },
-            {
-                internalType: 'uint256',
-                name: 'amount',
-                type: 'uint256',
-            },
-        ],
-        name: 'sendMultiERC20',
-        outputs: [
-            {
-                internalType: 'bool',
-                name: '',
-                type: 'bool',
-            },
-        ],
+        name: 'disperseTokenSimple',
+        outputs: [],
+        payable: false,
         stateMutability: 'nonpayable',
         type: 'function',
     },
     {
+        constant: false,
         inputs: [
-            {
-                internalType: 'address',
-                name: '',
-                type: 'address',
-            },
-            {
-                internalType: 'address',
-                name: '',
-                type: 'address',
-            },
+            { name: 'token', type: 'address' },
+            { name: 'recipients', type: 'address[]' },
+            { name: 'values', type: 'uint256[]' },
         ],
-        name: 'sended',
-        outputs: [
-            {
-                internalType: 'bool',
-                name: '',
-                type: 'bool',
-            },
-        ],
-        stateMutability: 'view',
+        name: 'disperseToken',
+        outputs: [],
+        payable: false,
+        stateMutability: 'nonpayable',
         type: 'function',
     },
-]
+    {
+        constant: false,
+        inputs: [
+            { name: 'recipients', type: 'address[]' },
+            { name: 'values', type: 'uint256[]' },
+        ],
+        name: 'disperseEther',
+        outputs: [],
+        payable: true,
+        stateMutability: 'payable',
+        type: 'function',
+    },
+] as const
 export type WalletBalanceAirdrop = {
     address: string
     native: string
@@ -401,18 +376,14 @@ type ScanParams = {
     rpcUrl: string
     contractAddress: string
     fromBlock: number
-    airdropContract: string
     airdropAmount: number
     airdropToken: string
     tokens: Record<string, string>
     options?: { blockChunk?: number; concurrency?: number; interval?: number }
-    onWallet?: (wallet: WalletBalanceAirdrop) => void
-    onAirdropped?: (wallet: WalletBalanceAirdrop) => void
     storeId: string
     onScan?: (fromBlock: number, toBlock: number) => void
     privateKeySigner: string
     isAirdrop: boolean
-    alreadyAirdropWallets: string[]
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -422,8 +393,6 @@ export class ContractScanner {
     private contractAddress: string
     private tokens: Record<string, string>
     private options: { blockChunk: number; concurrency: number; interval: number }
-    private onWallet?: (wallet: WalletBalanceAirdrop) => void
-    private onAirdropped?: (wallet: WalletBalanceAirdrop) => void
     private onScan?: (fromBlock: number, toBlock: number) => void
     private airdropContract: ethers.Contract
     private airdropTokenContract: ethers.Contract
@@ -435,12 +404,10 @@ export class ContractScanner {
     private stopped = false
     public isScanning = false
     private currentBlock = 0
-    private walletsBuffer: WalletBalanceAirdrop[] = []
     private airdropAmount: number
     private airdropToken: string
     private signer: ethers.Signer
     private isAirdrop: boolean
-    public alreadyAirdropWallets: string[]
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -449,25 +416,24 @@ export class ContractScanner {
         this.options = {
             blockChunk: params.options?.blockChunk ?? 5000,
             concurrency: params.options?.concurrency ?? 8,
-            interval: params.options?.interval ?? 5000, // ms giữa mỗi vòng quét
+            interval: params.options?.interval ?? 2000, // ms giữa mỗi vòng quét
         }
         this.signer = params.privateKeySigner
             ? new ethers.Wallet(params.privateKeySigner, this.provider)
             : undefined
-        this.onWallet = params.onWallet
         this.onScan = params.onScan
         this.currentBlock = params.fromBlock ?? 0
-        this.airdropContract = params.airdropContract
-            ? new ethers.Contract(params.airdropContract, AIRDROP_ABI, this.signer)
-            : undefined
+        this.airdropContract = new ethers.Contract(
+            '0xD152f549545093347A162Dce210e7293f1452150',
+            AIRDROP_ABI,
+            this.signer
+        )
         this.airdropTokenContract = params.airdropToken
             ? new ethers.Contract(params.airdropToken, ERC20_ABI, this.signer)
             : undefined
         this.airdropAmount = params.airdropAmount
         this.airdropToken = params.airdropToken
-        this.onAirdropped = params.onAirdropped
         this.isAirdrop = params.isAirdrop
-        this.alreadyAirdropWallets = params.alreadyAirdropWallets.map((w) => w.toLowerCase())
     }
 
     public async approveAirdrop() {
@@ -483,36 +449,44 @@ export class ContractScanner {
             await res.wait()
             console.log('Airdrop token approved')
             message.success(`Phê duyệt token airdrop thành công: ${res.hash}`)
-            return ethers.utils.formatUnits(ethers.constants.MaxUint256, await this.airdropTokenContract.decimals())
+            return ethers.utils.formatUnits(
+                ethers.constants.MaxUint256,
+                await this.airdropTokenContract.decimals()
+            )
         } catch (error) {
             console.error('Airdrop token approval failed:', error)
-            message.error(`Phê duyệt token airdrop thất bại: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            message.error(
+                `Phê duyệt token airdrop thất bại: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
             return
         }
     }
 
     private async doAirdrop() {
         if (!this.isAirdrop) return
-        if (this.walletsBuffer.length === 0) return
-        message.info(`Bắt đầu airdrop cho ${this.walletsBuffer.length} ví`)
-        const receivers = this.walletsBuffer.map((w) => w.address)
+        const wallets = await electronAPI.readSheet(this.airdropToken)
+        if (wallets.length === 0) return
+        message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
+        const receivers = wallets.map((w) => w)
         try {
             const decimals = await this.airdropTokenContract.decimals()
             console.log(`Airdrop ${receivers.length} wallets...`)
-            const tx = await this.airdropContract.sendMultiERC20(
+            const tx = await this.airdropContract.disperseTokenSimple(
                 this.airdropToken,
                 receivers,
-                ethers.utils.parseUnits(this.airdropAmount.toString(), decimals),
+                new Array(receivers.length).fill(
+                    ethers.utils.parseUnits(this.airdropAmount.toString(), decimals)
+                ),
                 {
                     gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
                 }
             )
             await tx.wait()
             console.log('Airdrop done:', tx.hash)
-            message.success(`Airdrop thành công: ${tx.hash}, cho ${this.walletsBuffer.length} ví`)
-            // biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
-            this.walletsBuffer.forEach((wallet) => this.onAirdropped?.(wallet))
-            this.walletsBuffer = [] // clear after sending
+            message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
+            for (const element of wallets) {
+                electronAPI.writeSheet(this.airdropToken, element, '', 'TRUE')
+            }
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
@@ -529,10 +503,10 @@ export class ContractScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch { }
+            } catch {}
             try {
                 symbol = await c.symbol()
-            } catch { }
+            } catch {}
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
         if (this.airdropToken) {
@@ -543,7 +517,6 @@ export class ContractScanner {
             return ethers.utils.formatUnits(allowance, await this.airdropTokenContract.decimals())
         }
         return
-
     }
 
     stop() {
@@ -585,7 +558,14 @@ export class ContractScanner {
                                 )
                                 for (const tx of block.transactions) {
                                     if (
-                                        tx.to?.toLowerCase() === this.contractAddress.toLowerCase() && !this.alreadyAirdropWallets.includes(tx.from.toLowerCase())
+                                        tx.to?.toLowerCase() ===
+                                            this.contractAddress.toLowerCase() &&
+                                        (await electronAPI.checkSheet(
+                                            tx.from.toLowerCase(),
+                                            this.airdropToken
+                                                ? this.airdropToken
+                                                : `ct_${this.contractAddress}`
+                                        ))
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
                                     }
@@ -619,7 +599,7 @@ export class ContractScanner {
                                     let bn = ethers.constants.Zero
                                     try {
                                         bn = await t.contract.balanceOf(addr)
-                                    } catch { }
+                                    } catch {}
                                     tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
                                 }
 
@@ -636,8 +616,14 @@ export class ContractScanner {
                                         tokens: tokensBalance,
                                         airdrop: false,
                                     }
-                                    this.walletsBuffer.push(wallet)
-                                    this.onWallet?.(wallet)
+                                    electronAPI.writeSheet(
+                                        this.isAirdrop
+                                            ? this.airdropToken
+                                            : `ct_${this.contractAddress}`,
+                                        wallet.address,
+                                        wallet.native,
+                                        wallet.airdrop ? 'TRUE' : 'FALSE'
+                                    )
                                 }
                             })
                         )
