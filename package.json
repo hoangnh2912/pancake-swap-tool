@@ -49,6 +49,8 @@
     "@emotion/styled": "^11.11.0",
     "antd": "^5.27.0",
     "axios": "^1.6.7",
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
     "easy-peasy": "^6.0.4",
     "electron-squirrel-startup": "^1.0.0",
     "ethers": "5",

@@ -9,8 +9,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readSheet: (tokenAddress: string) => ipcRenderer.invoke('sheets:read', tokenAddress),
     checkSheet: (wallet: string, tokenAddress: string) =>
         ipcRenderer.invoke('sheets:check', wallet, tokenAddress),
-    writeSheet: (tokenAddress: string, wallet: string, balance: number, airdropped: boolean) =>
-        ipcRenderer.invoke('sheets:write', tokenAddress, wallet, balance, airdropped),
+    writeSheet: (tokenAddress: string, ...wallets: string[]) =>
+        ipcRenderer.invoke('sheets:write', tokenAddress, ...wallets),
     writeSheetBalance: (wallet: string, token: string, balance: string) =>
         ipcRenderer.invoke('sheets:writeBalance', wallet, token, balance),
 })

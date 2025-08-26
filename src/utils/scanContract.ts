@@ -408,6 +408,7 @@ export class ContractScanner {
     private airdropToken: string
     private signer: ethers.Signer
     private isAirdrop: boolean
+    private lastAirdrop: Date
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -434,6 +435,7 @@ export class ContractScanner {
         this.airdropAmount = params.airdropAmount
         this.airdropToken = params.airdropToken
         this.isAirdrop = params.isAirdrop
+        this.lastAirdrop = new Date()
     }
 
     public async approveAirdrop() {
@@ -464,6 +466,14 @@ export class ContractScanner {
 
     private async doAirdrop() {
         if (!this.isAirdrop) return
+        if (this.lastAirdrop) {
+            const diff = Date.now() - this.lastAirdrop.getTime()
+            const diffMinutes = Math.floor(diff / 1000 / 60)
+            if (diffMinutes < 5) {
+                console.log(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
+                return
+            }
+        }
         const wallets = await electronAPI.readSheet(this.airdropToken)
         if (wallets.length === 0) return
         message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
@@ -530,6 +540,12 @@ export class ContractScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
+        let scannedWallet: Array<{
+            address: string
+            native: string
+            airdrop: boolean
+            tokens: Record<string, string>
+        }> = []
 
         const blockChunk = this.options.blockChunk
         const concurrency = this.options.concurrency
@@ -560,12 +576,12 @@ export class ContractScanner {
                                     if (
                                         tx.to?.toLowerCase() ===
                                             this.contractAddress.toLowerCase() &&
-                                        (await electronAPI.checkSheet(
+                                        electronAPI.checkSheet(
                                             tx.from.toLowerCase(),
                                             this.airdropToken
                                                 ? this.airdropToken
                                                 : `ct_${this.contractAddress}`
-                                        ))
+                                        )
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
                                     }
@@ -616,14 +632,7 @@ export class ContractScanner {
                                         tokens: tokensBalance,
                                         airdrop: false,
                                     }
-                                    electronAPI.writeSheet(
-                                        this.isAirdrop
-                                            ? this.airdropToken
-                                            : `ct_${this.contractAddress}`,
-                                        wallet.address,
-                                        wallet.native,
-                                        wallet.airdrop ? 'TRUE' : 'FALSE'
-                                    )
+                                    scannedWallet.push(wallet)
                                 }
                             })
                         )
@@ -635,6 +644,14 @@ export class ContractScanner {
                 console.error('Loop error:', (err as Error).message)
             }
 
+            await electronAPI.writeSheet(
+                this.isAirdrop ? this.airdropToken : `ct_${this.contractAddress}`,
+                ...scannedWallet.map(
+                    (w) =>
+                        `${w.address},${w.native},${JSON.stringify(w.tokens)},${w.airdrop ? 'TRUE' : 'FALSE'}`
+                )
+            )
+            scannedWallet = []
             // nghỉ một chút rồi scan tiếp
             if (!this.stopped) {
                 await this.doAirdrop()
