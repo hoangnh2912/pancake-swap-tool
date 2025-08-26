@@ -411,17 +411,13 @@ export class WalletBalanceScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
-        const addresses = await electronAPI.readSheet('Balance')
+        const addresses = electronAPI.readSheet('Balance')
         const balLimit = pLimit(this.options.concurrency)
 
         for (const addr of addresses) {
             if (this.stopped) break
             const wallet = await balLimit(() => this.fetchBalance(addr))
-            await electronAPI.writeBalance(
-                wallet.address,
-                JSON.stringify(wallet.tokens),
-                wallet.native
-            )
+            electronAPI.writeBalance(wallet.address, JSON.stringify(wallet.tokens), wallet.native)
         }
         this.stop()
     }

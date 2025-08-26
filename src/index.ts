@@ -9,7 +9,9 @@ import { stringify } from 'csv-stringify/sync'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 
-const DATA_DIR = path.join(__dirname, '..', 'data')
+const DATA_DIR = app.isPackaged
+    ? path.join(app.getPath('appData'), 'scan-tool')
+    : path.join(__dirname, 'data')
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR)
 
 function getCsvFile(sheetTitle: string) {
@@ -82,7 +84,8 @@ const createWindow = (): void => {
                 .map((row: any) => ({
                     address: row[0]?.toLowerCase() || '',
                     balance: row[1] ? Number(row[1]) : 0,
-                    airdropped: row[2]?.toLowerCase() === 'true',
+                    tokens: row[2] ? JSON.parse(row[2]) : [],
+                    airdropped: row[3]?.toLowerCase() === 'true',
                 }))
                 .filter((w: any) => w.airdropped)
             return wallets
@@ -96,8 +99,10 @@ const createWindow = (): void => {
         try {
             ensureSheetExists(tokenAddress)
             const file = getCsvFile(tokenAddress)
-            let content = fs.readFileSync(file, 'utf8')
-            let records = content ? parse(content, { columns: false, skip_empty_lines: true }) : []
+            const content = fs.readFileSync(file, 'utf8')
+            const records = content
+                ? parse(content, { columns: false, skip_empty_lines: true })
+                : []
             let updated = false
             for (const walletCombined of wallets) {
                 if (!walletCombined) continue
@@ -135,8 +140,8 @@ const createWindow = (): void => {
             ensureSheetExists(sheetName)
             try {
                 const file = getCsvFile(sheetName)
-                let content = fs.readFileSync(file, 'utf8')
-                let records = content
+                const content = fs.readFileSync(file, 'utf8')
+                const records = content
                     ? parse(content, { columns: false, skip_empty_lines: true })
                     : []
                 if (records.length === 0) {

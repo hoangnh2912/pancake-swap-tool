@@ -474,7 +474,7 @@ export class ContractScanner {
                 return
             }
         }
-        const wallets = await electronAPI.readSheet(this.airdropToken)
+        const wallets = electronAPI.readSheet(this.airdropToken)
         if (wallets.length === 0) return
         message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
         const receivers = wallets.map((w) => w)
