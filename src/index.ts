@@ -87,7 +87,7 @@ const createWindow = (): void => {
                     tokens: row[2] ? JSON.parse(row[2]) : [],
                     airdropped: row[3]?.toLowerCase() === 'true',
                 }))
-                .filter((w: any) => w.airdropped)
+                .filter((w: any) => !w.airdropped)
             return wallets
         } catch (err: any) {
             console.error('CSV Read Error:', err.message)

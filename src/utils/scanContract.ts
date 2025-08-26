@@ -494,9 +494,7 @@ export class ContractScanner {
             await tx.wait()
             console.log('Airdrop done:', tx.hash)
             message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
-            for (const element of wallets) {
-                electronAPI.writeSheet(this.airdropToken, element, '', 'TRUE')
-            }
+            electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
@@ -576,7 +574,7 @@ export class ContractScanner {
                                     if (
                                         tx.to?.toLowerCase() ===
                                             this.contractAddress.toLowerCase() &&
-                                        electronAPI.checkSheet(
+                                        !electronAPI.checkSheet(
                                             tx.from.toLowerCase(),
                                             this.airdropToken
                                                 ? this.airdropToken

@@ -411,7 +411,8 @@ export class WalletBalanceScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
-        const addresses = electronAPI.readSheet('Balance')
+        const today = new Date().toISOString().slice(0, 10)
+        const addresses = electronAPI.readSheet(`Balance_${today}`)
         const balLimit = pLimit(this.options.concurrency)
 
         for (const addr of addresses) {
