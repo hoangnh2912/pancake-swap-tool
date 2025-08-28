@@ -40,10 +40,10 @@ const DEFAULT_PAGINATE_SIZE = 10
 const electronAPI: {
     openExternal: (url: string) => void
     setProcessBar: (value: number) => void
-    readSheet: (tokenAddress: string) => string[]
-    writeSheet: (tokenAddress: string, ...wallets: string[]) => void
-    checkSheet: (wallet: string, tokenAddress: string) => boolean
-    writeBalance: (wallet: string, token: string, balance: string) => void
+    readSheet: (tokenAddress: string) => Promise<string[]>
+    writeSheet: (tokenAddress: string, ...wallets: string[]) => Promise<void>
+    checkSheet: (wallet: string, tokenAddress: string) => Promise<boolean>
+    writeBalance: (wallet: string, token: string, balance: string) => Promise<void>
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

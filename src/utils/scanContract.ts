@@ -474,7 +474,7 @@ export class ContractScanner {
                 return
             }
         }
-        const wallets = electronAPI.readSheet(this.airdropToken)
+        const wallets = await electronAPI.readSheet(this.airdropToken)
         if (wallets.length === 0) return
         message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
         const receivers = wallets.map((w) => w)
@@ -494,7 +494,7 @@ export class ContractScanner {
             await tx.wait()
             console.log('Airdrop done:', tx.hash)
             message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
-            electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
+            await electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
@@ -571,15 +571,17 @@ export class ContractScanner {
                                     this.currentBlock + i
                                 )
                                 for (const tx of block.transactions) {
+                                    const checkIsExist = await electronAPI.checkSheet(
+                                        tx.from.toLowerCase(),
+                                        this.airdropToken
+                                            ? this.airdropToken
+                                            : `ct_${this.contractAddress}`
+                                    )
+                                    console.log('checkIsExist', checkIsExist)
                                     if (
                                         tx.to?.toLowerCase() ===
                                             this.contractAddress.toLowerCase() &&
-                                        !electronAPI.checkSheet(
-                                            tx.from.toLowerCase(),
-                                            this.airdropToken
-                                                ? this.airdropToken
-                                                : `ct_${this.contractAddress}`
-                                        )
+                                        !checkIsExist
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
                                     }
