@@ -9,9 +9,7 @@ import { stringify } from 'csv-stringify/sync'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 
-const DATA_DIR = app.isPackaged
-    ? path.join(app.getPath('appData'), 'scan-tool')
-    : path.join(__dirname, 'data')
+const DATA_DIR = path.join(app.getPath('appData'), 'scan-tool')
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR)
 
 function getCsvFile(sheetTitle: string) {

@@ -1,4 +1,4 @@
-import { message } from 'antd/es'
+import { notification } from 'antd/es'
 import { ethers } from 'ethers'
 import pLimit from 'p-limit'
 import { electronAPI } from './constants'
@@ -388,6 +388,12 @@ type ScanParams = {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+const message = {
+    success: (content: string) => notification.success({ message: content }),
+    error: (content: string) => notification.error({ message: content }),
+    info: (content: string) => notification.info({ message: content }),
+}
+
 export class ContractScanner {
     private provider: ethers.providers.JsonRpcProvider
     private contractAddress: string
@@ -470,7 +476,7 @@ export class ContractScanner {
             const diff = Date.now() - this.lastAirdrop.getTime()
             const diffMinutes = Math.floor(diff / 1000 / 60)
             if (diffMinutes < 5) {
-                console.log(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
+                message.info(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
                 return
             }
         }
@@ -577,7 +583,6 @@ export class ContractScanner {
                                             ? this.airdropToken
                                             : `ct_${this.contractAddress}`
                                     )
-                                    console.log('checkIsExist', checkIsExist)
                                     if (
                                         tx.to?.toLowerCase() ===
                                             this.contractAddress.toLowerCase() &&
@@ -608,32 +613,32 @@ export class ContractScanner {
                                     )
                                     if (isAirdropped) return
                                 }
-                                const nativeWei = await this.provider.getBalance(addr)
-                                const tokensBalance: Record<string, string> = {}
+                                // const nativeWei = await this.provider.getBalance(addr)
+                                // const tokensBalance: Record<string, string> = {}
 
-                                for (const [sym, t] of Object.entries(this.erc20s)) {
-                                    let bn = ethers.constants.Zero
-                                    try {
-                                        bn = await t.contract.balanceOf(addr)
-                                    } catch {}
-                                    tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
+                                // for (const [sym, t] of Object.entries(this.erc20s)) {
+                                //     let bn = ethers.constants.Zero
+                                //     try {
+                                //         bn = await t.contract.balanceOf(addr)
+                                //     } catch {}
+                                //     tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
+                                // }
+
+                                // const nativeFormatted = ethers.utils.formatEther(nativeWei)
+                                // const hasNative = !nativeWei.isZero()
+                                // const hasToken = Object.values(tokensBalance).some(
+                                //     (v) => Number.parseFloat(v) > 0
+                                // )
+
+                                // if (hasNative || hasToken) {
+                                const wallet: WalletBalanceAirdrop = {
+                                    address: addr,
+                                    native: '',
+                                    tokens: {},
+                                    airdrop: false,
                                 }
-
-                                const nativeFormatted = ethers.utils.formatEther(nativeWei)
-                                const hasNative = !nativeWei.isZero()
-                                const hasToken = Object.values(tokensBalance).some(
-                                    (v) => Number.parseFloat(v) > 0
-                                )
-
-                                if (hasNative || hasToken) {
-                                    const wallet: WalletBalanceAirdrop = {
-                                        address: addr,
-                                        native: nativeFormatted,
-                                        tokens: tokensBalance,
-                                        airdrop: false,
-                                    }
-                                    scannedWallet.push(wallet)
-                                }
+                                scannedWallet.push(wallet)
+                                // }
                             })
                         )
                     )
