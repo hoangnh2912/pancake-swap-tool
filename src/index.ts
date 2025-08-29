@@ -30,6 +30,8 @@ if (require('electron-squirrel-startup')) {
 let mainWindow: BrowserWindow
 
 const createWindow = (): void => {
+    const memoryInfo = process.getProcessMemoryInfo()
+    console.log('Process Memory Info:', memoryInfo)
     // Create the browser window.
     mainWindow = new BrowserWindow({
         center: true,
@@ -132,9 +134,8 @@ const createWindow = (): void => {
 
     ipcMain.handle(
         'sheets:writeBalance',
-        (_event, wallet: string, token: string, balance: string) => {
-            const today = new Date().toISOString().slice(0, 10)
-            const sheetName = `Balance_${today}`
+        (_event, fileName: string, wallet: string, token: string, balance: string) => {
+            const sheetName = fileName
             ensureSheetExists(sheetName)
             try {
                 const file = getCsvFile(sheetName)
@@ -170,6 +171,10 @@ const createWindow = (): void => {
             }
         }
     )
+
+    ipcMain.handle('get-memory-info', () => {
+        return process.getProcessMemoryInfo()
+    })
 
     const ses = mainWindow.webContents.session
     ses.clearAuthCache()

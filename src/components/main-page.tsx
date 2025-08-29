@@ -26,6 +26,7 @@ type ScanWalletAirdrop = {
 type ScanWalletBalance = {
     concurrency: number
     tokens: string[]
+    fileName: string
 }
 
 const MainPage = () => {
@@ -48,7 +49,7 @@ const MainPage = () => {
     const [allowance, setAllowance] = useState<string>()
     const [isScanning, setIsScanning] = useState<boolean>()
     const [isApproving, setIsApproving] = useState<boolean>()
-    const [rpc, setRpc] = useState<string>('')
+    const [rpc, setRpc] = useState<string>('https://bsc.drpc.org')
 
     const tabId = useStoreState((state) => state.tabId)
 
@@ -177,7 +178,7 @@ const MainPage = () => {
                         input.click()
                     }}
                     w={'300px'}
-                    h={'50px'}
+                    h={'30px'}
                     justifyContent="center"
                     alignItems="center"
                     borderRadius="lg"
@@ -497,6 +498,7 @@ const MainPage = () => {
                                                     concurrency: values.concurrency,
                                                 },
                                                 storeId: tabId,
+                                                fileName: values.fileName,
                                             })
                                             await walletBalanceScanner.current.initTokens()
                                         }
@@ -504,6 +506,9 @@ const MainPage = () => {
                                         await walletBalanceScanner.current.start()
                                     }}
                                 >
+                                    <Form.Item label="Tên file" name="fileName">
+                                        <Input placeholder="Tên file" />
+                                    </Form.Item>
                                     <Form.Item label="Số lượt quét đồng thời" name="concurrency">
                                         <InputNumber min={1} placeholder="Số lượt quét đồng thời" />
                                     </Form.Item>

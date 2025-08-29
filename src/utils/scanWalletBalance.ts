@@ -335,6 +335,7 @@ type ScanParams = {
     tokens: Record<string, string>
     options?: { concurrency?: number; interval?: number }
     storeId: string
+    fileName: string
 }
 
 export class WalletBalanceScanner {
@@ -347,6 +348,7 @@ export class WalletBalanceScanner {
     > = {}
     private stopped = false
     public isScanning = false
+    private fileName: string
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -355,6 +357,7 @@ export class WalletBalanceScanner {
             concurrency: params.options?.concurrency ?? 8,
             interval: params.options?.interval ?? 5000, // ms
         }
+        this.fileName = params.fileName
     }
 
     async initTokens() {
@@ -411,14 +414,14 @@ export class WalletBalanceScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
-        const today = new Date().toISOString().slice(0, 10)
-        const addresses = await electronAPI.readSheet(`Balance_${today}`)
+        const addresses = await electronAPI.readSheet(this.fileName)
         const balLimit = pLimit(this.options.concurrency)
 
         for (const addr of addresses) {
             if (this.stopped) break
             const wallet = await balLimit(() => this.fetchBalance(addr))
             await electronAPI.writeBalance(
+                this.fileName,
                 wallet.address,
                 JSON.stringify(wallet.tokens),
                 wallet.native

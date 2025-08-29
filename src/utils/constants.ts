@@ -43,7 +43,13 @@ const electronAPI: {
     readSheet: (tokenAddress: string) => Promise<string[]>
     writeSheet: (tokenAddress: string, ...wallets: string[]) => Promise<void>
     checkSheet: (wallet: string, tokenAddress: string) => Promise<boolean>
-    writeBalance: (wallet: string, token: string, balance: string) => Promise<void>
+    writeBalance: (
+        fileName: string,
+        wallet: string,
+        token: string,
+        balance: string
+    ) => Promise<void>
+    getMemoryInfo: () => Promise<Electron.ProcessMemoryInfo>
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

@@ -11,8 +11,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('sheets:check', wallet, tokenAddress),
     writeSheet: (tokenAddress: string, ...wallets: string[]) =>
         ipcRenderer.invoke('sheets:write', tokenAddress, ...wallets),
-    writeSheetBalance: (wallet: string, token: string, balance: string) =>
-        ipcRenderer.invoke('sheets:writeBalance', wallet, token, balance),
+    writeSheetBalance: (fileName: string, wallet: string, token: string, balance: string) =>
+        ipcRenderer.invoke('sheets:writeBalance', fileName, wallet, token, balance),
+    getMemoryInfo: () => ipcRenderer.invoke('get-memory-info'),
 })
 
 // Buffer, TypedArray, or DataView
