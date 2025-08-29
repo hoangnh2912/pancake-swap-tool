@@ -6,8 +6,6 @@ const useMemoryInfo = () => {
 
     const fetchMemoryInfo = async () => {
         const info = await electronAPI.getMemoryInfo()
-        console.log('info', info)
-
         setMemoryInfo(info)
     }
 
