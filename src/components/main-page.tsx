@@ -1,14 +1,13 @@
-import { Flex, Menu, MenuButton, MenuItem, MenuList, Stack, Text, useToast } from '@chakra-ui/react'
+import { Flex, Stack, Text, useToast } from '@chakra-ui/react'
 import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, } from 'antd'
 import { ethers } from 'ethers'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
-import { useStoreActions, useStoreState } from '../redux/hook'
-import type { StepDetail } from '../redux/model'
-import { PANCAKE_ADDRESS, TOKEN_ADDRESS } from '../utils/constants'
+import { useStoreState } from '../redux/hook'
+import { TOKEN_ADDRESS } from '../utils/constants'
 import { ContractScanner, } from '../utils/scanContract'
-import { type WalletBalance, WalletBalanceScanner } from '../utils/scanWalletBalance'
-import { chainNetworkColor, formatEtherWithDecimals, tryPrivateKeyToAddress } from '../utils/utils'
+import { WalletBalanceScanner } from '../utils/scanWalletBalance'
+import { tryPrivateKeyToAddress } from '../utils/utils'
 
 type ScanWalletAirdrop = {
     fromBlock: number
@@ -41,8 +40,6 @@ const MainPage = () => {
     const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
 
-    const walletBalances = Form.useWatch('wallets', formBalance) || {}
-
     const [privateKeys, setPrivateKeys] = useState([
         '4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042',
     ])
@@ -51,37 +48,9 @@ const MainPage = () => {
     const [allowance, setAllowance] = useState<string>()
     const [isScanning, setIsScanning] = useState<boolean>()
     const [isApproving, setIsApproving] = useState<boolean>()
+    const [rpc, setRpc] = useState<string>('')
 
     const tabId = useStoreState((state) => state.tabId)
-    const stepData = useStoreState((state) => state.steps.data)
-
-    const chainNetwork = useStoreState((state) => state.chainNetwork)
-
-    const isLoadCacheDone = useRef(false)
-
-    const walletData = useStoreState((state) => state.wallets.data)
-
-    const getWalletBalance = useCallback(
-        (privateKey: string) => {
-            try {
-                const address = tryPrivateKeyToAddress(privateKey)
-                const walletDataItem = walletData[address]
-                return walletDataItem.balance[chainNetwork.symbol].toString()
-            } catch (error) {
-                return '0'
-            }
-        },
-        [walletData]
-    )
-
-    const tokenAddress = useStoreState((state) => state.steps.tokenAddress)
-    const delay = useStoreState((state) => state.steps.delay)
-    const setDelay = useStoreActions((action) => action.steps.setDelay)
-    const setChainNetwork = useStoreActions((action) => action.chainNetwork.setChainNetwork)
-
-    const setTokenAddress = useStoreActions((action) => action.steps.setTokenAddress)
-
-    const addStep = useStoreActions((action) => action.steps.add)
 
     const { setItem, getItem, getKeyCacheByTabId } = useStorage()
 
@@ -89,41 +58,17 @@ const MainPage = () => {
         const cache = getItem<{
             privateKeys: string[]
             rpc: string
-            rpcSubmit: string
-            name: string
-            explorer: string
-            factory: string
-            router: string
-            symbol: string
-            weth: string
-            tokenAddress: string
-            delay: number
-            gasPrice: string
-            gasLimit: string
-            steps: StepDetail[]
         }>(getKeyCacheByTabId(tabId))
         if (cache) {
             setPrivateKeys(cache.privateKeys)
-            setChainNetwork({
-                ...cache,
-            })
-            setDelay(cache.delay)
-            setTokenAddress(cache.tokenAddress)
-            cache.steps.forEach((step: any) => {
-                addStep(step)
-            })
+            setRpc(cache.rpc)
         }
-        isLoadCacheDone.current = true
     }, [])
 
     const onSaveLocalCache = () => {
-        if (!isLoadCacheDone.current) return
         setItem(getKeyCacheByTabId(tabId), {
             privateKeys,
-            ...chainNetwork,
-            delay,
-            steps: stepData,
-            tokenAddress,
+            rpc,
         })
     }
     const onDragEnter = (e: any) => {
@@ -142,19 +87,6 @@ const MainPage = () => {
         e.stopPropagation()
     }
 
-    useEffect(() => {
-        onSaveLocalCache()
-    }, [
-        privateKeys,
-        chainNetwork.name,
-        delay,
-        stepData,
-        tokenAddress,
-        chainNetwork.gasLimit,
-        chainNetwork.gasPrice,
-        chainNetwork.rpc,
-        chainNetwork.rpcSubmit,
-    ])
     const toast = useToast()
 
     const exportWalletAddresses = () => {
@@ -171,36 +103,6 @@ const MainPage = () => {
         const a = document.createElement('a')
         a.href = url
         a.download = 'wallet_addresses.txt'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-    }
-
-    const exportWalletScan = (allWallet: WalletBalance[]) => {
-        const addresses = allWallet.map((wallet, idx) => ({
-            index: idx + 1,
-            address: wallet.address,
-            balance: `${chainNetwork.symbol}: ${wallet.native}`,
-            tokens: wallet.tokens,
-        }))
-        const blob = new Blob(
-            [
-                addresses
-                    .map(
-                        (e) =>
-                            `${e.index} ${e.address} ${e.balance} ${Object.entries(e.tokens)
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(', ')}`
-                    )
-                    .join('\n'),
-            ],
-            { type: 'text/plain' }
-        )
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'wallet_scan.txt'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -243,68 +145,18 @@ const MainPage = () => {
         reader.readAsText(file)
     }
 
-    if (!isLoadCacheDone.current) return null
-
     return (
         <Stack flex={1} boxShadow="md" p="4" bg={'white'} rounded={'md'}>
             <Text>{tabId}</Text>
-            <Text fontWeight={'bold'}>Mạng blockchain</Text>
-            <Menu>
-                <MenuButton
-                    {...chainNetworkColor(chainNetwork.name)}
-                    _hover={{
-                        ...chainNetworkColor(chainNetwork.name),
-                    }}
-                    as={Button}
-                >
-                    {chainNetwork.name}
-                </MenuButton>
-                <MenuList>
-                    {Object.entries(PANCAKE_ADDRESS).map(([key, value]) =>
-                        Object.entries(value).map(([key2, value2]) => (
-                            <MenuItem
-                                key={`${key}-${key2}`}
-                                onClick={() => {
-                                    setChainNetwork({
-                                        explorer: value2.Explorer,
-                                        factory: value2.Factory,
-                                        name: value2.Name,
-                                        router: value2.Router,
-                                        rpc: value2.RPC,
-                                        symbol: value2.Symbol,
-                                        weth: value2.WETH,
-                                    })
-                                }}
-                            >
-                                {value2.Name}
-                            </MenuItem>
-                        ))
-                    )}
-                </MenuList>
-            </Menu>
-
             <Flex gap={'10px'}>
                 <Flex flex={1} direction={'column'}>
                     <Flex gap={'5px'} alignItems={'center'}>
                         <Text>Nhập RPC</Text>
                         <Input
                             onChange={(e) =>
-                                setChainNetwork({
-                                    rpc: e.target.value,
-                                })
+                                setRpc(e.target.value)
                             }
-                            value={chainNetwork.rpc}
-                        />
-                    </Flex>
-                    <Flex gap={'5px'} alignItems={'center'}>
-                        <Text>Nhập RPC Submit</Text>
-                        <Input
-                            onChange={(e) =>
-                                setChainNetwork({
-                                    rpcSubmit: e.target.value,
-                                })
-                            }
-                            value={chainNetwork.rpcSubmit}
+                            value={rpc}
                         />
                     </Flex>
                 </Flex>
@@ -378,10 +230,6 @@ const MainPage = () => {
                         title: 'Địa chỉ',
                         dataIndex: 'address',
                     },
-                    {
-                        title: 'Số dư',
-                        dataIndex: 'balance',
-                    },
                 ]}
                 pagination={{
                     defaultPageSize: 10,
@@ -390,7 +238,6 @@ const MainPage = () => {
                 dataSource={privateKeys.map((key, idx) => ({
                     idx: idx + 1,
                     address: tryPrivateKeyToAddress(key),
-                    balance: formatEtherWithDecimals(getWalletBalance(key)),
                 }))}
             />
             <Tabs
@@ -433,7 +280,7 @@ const MainPage = () => {
                                                         }
                                                     }, {})
                                                     : {},
-                                            rpcUrl: chainNetwork.rpc,
+                                            rpcUrl: rpc,
                                             options: {
                                                 blockChunk: values.blockChunk,
                                                 concurrency: values.concurrency,
@@ -645,7 +492,7 @@ const MainPage = () => {
                                                             }
                                                         }, {})
                                                         : {},
-                                                rpcUrl: chainNetwork.rpc,
+                                                rpcUrl: rpc,
                                                 options: {
                                                     concurrency: values.concurrency,
                                                 },
