@@ -517,10 +517,10 @@ export class ContractScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch {}
+            } catch { }
             try {
                 symbol = await c.symbol()
-            } catch {}
+            } catch { }
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
         if (this.airdropToken) {
@@ -585,7 +585,7 @@ export class ContractScanner {
                                     )
                                     if (
                                         tx.to?.toLowerCase() ===
-                                            this.contractAddress.toLowerCase() &&
+                                        this.contractAddress.toLowerCase() &&
                                         !checkIsExist
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
@@ -646,6 +646,7 @@ export class ContractScanner {
                     this.currentBlock = end + 1
                 }
             } catch (err) {
+                message.error(`Lỗi trong quá trình quét: ${(err instanceof Error ? err.message : 'Unknown error')}`)
                 console.error('Loop error:', (err as Error).message)
             }
 

@@ -61,10 +61,12 @@ const MainPage = () => {
         const cache = getItem<{
             privateKeys: string[]
             rpc: string
+            scanAddress: string
         }>(getKeyCacheByTabId(tabId))
         if (cache) {
             setPrivateKeys(cache.privateKeys)
             setRpc(cache.rpc)
+            formAirdrop.setFieldValue('scanAddress', cache.scanAddress)
         }
     }, [])
 
@@ -72,6 +74,7 @@ const MainPage = () => {
         setItem(getKeyCacheByTabId(tabId), {
             privateKeys,
             rpc,
+            scanAddress: formAirdrop.getFieldValue('scanAddress'),
         })
     }
     const onDragEnter = (e: any) => {
@@ -304,6 +307,7 @@ const MainPage = () => {
                                             privateKeySigner: privateKeys[values.walletIndex - 1],
                                         })
                                         setAllowance(await contractScanner.current.initTokens())
+                                        onSaveLocalCache()
                                         message.success('Lưu airdrop thành công')
                                     }}
                                 >
