@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreState } from '../redux/hook'
-import { TOKEN_ADDRESS } from '../utils/constants'
+import { electronAPI, TOKEN_ADDRESS } from '../utils/constants'
 import { ContractScanner, } from '../utils/scanContract'
 import { WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { tryPrivateKeyToAddress } from '../utils/utils'
@@ -40,6 +40,8 @@ const MainPage = () => {
     const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
     const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
+    const scanAddress = Form.useWatch('scanAddress', formAirdrop)
+    const airdropToken = Form.useWatch('airdropToken', formAirdrop)
 
     const [privateKeys, setPrivateKeys] = useState([
         '4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042',
@@ -417,6 +419,17 @@ const MainPage = () => {
                                         }}
                                     >
                                         Quét
+                                    </Button>
+                                    <Button htmlType="button" type="dashed"
+                                        style={{
+                                            marginLeft: '8px',
+                                            backgroundColor: 'yellow',
+                                        }}
+                                        onClick={() => {
+                                            electronAPI.saveFile(isAirdrop ? airdropToken : `ct_${scanAddress}`)
+                                        }}
+                                    >
+                                        Xuất file
                                     </Button>
                                     {isScanning && (
                                         <Button

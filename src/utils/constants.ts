@@ -50,6 +50,7 @@ const electronAPI: {
         balance: string
     ) => Promise<void>
     getMemoryInfo: () => Promise<Electron.ProcessMemoryInfo>
+    saveFile: (tokenAddress: string) => Promise<string | null>
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

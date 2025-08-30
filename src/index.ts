@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, shell } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { parse } from 'csv-parse/sync'
@@ -30,8 +30,6 @@ if (require('electron-squirrel-startup')) {
 let mainWindow: BrowserWindow
 
 const createWindow = (): void => {
-    const memoryInfo = process.getProcessMemoryInfo()
-    console.log('Process Memory Info:', memoryInfo)
     // Create the browser window.
     mainWindow = new BrowserWindow({
         center: true,
@@ -94,6 +92,25 @@ const createWindow = (): void => {
             return []
         }
     })
+    ipcMain.handle('sheets:save', async (event, tokenAddress: string) => {
+        try {
+            ensureSheetExists(tokenAddress)
+            const file = getCsvFile(tokenAddress)
+            const content = fs.readFileSync(file, 'utf8')
+            const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+                title: 'Lưu file CSV',
+                defaultPath: path.join(app.getPath('desktop'), `${tokenAddress}.csv`),
+                filters: [{ name: 'CSV Files', extensions: ['csv'] }]
+            })
+            if (canceled || !filePath) return null
+            fs.writeFileSync(filePath, content, 'utf8')
+            return filePath
+        } catch (err: any) {
+            console.error('CSV save Error:', err.message)
+            return ''
+        }
+    })
+
 
     ipcMain.handle('sheets:write', (event, tokenAddress: string, ...wallets: string[]) => {
         try {
