@@ -470,9 +470,9 @@ export class ContractScanner {
         }
     }
 
-    public async doAirdrop() {
+    public async doAirdrop(checkLastAirdrop = true) {
         if (!this.isAirdrop) return
-        if (this.lastAirdrop) {
+        if (checkLastAirdrop && this.lastAirdrop) {
             const diff = Date.now() - this.lastAirdrop.getTime()
             const diffMinutes = Math.floor(diff / 1000 / 60)
             if (diffMinutes < 3) {
@@ -501,12 +501,14 @@ export class ContractScanner {
             console.log('Airdrop done:', tx.hash)
             message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
             await electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
+            this.lastAirdrop = new Date()
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
             )
             console.error('Airdrop failed:', err)
         }
+
     }
     async initTokens() {
         console.log('init tokens')
