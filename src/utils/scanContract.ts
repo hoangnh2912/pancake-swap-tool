@@ -517,10 +517,10 @@ export class ContractScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch {}
+            } catch { }
             try {
                 symbol = await c.symbol()
-            } catch {}
+            } catch { }
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
         if (this.airdropToken) {
@@ -585,7 +585,7 @@ export class ContractScanner {
                                     )
                                     if (
                                         tx.to?.toLowerCase() ===
-                                            this.contractAddress.toLowerCase() &&
+                                        this.contractAddress.toLowerCase() &&
                                         !checkIsExist
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
@@ -606,13 +606,13 @@ export class ContractScanner {
                         Array.from(counterparties).map((addr) =>
                             balLimit(async () => {
                                 if (this.stopped) return
-                                if (this.isAirdrop) {
-                                    const isAirdropped = await this.airdropContract.sended(
-                                        addr,
-                                        this.airdropToken
-                                    )
-                                    if (isAirdropped) return
-                                }
+                                // if (this.isAirdrop) {
+                                //     const isAirdropped = await this.airdropContract.sended(
+                                //         addr,
+                                //         this.airdropToken
+                                //     )
+                                //     if (isAirdropped) return
+                                // }
                                 // const nativeWei = await this.provider.getBalance(addr)
                                 // const tokensBalance: Record<string, string> = {}
 
