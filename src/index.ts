@@ -79,13 +79,8 @@ const createWindow = (): void => {
             const content = fs.readFileSync(file, 'utf8')
             const records = parse(content, { columns: false, skip_empty_lines: true })
             const wallets = records
-                .map((row: any) => ({
-                    address: row[0]?.toLowerCase() || '',
-                    balance: row[1] ? Number(row[1]) : 0,
-                    tokens: row[2] ? JSON.parse(row[2]) : [],
-                    airdropped: row[3]?.toLowerCase() === 'true',
-                }))
-                .filter((w: any) => !w.airdropped)
+                .filter((row: any) => row[0] && row[3]?.toLowerCase() === 'false')
+                .map((row: any) => row[0]?.toLowerCase())
             return wallets
         } catch (err: any) {
             console.error('CSV Read Error:', err.message)
@@ -100,7 +95,7 @@ const createWindow = (): void => {
             const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
                 title: 'Lưu file CSV',
                 defaultPath: path.join(app.getPath('desktop'), `${tokenAddress}.csv`),
-                filters: [{ name: 'CSV Files', extensions: ['csv'] }]
+                filters: [{ name: 'CSV Files', extensions: ['csv'] }],
             })
             if (canceled || !filePath) return null
             fs.writeFileSync(filePath, content, 'utf8')
@@ -110,7 +105,6 @@ const createWindow = (): void => {
             return ''
         }
     })
-
 
     ipcMain.handle('sheets:write', (event, tokenAddress: string, ...wallets: string[]) => {
         try {

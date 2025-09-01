@@ -470,21 +470,21 @@ export class ContractScanner {
         }
     }
 
-    private async doAirdrop() {
+    public async doAirdrop() {
         if (!this.isAirdrop) return
         if (this.lastAirdrop) {
             const diff = Date.now() - this.lastAirdrop.getTime()
             const diffMinutes = Math.floor(diff / 1000 / 60)
-            if (diffMinutes < 5) {
+            if (diffMinutes < 3) {
                 message.info(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
                 return
             }
         }
-        const wallets = await electronAPI.readSheet(this.airdropToken)
-        if (wallets.length === 0) return
-        message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
-        const receivers = wallets.map((w) => w)
         try {
+            const wallets = await electronAPI.readSheet(this.airdropToken)
+            if (wallets.length === 0) return
+            message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
+            const receivers = wallets.map((w) => w)
             const decimals = await this.airdropTokenContract.decimals()
             console.log(`Airdrop ${receivers.length} wallets...`)
             const tx = await this.airdropContract.disperseTokenSimple(
@@ -517,10 +517,10 @@ export class ContractScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch { }
+            } catch {}
             try {
                 symbol = await c.symbol()
-            } catch { }
+            } catch {}
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
         if (this.airdropToken) {
@@ -585,7 +585,7 @@ export class ContractScanner {
                                     )
                                     if (
                                         tx.to?.toLowerCase() ===
-                                        this.contractAddress.toLowerCase() &&
+                                            this.contractAddress.toLowerCase() &&
                                         !checkIsExist
                                     ) {
                                         counterparties.add(tx.from.toLowerCase())
@@ -646,7 +646,9 @@ export class ContractScanner {
                     this.currentBlock = end + 1
                 }
             } catch (err) {
-                message.error(`Lỗi trong quá trình quét: ${(err instanceof Error ? err.message : 'Unknown error')}`)
+                message.error(
+                    `Lỗi trong quá trình quét: ${err instanceof Error ? err.message : 'Unknown error'}`
+                )
                 console.error('Loop error:', (err as Error).message)
             }
 
