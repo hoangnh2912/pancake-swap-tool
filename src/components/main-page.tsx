@@ -438,6 +438,21 @@ const MainPage = () => {
                                     >
                                         Xuất file
                                     </Button>
+                                    {isAirdrop && (
+                                        <Button
+                                            htmlType="button"
+                                            style={{
+                                                marginLeft: '8px',
+                                                backgroundColor: 'green',
+                                            }}
+                                            type="primary"
+                                            onClick={() => {
+                                                contractScanner.current?.doAirdrop()
+                                            }}
+                                        >
+                                            Transfer thủ công
+                                        </Button>
+                                    )}
                                     {isScanning && (
                                         <Button
                                             htmlType="button"

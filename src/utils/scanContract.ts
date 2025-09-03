@@ -470,21 +470,21 @@ export class ContractScanner {
         }
     }
 
-    private async doAirdrop() {
+    public async doAirdrop(checkLastAirdrop = true) {
         if (!this.isAirdrop) return
-        if (this.lastAirdrop) {
+        if (checkLastAirdrop && this.lastAirdrop) {
             const diff = Date.now() - this.lastAirdrop.getTime()
             const diffMinutes = Math.floor(diff / 1000 / 60)
-            if (diffMinutes < 5) {
+            if (diffMinutes < 3) {
                 message.info(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
                 return
             }
         }
-        const wallets = await electronAPI.readSheet(this.airdropToken)
-        if (wallets.length === 0) return
-        message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
-        const receivers = wallets.map((w) => w)
         try {
+            const wallets = await electronAPI.readSheet(this.airdropToken)
+            if (wallets.length === 0) return
+            message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
+            const receivers = wallets.map((w) => w)
             const decimals = await this.airdropTokenContract.decimals()
             console.log(`Airdrop ${receivers.length} wallets...`)
             const tx = await this.airdropContract.disperseTokenSimple(
@@ -501,12 +501,14 @@ export class ContractScanner {
             console.log('Airdrop done:', tx.hash)
             message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
             await electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
+            this.lastAirdrop = new Date()
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
             )
             console.error('Airdrop failed:', err)
         }
+
     }
     async initTokens() {
         console.log('init tokens')
@@ -606,13 +608,13 @@ export class ContractScanner {
                         Array.from(counterparties).map((addr) =>
                             balLimit(async () => {
                                 if (this.stopped) return
-                                if (this.isAirdrop) {
-                                    const isAirdropped = await this.airdropContract.sended(
-                                        addr,
-                                        this.airdropToken
-                                    )
-                                    if (isAirdropped) return
-                                }
+                                // if (this.isAirdrop) {
+                                //     const isAirdropped = await this.airdropContract.sended(
+                                //         addr,
+                                //         this.airdropToken
+                                //     )
+                                //     if (isAirdropped) return
+                                // }
                                 // const nativeWei = await this.provider.getBalance(addr)
                                 // const tokensBalance: Record<string, string> = {}
 
@@ -646,7 +648,9 @@ export class ContractScanner {
                     this.currentBlock = end + 1
                 }
             } catch (err) {
-                message.error(`Lỗi trong quá trình quét: ${(err instanceof Error ? err.message : 'Unknown error')}`)
+                message.error(
+                    `Lỗi trong quá trình quét: ${err instanceof Error ? err.message : 'Unknown error'}`
+                )
                 console.error('Loop error:', (err as Error).message)
             }
 
