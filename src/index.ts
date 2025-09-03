@@ -8,7 +8,7 @@ import { PrismaClient } from './prisma/client'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 const prisma = new PrismaClient({
-    datasourceUrl: app.isPackaged ? 'file:./resources/scan-wallet.sqlite' : process.env.DATABASE_URL,
+    datasourceUrl: app.isPackaged ? 'file:../../../resources/scan-wallet.sqlite' : process.env.DATABASE_URL,
 });
 // Gracefully disconnect Prisma when app is closing
 app.on('before-quit', async () => {
@@ -41,7 +41,9 @@ const createWindow = (): void => {
 
     // and load the index.html of the app.
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
-
+    dialog.showMessageBox(mainWindow, {
+        message: `${__dirname}`
+    })
     ipcMain.on('open-link', (event, url) => {
         shell.openExternal(url)
     })
@@ -96,6 +98,7 @@ const createWindow = (): void => {
                 },
             })
 
+
             const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
                 title: 'Lưu file CSV',
                 defaultPath: path.join(app.getPath('desktop'), `${[tokenAddress ? `t_${tokenAddress}` : '', contractAddress ? `ct_${contractAddress}` : ''].filter(Boolean).join('_')}.csv`),
@@ -105,9 +108,9 @@ const createWindow = (): void => {
             if (canceled || !filePath) return null
 
             // Create CSV content
-            const headers = 'Contract,Balance,Token,IsAirdrop,CreatedAt\n'
+            const headers = 'Wallet,Balance,TokenBalance,IsAirdrop,CreatedAt\n'
             const rows = contracts.map(c =>
-                `${c.contract},${c.balance},${c.token || ''},${c.isAirdrop},${c.createdAt.toISOString()}`
+                `${c.wallet},${c.balance},${c.token || ''},${c.isAirdrop},${c.createdAt.toISOString()}`
             ).join('\n')
 
             fs.writeFileSync(filePath, headers + rows, 'utf8')
