@@ -429,11 +429,7 @@ const MainPage = () => {
                                             backgroundColor: 'yellow',
                                         }}
                                         onClick={() => {
-                                            electronAPI.saveFile(
-                                                isAirdrop
-                                                    ? `ad_${airdropToken}|ct_${scanAddress}`
-                                                    : `ct_${scanAddress}`
-                                            )
+                                            electronAPI.saveFile(airdropToken, scanAddress)
                                         }}
                                     >
                                         Xuất file

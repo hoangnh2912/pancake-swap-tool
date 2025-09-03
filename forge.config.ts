@@ -5,11 +5,15 @@ import type { ForgeConfig } from '@electron-forge/shared-types'
 
 import { mainConfig } from './webpack.main.config'
 import { rendererConfig } from './webpack.renderer.config'
-
+import path from 'path'
 const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
         icon: './src/favicon',
+        extraResource: [
+            path.resolve(__dirname, 'src/prisma/client'),
+            path.resolve(__dirname, 'prisma/scan-wallet.sqlite')
+        ]
     },
     rebuildConfig: {},
     makers: [new MakerZIP({})],

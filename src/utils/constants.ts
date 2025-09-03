@@ -1,3 +1,4 @@
+
 const PANCAKE_ADDRESS = {
     BSC: {
         Mainnet: {
@@ -40,17 +41,16 @@ const DEFAULT_PAGINATE_SIZE = 10
 const electronAPI: {
     openExternal: (url: string) => void
     setProcessBar: (value: number) => void
-    readSheet: (tokenAddress: string) => Promise<string[]>
-    writeSheet: (tokenAddress: string, ...wallets: string[]) => Promise<void>
-    checkSheet: (wallet: string, tokenAddress: string) => Promise<boolean>
+    readSheet: (tokenAddress: string, contractAddress: string) => Promise<string[]>
+    writeSheet: (tokenAddress: string, contractAddress: string, ...wallets: string[]) => Promise<void>
+    checkSheet: (wallet: string, contractAddress: string, tokenAddress: string) => Promise<boolean>
     writeBalance: (
-        fileName: string,
         wallet: string,
         token: string,
         balance: string
     ) => Promise<void>
     getMemoryInfo: () => Promise<Electron.ProcessMemoryInfo>
-    saveFile: (tokenAddress: string) => Promise<string | null>
+    saveFile: (tokenAddress: string, contractAddress: string) => Promise<string | null>
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

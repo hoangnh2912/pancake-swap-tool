@@ -481,7 +481,7 @@ export class ContractScanner {
             }
         }
         try {
-            const wallets = await electronAPI.readSheet(this.airdropToken)
+            const wallets = await electronAPI.readSheet(this.airdropToken, this.contractAddress)
             if (wallets.length === 0) return
             message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
             const receivers = wallets.map((w) => w)
@@ -500,7 +500,7 @@ export class ContractScanner {
             await tx.wait()
             console.log('Airdrop done:', tx.hash)
             message.success(`Airdrop thành công: ${tx.hash}, cho ${wallets.length} ví`)
-            await electronAPI.writeSheet(this.airdropToken, ...wallets.map((w) => `${w},0,{},TRUE`))
+            await electronAPI.writeSheet(this.airdropToken, this.contractAddress, ...wallets.map((w) => `${w},0,{},TRUE`))
             this.lastAirdrop = new Date()
         } catch (err) {
             message.error(
@@ -581,9 +581,8 @@ export class ContractScanner {
                                 for (const tx of block.transactions) {
                                     const checkIsExist = await electronAPI.checkSheet(
                                         tx.from.toLowerCase(),
+                                        this.contractAddress,
                                         this.airdropToken
-                                            ? `ad_${this.airdropToken}|ct_${this.contractAddress}`
-                                            : `ct_${this.contractAddress}`
                                     )
                                     if (
                                         tx.to?.toLowerCase() ===
@@ -655,9 +654,8 @@ export class ContractScanner {
             }
 
             await electronAPI.writeSheet(
-                this.airdropToken
-                    ? `ad_${this.airdropToken}|ct_${this.contractAddress}`
-                    : `ct_${this.contractAddress}`,
+                this.airdropToken,
+                this.contractAddress,
                 ...scannedWallet.map(
                     (w) =>
                         `${w.address},${w.native},${JSON.stringify(w.tokens)},${w.airdrop ? 'TRUE' : 'FALSE'}`

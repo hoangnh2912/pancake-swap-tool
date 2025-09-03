@@ -6,15 +6,15 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
     openExternal: (url: string) => ipcRenderer.send('open-link', url),
     setProcessBar: (value: number) => ipcRenderer.send('set-progress-bar', value),
-    readSheet: (tokenAddress: string) => ipcRenderer.invoke('sheets:read', tokenAddress),
-    checkSheet: (wallet: string, tokenAddress: string) =>
-        ipcRenderer.invoke('sheets:check', wallet, tokenAddress),
-    writeSheet: (tokenAddress: string, ...wallets: string[]) =>
-        ipcRenderer.invoke('sheets:write', tokenAddress, ...wallets),
-    writeSheetBalance: (fileName: string, wallet: string, token: string, balance: string) =>
-        ipcRenderer.invoke('sheets:writeBalance', fileName, wallet, token, balance),
+    readSheet: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:read', tokenAddress, contractAddress),
+    checkSheet: (wallet: string, contractAddress: string, tokenAddress: string) =>
+        ipcRenderer.invoke('sheets:check', wallet, contractAddress, tokenAddress),
+    writeSheet: (tokenAddress: string, contractAddress: string, ...wallets: string[]) =>
+        ipcRenderer.invoke('sheets:write', tokenAddress, contractAddress, ...wallets),
+    writeSheetBalance: (wallet: string, token: string, balance: string) =>
+        ipcRenderer.invoke('sheets:writeBalance', wallet, token, balance),
     getMemoryInfo: () => ipcRenderer.invoke('get-memory-info'),
-    saveFile: (tokenAddress: string) => ipcRenderer.invoke('sheets:save', tokenAddress),
+    saveFile: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:save', tokenAddress, contractAddress),
 })
 
 // Buffer, TypedArray, or DataView

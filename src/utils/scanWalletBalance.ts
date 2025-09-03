@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
-import pLimit from 'p-limit'
-import { electronAPI } from './constants'
+// import pLimit from 'p-limit'
+// import { electronAPI } from './constants'
 
 const ERC20_ABI = [
     {
@@ -369,10 +369,10 @@ export class WalletBalanceScanner {
             let symbol = sym
             try {
                 decimals = await c.decimals()
-            } catch {}
+            } catch { }
             try {
                 symbol = await c.symbol()
-            } catch {}
+            } catch { }
             this.erc20s[sym] = { contract: c, decimals, symbol }
         }
     }
@@ -392,7 +392,7 @@ export class WalletBalanceScanner {
                 let bn = ethers.constants.Zero
                 try {
                     bn = await t.contract.balanceOf(addr)
-                } catch {}
+                } catch { }
                 tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
             }
 
@@ -410,23 +410,22 @@ export class WalletBalanceScanner {
     }
 
     async start() {
-        if (this.isScanning) return
-        console.log('start scan')
-        this.stopped = false
-        this.isScanning = true
-        const addresses = await electronAPI.readSheet(this.fileName)
-        const balLimit = pLimit(this.options.concurrency)
+        // if (this.isScanning) return
+        // console.log('start scan')
+        // this.stopped = false
+        // this.isScanning = true
+        // const addresses = await electronAPI.readSheet(this.airdropToken, this.contractAddress)
+        // const balLimit = pLimit(this.options.concurrency)
 
-        for (const addr of addresses) {
-            if (this.stopped) break
-            const wallet = await balLimit(() => this.fetchBalance(addr))
-            await electronAPI.writeBalance(
-                this.fileName,
-                wallet.address,
-                JSON.stringify(wallet.tokens),
-                wallet.native
-            )
-        }
+        // for (const addr of addresses) {
+        //     if (this.stopped) break
+        //     const wallet = await balLimit(() => this.fetchBalance(addr))
+        //     await electronAPI.writeBalance(
+        //         wallet.address,
+        //         JSON.stringify(wallet.tokens),
+        //         wallet.native
+        //     )
+        // }
         this.stop()
     }
 }
