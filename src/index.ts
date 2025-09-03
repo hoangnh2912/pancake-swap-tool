@@ -98,7 +98,7 @@ const createWindow = (): void => {
 
             const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
                 title: 'Lưu file CSV',
-                defaultPath: path.join(app.getPath('desktop'), `${tokenAddress}.csv`),
+                defaultPath: path.join(app.getPath('desktop'), `${[tokenAddress ? `t_${tokenAddress}` : '', contractAddress ? `ct_${contractAddress}` : ''].filter(Boolean).join('_')}.csv`),
                 filters: [{ name: 'CSV Files', extensions: ['csv'] }],
             })
 
