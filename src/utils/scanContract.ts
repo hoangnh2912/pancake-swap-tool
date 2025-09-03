@@ -580,7 +580,7 @@ export class ContractScanner {
                                     const checkIsExist = await electronAPI.checkSheet(
                                         tx.from.toLowerCase(),
                                         this.airdropToken
-                                            ? this.airdropToken
+                                            ? `ad_${this.airdropToken}|ct_${this.contractAddress}`
                                             : `ct_${this.contractAddress}`
                                     )
                                     if (
@@ -651,7 +651,9 @@ export class ContractScanner {
             }
 
             await electronAPI.writeSheet(
-                this.isAirdrop ? this.airdropToken : `ct_${this.contractAddress}`,
+                this.airdropToken
+                    ? `ad_${this.airdropToken}|ct_${this.contractAddress}`
+                    : `ct_${this.contractAddress}`,
                 ...scannedWallet.map(
                     (w) =>
                         `${w.address},${w.native},${JSON.stringify(w.tokens)},${w.airdrop ? 'TRUE' : 'FALSE'}`

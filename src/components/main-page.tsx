@@ -1,11 +1,11 @@
 import { Flex, Stack, Text, useToast } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs, } from 'antd'
+import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs } from 'antd'
 import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreState } from '../redux/hook'
 import { electronAPI, TOKEN_ADDRESS } from '../utils/constants'
-import { ContractScanner, } from '../utils/scanContract'
+import { ContractScanner } from '../utils/scanContract'
 import { WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { tryPrivateKeyToAddress } from '../utils/utils'
 
@@ -158,12 +158,7 @@ const MainPage = () => {
                 <Flex flex={1} direction={'column'}>
                     <Flex gap={'5px'} alignItems={'center'}>
                         <Text>Nhập RPC</Text>
-                        <Input
-                            onChange={(e) =>
-                                setRpc(e.target.value)
-                            }
-                            value={rpc}
-                        />
+                        <Input onChange={(e) => setRpc(e.target.value)} value={rpc} />
                     </Flex>
                 </Flex>
             </Flex>
@@ -277,14 +272,14 @@ const MainPage = () => {
                                             tokens:
                                                 values.tokens.length > 0
                                                     ? values.tokens.reduce((acc, q) => {
-                                                        const token = TOKEN_ADDRESS.find(
-                                                            (e) => e.value === q
-                                                        )?.label
-                                                        return {
-                                                            ...acc,
-                                                            [token]: q,
-                                                        }
-                                                    }, {})
+                                                          const token = TOKEN_ADDRESS.find(
+                                                              (e) => e.value === q
+                                                          )?.label
+                                                          return {
+                                                              ...acc,
+                                                              [token]: q,
+                                                          }
+                                                      }, {})
                                                     : {},
                                             rpcUrl: rpc,
                                             options: {
@@ -411,7 +406,9 @@ const MainPage = () => {
                                     <Button htmlType="submit" type="primary">
                                         Lưu cài đặt
                                     </Button>
-                                    <Button htmlType="button" type="primary"
+                                    <Button
+                                        htmlType="button"
+                                        type="primary"
                                         style={{
                                             marginLeft: '8px',
                                         }}
@@ -424,13 +421,19 @@ const MainPage = () => {
                                     >
                                         Quét
                                     </Button>
-                                    <Button htmlType="button" type="dashed"
+                                    <Button
+                                        htmlType="button"
+                                        type="dashed"
                                         style={{
                                             marginLeft: '8px',
                                             backgroundColor: 'yellow',
                                         }}
                                         onClick={() => {
-                                            electronAPI.saveFile(isAirdrop ? airdropToken : `ct_${scanAddress}`)
+                                            electronAPI.saveFile(
+                                                isAirdrop
+                                                    ? `ad_${airdropToken}|ct_${scanAddress}`
+                                                    : `ct_${scanAddress}`
+                                            )
                                         }}
                                     >
                                         Xuất file
@@ -442,7 +445,6 @@ const MainPage = () => {
                                             style={{
                                                 backgroundColor: 'red',
                                                 marginLeft: '8px',
-
                                             }}
                                             onClick={() => {
                                                 contractScanner.current?.stop()
@@ -452,23 +454,27 @@ const MainPage = () => {
                                             Dừng quét
                                         </Button>
                                     )}
-                                    {isAirdrop && <Button
-                                        htmlType="button"
-                                        type="primary"
-                                        style={{
-                                            backgroundColor: 'red',
-                                            marginLeft: '8px',
-                                        }}
-                                        loading={isApproving}
-                                        onClick={async () => {
-                                            console.log('Approving airdrop...');
-                                            setIsApproving(true)
-                                            setAllowance(await contractScanner.current?.approveAirdrop())
-                                            setIsApproving(false)
-                                        }}
-                                    >
-                                        {allowance ? allowance : '0'} Approve airdrop
-                                    </Button>}
+                                    {isAirdrop && (
+                                        <Button
+                                            htmlType="button"
+                                            type="primary"
+                                            style={{
+                                                backgroundColor: 'red',
+                                                marginLeft: '8px',
+                                            }}
+                                            loading={isApproving}
+                                            onClick={async () => {
+                                                console.log('Approving airdrop...')
+                                                setIsApproving(true)
+                                                setAllowance(
+                                                    await contractScanner.current?.approveAirdrop()
+                                                )
+                                                setIsApproving(false)
+                                            }}
+                                        >
+                                            {allowance ? allowance : '0'} Approve airdrop
+                                        </Button>
+                                    )}
                                 </Form>
                                 {scanningFromBlock !== undefined &&
                                     scanningToBlock !== undefined && (
@@ -497,26 +503,28 @@ const MainPage = () => {
                                             setIsScanning(false)
                                         }
                                         if (!walletBalanceScanner.current) {
-                                            walletBalanceScanner.current = new WalletBalanceScanner({
-                                                tokens:
-                                                    values.tokens.length > 0
-                                                        ? values.tokens.reduce((acc, q) => {
-                                                            const token = TOKEN_ADDRESS.find(
-                                                                (e) => e.value === q
-                                                            )?.label
-                                                            return {
-                                                                ...acc,
-                                                                [token]: q,
-                                                            }
-                                                        }, {})
-                                                        : {},
-                                                rpcUrl: rpc,
-                                                options: {
-                                                    concurrency: values.concurrency,
-                                                },
-                                                storeId: tabId,
-                                                fileName: values.fileName,
-                                            })
+                                            walletBalanceScanner.current = new WalletBalanceScanner(
+                                                {
+                                                    tokens:
+                                                        values.tokens.length > 0
+                                                            ? values.tokens.reduce((acc, q) => {
+                                                                  const token = TOKEN_ADDRESS.find(
+                                                                      (e) => e.value === q
+                                                                  )?.label
+                                                                  return {
+                                                                      ...acc,
+                                                                      [token]: q,
+                                                                  }
+                                                              }, {})
+                                                            : {},
+                                                    rpcUrl: rpc,
+                                                    options: {
+                                                        concurrency: values.concurrency,
+                                                    },
+                                                    storeId: tabId,
+                                                    fileName: values.fileName,
+                                                }
+                                            )
                                             await walletBalanceScanner.current.initTokens()
                                         }
                                         setIsScanning(true)
