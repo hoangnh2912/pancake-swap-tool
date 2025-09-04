@@ -133,7 +133,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Volumes/DATA/CODE/pancake-swap-tool/src/prisma/client",
+      "value": "D:\\CODE\\pancake-swap-tool\\src\\prisma\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -142,7 +142,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin",
+        "value": "windows",
         "native": true
       },
       {
@@ -151,11 +151,12 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Volumes/DATA/CODE/pancake-swap-tool/prisma/schema.prisma",
+    "sourceFilePath": "D:\\CODE\\pancake-swap-tool\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.15.0",
