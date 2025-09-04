@@ -107,9 +107,9 @@ const createWindow = (): void => {
             if (canceled || !filePath) return null
 
             // Create CSV content
-            const headers = 'Wallet,Balance,TokenBalance,IsAirdrop,CreatedAt\n'
+            const headers = 'Wallet,Contract,Balance,TokenBalance,IsAirdrop,CreatedAt\n'
             const rows = contracts.map(c =>
-                `${c.wallet},${c.balance},${c.token || ''},${c.isAirdrop},${c.createdAt.toISOString()}`
+                `${c.wallet},${c.contract},${c.balance},${c.token || ''},${c.isAirdrop},${c.createdAt.toISOString()}`
             ).join('\n')
 
             fs.writeFileSync(filePath, headers + rows, 'utf8')
