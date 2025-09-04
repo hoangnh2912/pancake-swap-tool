@@ -53,6 +53,13 @@ const electronAPI: {
         appPath: string
     }>
     saveFile: (tokenAddress: string, contractAddress: string) => Promise<string | null>
+    readFile: () => Promise<void>
+    countSheet: (tokenAddress: string, contractAddress: string) => Promise<{
+        countAll: number
+        countAirdrop: number
+    }>
+    deleteAll: (tokenAddress: string, contractAddress: string) => Promise<void>
+
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

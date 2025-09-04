@@ -8,6 +8,7 @@ import { electronAPI, TOKEN_ADDRESS } from '../utils/constants'
 import { ContractScanner } from '../utils/scanContract'
 import { WalletBalanceScanner } from '../utils/scanWalletBalance'
 import { tryPrivateKeyToAddress } from '../utils/utils'
+import useCountWallet from '../hooks/useCountWallet'
 
 type ScanWalletAirdrop = {
     fromBlock: number
@@ -42,6 +43,11 @@ const MainPage = () => {
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
     const scanAddress = Form.useWatch('scanAddress', formAirdrop)
     const airdropToken = Form.useWatch('airdropToken', formAirdrop)
+    const {
+        airdropCount,
+        refetch: refetchCount,
+        walletCount,
+    } = useCountWallet(airdropToken, scanAddress)
 
     const [privateKeys, setPrivateKeys] = useState([
         '4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042',
@@ -355,7 +361,8 @@ const MainPage = () => {
                                     >
                                         <Input placeholder="Nhập địa chỉ quét" />
                                     </Form.Item>
-
+                                    <p>Số ví đã quét: {walletCount} </p>
+                                    <p>Số ví đã airdrop: {airdropCount} </p>
                                     {isAirdrop && (
                                         <>
                                             <Form.Item
@@ -432,10 +439,45 @@ const MainPage = () => {
                                             backgroundColor: 'yellow',
                                         }}
                                         onClick={() => {
+                                            electronAPI.readFile()
+                                        }}
+                                    >
+                                        Nhập file
+                                    </Button>
+                                    <Button
+                                        htmlType="button"
+                                        type="dashed"
+                                        style={{
+                                            marginLeft: '8px',
+                                            backgroundColor: 'yellow',
+                                        }}
+                                        onClick={() => {
                                             electronAPI.saveFile(airdropToken, scanAddress)
                                         }}
                                     >
                                         Xuất file
+                                    </Button>
+                                    <Button
+                                        htmlType="button"
+                                        style={{
+                                            marginLeft: '8px',
+                                            backgroundColor: 'red',
+                                        }}
+                                        type="primary"
+                                        onClick={async () => {
+                                            try {
+                                                await electronAPI.deleteAll(
+                                                    airdropToken,
+                                                    scanAddress
+                                                )
+                                                await refetchCount()
+                                                message.success('Xoá dữ liệu thành công')
+                                            } catch (error) {
+                                                message.error(`Xoá dữ liệu thất bại: ${error}`)
+                                            }
+                                        }}
+                                    >
+                                        Xoá dữ liệu đã quét
                                     </Button>
                                     {isAirdrop && (
                                         <Button

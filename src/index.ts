@@ -85,6 +85,96 @@ const createWindow = (): void => {
             return []
         }
     })
+
+
+    ipcMain.handle('sheets:count', async (event, tokenAddress: string, contractAddress: string) => {
+        try {
+            const countAll = tokenAddress ? await prisma.scanContract.count({
+                where: {
+                    token: tokenAddress,
+                    contract: contractAddress,
+                },
+            }) : await prisma.scanContract.count({
+                where: {
+                    contract: contractAddress,
+                    token: null,
+                },
+            })
+
+            const countAirdrop = tokenAddress ? await prisma.scanContract.count({
+                where: {
+                    token: tokenAddress,
+                    contract: contractAddress,
+                    isAirdrop: true,
+                },
+            }) : await prisma.scanContract.count({
+                where: {
+                    contract: contractAddress,
+                    token: null,
+                    isAirdrop: true,
+                },
+            })
+            return { countAll, countAirdrop }
+        } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi đọc số lượng ví: ${err.message}`)
+            console.error('Database Read Error:', err.message)
+            return 0
+        }
+    })
+
+    ipcMain.handle('sheets:deleteAll', async (event, tokenAddress: string, contractAddress: string) => {
+        try {
+            await prisma.scanContract.deleteMany({
+                where: {
+                    token: tokenAddress,
+                    contract: contractAddress,
+                },
+            })
+            return true
+        } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi xóa ví: ${err.message}`)
+            console.error('Database Read Error:', err.message)
+            return false
+        }
+    })
+
+    ipcMain.handle('sheets:import', async (event) => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+            title: 'Chọn file CSV để nhập',
+            properties: ['openFile'],
+            filters: [{ name: 'CSV Files', extensions: ['csv'] }],
+        })
+
+        if (canceled || !filePaths || filePaths.length === 0) return null
+        const allData = fs.readFileSync(filePaths[0], 'utf8').split('\n').map(line => line.trim()).filter(line => line !== '')
+        // import to database
+        let importErr = 0
+        for (let index = 0; index < allData.length; index++) {
+            const line = allData[index];
+            const [Wallet, Contract, Balance, TokenBalance, IsAirdrop, CreatedAt] = line.split(',').map(part => part.trim())
+            if (!Wallet || !Contract || Wallet === 'Wallet') continue
+            try {
+                await prisma.scanContract.create({
+                    data: {
+                        wallet: Wallet.toLowerCase(),
+                        contract: Contract,
+                        balance: Number.parseFloat(Balance) || 0,
+                        token: TokenBalance?.trim() || null,
+                        isAirdrop: IsAirdrop?.toLowerCase() === 'true',
+                        createdAt: new Date(CreatedAt),
+                    },
+                })
+                mainWindow.setProgressBar((index + 1) / allData.length)
+            } catch (err: any) {
+                mainWindow.webContents.send('message', `Lỗi nhập dữ liệu: ${err.message} dòng: ${line}`)
+                console.error('Database Import Error:', err.message)
+                importErr++
+            }
+        }
+        mainWindow.webContents.send('message', `Nhập dữ liệu thành công: ${allData.length - 1 - importErr} dòng`)
+        mainWindow.setProgressBar(-1)
+    })
+
     ipcMain.handle('sheets:save', async (event, tokenAddress: string, contractAddress: string) => {
         try {
             const contracts = await prisma.scanContract.findMany({
@@ -97,7 +187,6 @@ const createWindow = (): void => {
                 },
             })
 
-
             const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
                 title: 'Lưu file CSV',
                 defaultPath: path.join(app.getPath('desktop'), `${[tokenAddress ? `t_${tokenAddress}` : '', contractAddress ? `ct_${contractAddress}` : ''].filter(Boolean).join('_')}.csv`),
@@ -107,7 +196,7 @@ const createWindow = (): void => {
             if (canceled || !filePath) return null
 
             // Create CSV content
-            const headers = 'Wallet,Contract,Balance,TokenBalance,IsAirdrop,CreatedAt\n'
+            const headers = 'Wallet,Contract,Balance,TokenAirdrop,IsAirdrop,CreatedAt\n'
             const rows = contracts.map(c =>
                 `${c.wallet},${c.contract},${c.balance},${c.token || ''},${c.isAirdrop},${c.createdAt.toISOString()}`
             ).join('\n')
