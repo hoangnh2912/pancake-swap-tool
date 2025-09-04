@@ -11,8 +11,7 @@ const config: ForgeConfig = {
         asar: true,
         icon: './src/favicon',
         extraResource: [
-            path.resolve(__dirname, 'src/prisma/client'),
-            path.resolve(__dirname, 'prisma/scan-wallet.sqlite')
+            path.resolve(__dirname, 'prisma'),
         ]
     },
     rebuildConfig: {},
