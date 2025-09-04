@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { electronAPI } from '../utils/constants'
 
 const useMemoryInfo = () => {
-    const [memoryInfo, setMemoryInfo] = useState<Electron.ProcessMemoryInfo>()
+    const [memoryInfo, setMemoryInfo] = useState<Electron.ProcessMemoryInfo & {
+        appPath: string
+    }>()
 
     const fetchMemoryInfo = async () => {
         const info = await electronAPI.getMemoryInfo()

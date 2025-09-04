@@ -5,7 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('electronAPI', {
     openExternal: (url: string) => ipcRenderer.send('open-link', url),
-    setProcessBar: (value: number) => ipcRenderer.send('set-progress-bar', value),
+    onMessage: (callback: (message: string) => void) => ipcRenderer.on('message', (event, message) => callback(message)),
     readSheet: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:read', tokenAddress, contractAddress),
     checkSheet: (wallet: string, contractAddress: string, tokenAddress: string) =>
         ipcRenderer.invoke('sheets:check', wallet, contractAddress, tokenAddress),

@@ -8,7 +8,7 @@ import { PrismaClient } from './prisma/client'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 const prisma = new PrismaClient({
-    datasourceUrl: app.isPackaged ? 'file:../../../resources/scan-wallet.sqlite' : process.env.DATABASE_URL,
+    datasourceUrl: app.isPackaged ? `file:${path.join(app.getAppPath(), '..', 'scan-wallet.sqlite')}` : `file:${path.join(app.getAppPath(), 'prisma', 'scan-wallet.sqlite')}`
 });
 // Gracefully disconnect Prisma when app is closing
 app.on('before-quit', async () => {
@@ -41,9 +41,6 @@ const createWindow = (): void => {
 
     // and load the index.html of the app.
     mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
-    dialog.showMessageBox(mainWindow, {
-        message: `${__dirname}`
-    })
     ipcMain.on('open-link', (event, url) => {
         shell.openExternal(url)
     })
@@ -63,6 +60,7 @@ const createWindow = (): void => {
             })
             return !!existingContract
         } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi kiểm tra ví ${wallet}: ${err.message}`)
             console.error('Database Error:', err.message)
             return true
         }
@@ -82,6 +80,7 @@ const createWindow = (): void => {
             })
             return contracts.map(c => c.wallet.toLowerCase())
         } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi đọc danh sách ví: ${err.message}`)
             console.error('Database Read Error:', err.message)
             return []
         }
@@ -116,6 +115,7 @@ const createWindow = (): void => {
             fs.writeFileSync(filePath, headers + rows, 'utf8')
             return filePath
         } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi lưu file: ${err.message}`)
             console.error('Database save Error:', err.message)
             return ''
         }
@@ -160,6 +160,7 @@ const createWindow = (): void => {
             }
             return true
         } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi ghi ví: ${err.message}`)
             console.error('Database Write Error:', err.message)
             return false
         }
@@ -198,14 +199,19 @@ const createWindow = (): void => {
 
                 return { success: true }
             } catch (err: any) {
+                mainWindow.webContents.send('message', `Lỗi ghi số dư ví ${wallet}: ${err.message}`)
                 console.error('Database WriteBalance Error:', err.message)
                 return { success: false, error: err.message }
             }
         }
     )
 
-    ipcMain.handle('get-memory-info', () => {
-        return process.getProcessMemoryInfo()
+    ipcMain.handle('get-memory-info', async () => {
+        const infor = await process.getProcessMemoryInfo()
+        return {
+            ...infor,
+            appPath: app.getAppPath(),
+        }
     })
 
     const ses = mainWindow.webContents.session

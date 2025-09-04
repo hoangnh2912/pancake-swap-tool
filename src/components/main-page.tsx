@@ -68,6 +68,9 @@ const MainPage = () => {
             setRpc(cache.rpc)
             formAirdrop.setFieldValue('scanAddress', cache.scanAddress)
         }
+        electronAPI.onMessage((msg) => {
+            message.info(msg)
+        })
     }, [])
 
     const onSaveLocalCache = () => {

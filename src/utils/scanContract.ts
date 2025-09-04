@@ -532,7 +532,6 @@ export class ContractScanner {
             )
             return ethers.utils.formatUnits(allowance, await this.airdropTokenContract.decimals())
         }
-        return
     }
 
     stop() {

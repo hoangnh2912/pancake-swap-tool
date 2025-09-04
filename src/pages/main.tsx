@@ -99,6 +99,7 @@ const Main = () => {
         <>
             {memory && (
                 <div>
+                    <div>App Path: {memory.appPath}</div>
                     <div>Private: {formatNiceBytes(`${memory.private}`)}</div>
                     <div>residentSet Set Size: {formatNiceBytes(`${memory.residentSet}`)}</div>
                     <div>shared Bytes: {formatNiceBytes(`${memory.shared}`)}</div>

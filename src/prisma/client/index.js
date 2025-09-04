@@ -134,7 +134,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\CODE\\pancake-swap-tool\\src\\prisma\\client",
+      "value": "/Volumes/DATA/CODE/pancake-swap-tool/src/prisma/client",
       "fromEnvVar": null
     },
     "config": {
@@ -143,17 +143,20 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "windows"
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\CODE\\pancake-swap-tool\\prisma\\schema.prisma",
+    "sourceFilePath": "/Volumes/DATA/CODE/pancake-swap-tool/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.15.0",
@@ -162,16 +165,17 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "fromEnvVar": null,
+        "value": "file:./scan-wallet.sqlite"
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/prisma/client\"\n  binaryTargets = [\"native\"]\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel ScanContract {\n  id        String   @id @default(cuid())\n  wallet    String\n  contract  String\n  balance   Float    @default(0)\n  token     String?\n  isAirdrop Boolean  @default(false)\n  createdAt DateTime @default(now())\n}\n\nmodel ScanBalance {\n  id        String   @id @default(cuid())\n  wallet    String\n  balance   Float    @default(0)\n  token     String?\n  createdAt DateTime @default(now())\n}\n",
-  "inlineSchemaHash": "5f9a01eef85cd547ebbfc221788d3cae07e58ed0f41a85a8a62dffc5e6cbaf8a",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../src/prisma/client\"\n  binaryTargets = [\"native\", \"windows\"]\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./scan-wallet.sqlite\"\n}\n\nmodel ScanContract {\n  id        String   @id @default(cuid())\n  wallet    String\n  contract  String\n  balance   Float    @default(0)\n  token     String?\n  isAirdrop Boolean  @default(false)\n  createdAt DateTime @default(now())\n}\n\nmodel ScanBalance {\n  id        String   @id @default(cuid())\n  wallet    String\n  balance   Float    @default(0)\n  token     String?\n  createdAt DateTime @default(now())\n}\n",
+  "inlineSchemaHash": "a3d96608ebfafb3f71ebe5db54e4c19cf9c0cec52e5749561716bef6866e02b3",
   "copyEngine": true
 }
 
@@ -208,6 +212,10 @@ warnEnvConflicts({
 const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-darwin.dylib.node");
+path.join(process.cwd(), "src/prisma/client/libquery_engine-darwin.dylib.node")
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "query_engine-windows.dll.node");

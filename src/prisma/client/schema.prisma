@@ -7,12 +7,12 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../src/prisma/client"
-  binaryTargets = ["native"]
+  binaryTargets = ["native", "windows"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./scan-wallet.sqlite"
 }
 
 model ScanContract {
