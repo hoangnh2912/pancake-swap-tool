@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readFile: () => ipcRenderer.invoke('sheets:import'),
     countSheet: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:count', tokenAddress, contractAddress),
     deleteAll: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:deleteAll', tokenAddress, contractAddress),
+    deleteAirdrop: (tokenAddress: string, contractAddress: string) => ipcRenderer.invoke('sheets:deleteAirdrop', tokenAddress, contractAddress),
 })
 
 // Buffer, TypedArray, or DataView

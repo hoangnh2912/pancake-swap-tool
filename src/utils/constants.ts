@@ -59,7 +59,7 @@ const electronAPI: {
         countAirdrop: number
     }>
     deleteAll: (tokenAddress: string, contractAddress: string) => Promise<void>
-
+    deleteAirdrop: (tokenAddress: string, contractAddress: string) => Promise<void>
 } = (window as any).electronAPI
 export {
     PANCAKE_ADDRESS,

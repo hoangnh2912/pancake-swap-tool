@@ -138,6 +138,23 @@ const createWindow = (): void => {
         }
     })
 
+    ipcMain.handle('sheets:deleteAirdrop', async (event, tokenAddress: string, contractAddress: string) => {
+        try {
+            await prisma.scanContract.deleteMany({
+                where: {
+                    token: tokenAddress,
+                    contract: contractAddress,
+                    isAirdrop: true,
+                },
+            })
+            return true
+        } catch (err: any) {
+            mainWindow.webContents.send('message', `Lỗi xóa ví: ${err.message}`)
+            console.error('Database Read Error:', err.message)
+            return false
+        }
+    })
+
     ipcMain.handle('sheets:import', async (event) => {
         const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
             title: 'Chọn file CSV để nhập',

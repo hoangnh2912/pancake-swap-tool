@@ -22,6 +22,7 @@ type ScanWalletAirdrop = {
     airdropToken: string
     walletIndex: number
     isAirdrop: boolean
+    isFakeAirdrop: boolean
 }
 
 type ScanWalletBalance = {
@@ -309,6 +310,7 @@ const MainPage = () => {
                                                 )
                                             },
                                             privateKeySigner: privateKeys[values.walletIndex - 1],
+                                            isFakeAirdrop: values.isFakeAirdrop,
                                         })
                                         setAllowance(await contractScanner.current.initTokens())
                                         onSaveLocalCache()
@@ -394,6 +396,12 @@ const MainPage = () => {
                                             >
                                                 <InputNumber placeholder="Nhập số lượng airdrop" />
                                             </Form.Item>
+                                            <Form.Item
+                                                label="Airdrop giả (không thực hiện chuyển token)"
+                                                name="isFakeAirdrop"
+                                            >
+                                                <Switch />
+                                            </Form.Item>
                                         </>
                                     )}
 
@@ -478,6 +486,28 @@ const MainPage = () => {
                                         }}
                                     >
                                         Xoá dữ liệu đã quét
+                                    </Button>
+                                    <Button
+                                        htmlType="button"
+                                        style={{
+                                            marginLeft: '8px',
+                                            backgroundColor: 'red',
+                                        }}
+                                        type="primary"
+                                        onClick={async () => {
+                                            try {
+                                                await electronAPI.deleteAirdrop(
+                                                    airdropToken,
+                                                    scanAddress
+                                                )
+                                                await refetchCount()
+                                                message.success('Xoá dữ liệu thành công')
+                                            } catch (error) {
+                                                message.error(`Xoá dữ liệu thất bại: ${error}`)
+                                            }
+                                        }}
+                                    >
+                                        Xoá ví đã airdrop
                                     </Button>
                                     {isAirdrop && (
                                         <Button
