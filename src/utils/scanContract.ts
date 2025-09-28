@@ -724,6 +724,7 @@ type ScanParams = {
     privateKeySigner: string
     isAirdrop: boolean
     isFakeAirdrop: boolean
+    gasPrice: number
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -756,6 +757,7 @@ export class ContractScanner {
     private isAirdrop: boolean
     private lastAirdrop: Date
     private isFakeAirdrop: boolean
+    private gasPrice: number
 
     constructor(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
@@ -784,6 +786,7 @@ export class ContractScanner {
         this.airdropToken = params.airdropToken
         this.isAirdrop = params.isAirdrop
         this.lastAirdrop = new Date()
+        this.gasPrice = params.gasPrice
     }
 
     public async approveAirdrop() {
@@ -794,7 +797,7 @@ export class ContractScanner {
                 this.airdropContract.address,
                 ethers.constants.MaxUint256,
                 {
-                    gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
+                    gasPrice: ethers.utils.parseUnits(this.gasPrice.toString(), 'gwei'),
                 }
             )
             await res.wait()
@@ -835,7 +838,7 @@ export class ContractScanner {
                     wallets,
                     ethers.utils.parseUnits(this.airdropAmount.toString(), decimals),
                     {
-                        gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
+                        gasPrice: ethers.utils.parseUnits(this.gasPrice.toString(), 'gwei'),
                     }
                 )
                 await tx.wait()
@@ -848,7 +851,7 @@ export class ContractScanner {
                         ethers.utils.parseUnits(this.airdropAmount.toString(), decimals)
                     ),
                     {
-                        gasPrice: ethers.utils.parseUnits('0.1', 'gwei'),
+                        gasPrice: ethers.utils.parseUnits(this.gasPrice.toString(), 'gwei'),
                     }
                 )
                 await tx.wait()

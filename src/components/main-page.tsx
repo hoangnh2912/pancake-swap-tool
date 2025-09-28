@@ -23,6 +23,7 @@ type ScanWalletAirdrop = {
     walletIndex: number
     isAirdrop: boolean
     isFakeAirdrop: boolean
+    gasPrice: number
 }
 
 type ScanWalletBalance = {
@@ -311,6 +312,7 @@ const MainPage = () => {
                                             },
                                             privateKeySigner: privateKeys[values.walletIndex - 1],
                                             isFakeAirdrop: values.isFakeAirdrop,
+                                            gasPrice: values.gasPrice || 0.1,
                                         })
                                         setAllowance(await contractScanner.current.initTokens())
                                         onSaveLocalCache()
@@ -401,6 +403,12 @@ const MainPage = () => {
                                                 name="isFakeAirdrop"
                                             >
                                                 <Switch />
+                                            </Form.Item>
+                                            <Form.Item label="Gas Price (Gwei)" name="gasPrice">
+                                                <InputNumber
+                                                    defaultValue={0.1}
+                                                    placeholder="Nhập gas price"
+                                                />
                                             </Form.Item>
                                         </>
                                     )}
