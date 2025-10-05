@@ -12,7 +12,7 @@ const config: ForgeConfig = {
         icon: './src/favicon',
         extraResource: [
             path.resolve(__dirname, 'prisma'),
-        ]
+        ],
     },
     rebuildConfig: {},
     makers: [new MakerZIP({})],

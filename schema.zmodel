@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./client"
+  binaryTargets = ["native", "windows", "darwin", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./scan-wallet.sqlite"
+}
+
+plugin hooks {
+  provider = '@zenstackhq/tanstack-query'
+  target = 'react'
+  output = 'src/hooks/zenstack'
+}
+
+abstract model Base {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @allow('all',  true)
+}
+
+model Tab extends Base {
+  name    String
+  Stepper Stepper[]
+}
+
+model Stepper extends Base {
+  tab         Tab           @relation(fields: [tabId], references: [id])
+  tabId       String
+  from        String
+  to          String
+  value       Float
+  data        String
+  gasLimit    Int
+  gasPrice    Int
+  Transaction Transaction[]
+}
+
+model Transaction extends Base {
+  stepper   Stepper @relation(fields: [stepperId], references: [id])
+  stepperId String
+  hash      String  @unique
+  gasUsed   Int
+}

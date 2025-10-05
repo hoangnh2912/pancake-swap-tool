@@ -14,15 +14,20 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
- * Model ScanContract
+ * Model Tab
  * 
  */
-export type ScanContract = $Result.DefaultSelection<Prisma.$ScanContractPayload>
+export type Tab = $Result.DefaultSelection<Prisma.$TabPayload>
 /**
- * Model ScanBalance
+ * Model Stepper
  * 
  */
-export type ScanBalance = $Result.DefaultSelection<Prisma.$ScanBalancePayload>
+export type Stepper = $Result.DefaultSelection<Prisma.$StepperPayload>
+/**
+ * Model Transaction
+ * 
+ */
+export type Transaction = $Result.DefaultSelection<Prisma.$TransactionPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -31,8 +36,8 @@ export type ScanBalance = $Result.DefaultSelection<Prisma.$ScanBalancePayload>
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more ScanContracts
- * const scanContracts = await prisma.scanContract.findMany()
+ * // Fetch zero or more Tabs
+ * const tabs = await prisma.tab.findMany()
  * ```
  *
  *
@@ -52,8 +57,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more ScanContracts
-   * const scanContracts = await prisma.scanContract.findMany()
+   * // Fetch zero or more Tabs
+   * const tabs = await prisma.tab.findMany()
    * ```
    *
    *
@@ -143,24 +148,34 @@ export class PrismaClient<
   }>>
 
       /**
-   * `prisma.scanContract`: Exposes CRUD operations for the **ScanContract** model.
+   * `prisma.tab`: Exposes CRUD operations for the **Tab** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ScanContracts
-    * const scanContracts = await prisma.scanContract.findMany()
+    * // Fetch zero or more Tabs
+    * const tabs = await prisma.tab.findMany()
     * ```
     */
-  get scanContract(): Prisma.ScanContractDelegate<ExtArgs, ClientOptions>;
+  get tab(): Prisma.TabDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.scanBalance`: Exposes CRUD operations for the **ScanBalance** model.
+   * `prisma.stepper`: Exposes CRUD operations for the **Stepper** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ScanBalances
-    * const scanBalances = await prisma.scanBalance.findMany()
+    * // Fetch zero or more Steppers
+    * const steppers = await prisma.stepper.findMany()
     * ```
     */
-  get scanBalance(): Prisma.ScanBalanceDelegate<ExtArgs, ClientOptions>;
+  get stepper(): Prisma.StepperDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.transaction`: Exposes CRUD operations for the **Transaction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Transactions
+    * const transactions = await prisma.transaction.findMany()
+    * ```
+    */
+  get transaction(): Prisma.TransactionDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -219,8 +234,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.15.0
-   * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
+   * Prisma Client JS version: 6.16.3
+   * Query Engine version: bb420e667c1820a8c05a38023385f6cc7ef8e83a
    */
   export type PrismaVersion = {
     client: string
@@ -601,8 +616,9 @@ export namespace Prisma {
 
 
   export const ModelName: {
-    ScanContract: 'ScanContract',
-    ScanBalance: 'ScanBalance'
+    Tab: 'Tab',
+    Stepper: 'Stepper',
+    Transaction: 'Transaction'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -621,155 +637,229 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "scanContract" | "scanBalance"
+      modelProps: "tab" | "stepper" | "transaction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
-      ScanContract: {
-        payload: Prisma.$ScanContractPayload<ExtArgs>
-        fields: Prisma.ScanContractFieldRefs
+      Tab: {
+        payload: Prisma.$TabPayload<ExtArgs>
+        fields: Prisma.TabFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ScanContractFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload> | null
+            args: Prisma.TabFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ScanContractFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           findFirst: {
-            args: Prisma.ScanContractFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload> | null
+            args: Prisma.TabFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ScanContractFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           findMany: {
-            args: Prisma.ScanContractFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.TabFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>[]
           }
           create: {
-            args: Prisma.ScanContractCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           createMany: {
-            args: Prisma.ScanContractCreateManyArgs<ExtArgs>
+            args: Prisma.TabCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ScanContractCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.TabCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>[]
           }
           delete: {
-            args: Prisma.ScanContractDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           update: {
-            args: Prisma.ScanContractUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           deleteMany: {
-            args: Prisma.ScanContractDeleteManyArgs<ExtArgs>
+            args: Prisma.TabDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ScanContractUpdateManyArgs<ExtArgs>
+            args: Prisma.TabUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.ScanContractUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.TabUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>[]
           }
           upsert: {
-            args: Prisma.ScanContractUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.TabUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TabPayload>
           }
           aggregate: {
-            args: Prisma.ScanContractAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScanContract>
+            args: Prisma.TabAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTab>
           }
           groupBy: {
-            args: Prisma.ScanContractGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScanContractGroupByOutputType>[]
+            args: Prisma.TabGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TabGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ScanContractCountArgs<ExtArgs>
-            result: $Utils.Optional<ScanContractCountAggregateOutputType> | number
+            args: Prisma.TabCountArgs<ExtArgs>
+            result: $Utils.Optional<TabCountAggregateOutputType> | number
           }
         }
       }
-      ScanBalance: {
-        payload: Prisma.$ScanBalancePayload<ExtArgs>
-        fields: Prisma.ScanBalanceFieldRefs
+      Stepper: {
+        payload: Prisma.$StepperPayload<ExtArgs>
+        fields: Prisma.StepperFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ScanBalanceFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload> | null
+            args: Prisma.StepperFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ScanBalanceFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           findFirst: {
-            args: Prisma.ScanBalanceFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload> | null
+            args: Prisma.StepperFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ScanBalanceFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           findMany: {
-            args: Prisma.ScanBalanceFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
+            args: Prisma.StepperFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>[]
           }
           create: {
-            args: Prisma.ScanBalanceCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           createMany: {
-            args: Prisma.ScanBalanceCreateManyArgs<ExtArgs>
+            args: Prisma.StepperCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ScanBalanceCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
+            args: Prisma.StepperCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>[]
           }
           delete: {
-            args: Prisma.ScanBalanceDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           update: {
-            args: Prisma.ScanBalanceUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           deleteMany: {
-            args: Prisma.ScanBalanceDeleteManyArgs<ExtArgs>
+            args: Prisma.StepperDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ScanBalanceUpdateManyArgs<ExtArgs>
+            args: Prisma.StepperUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.ScanBalanceUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
+            args: Prisma.StepperUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>[]
           }
           upsert: {
-            args: Prisma.ScanBalanceUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
+            args: Prisma.StepperUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StepperPayload>
           }
           aggregate: {
-            args: Prisma.ScanBalanceAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScanBalance>
+            args: Prisma.StepperAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStepper>
           }
           groupBy: {
-            args: Prisma.ScanBalanceGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScanBalanceGroupByOutputType>[]
+            args: Prisma.StepperGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StepperGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ScanBalanceCountArgs<ExtArgs>
-            result: $Utils.Optional<ScanBalanceCountAggregateOutputType> | number
+            args: Prisma.StepperCountArgs<ExtArgs>
+            result: $Utils.Optional<StepperCountAggregateOutputType> | number
+          }
+        }
+      }
+      Transaction: {
+        payload: Prisma.$TransactionPayload<ExtArgs>
+        fields: Prisma.TransactionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TransactionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TransactionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          findFirst: {
+            args: Prisma.TransactionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TransactionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          findMany: {
+            args: Prisma.TransactionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>[]
+          }
+          create: {
+            args: Prisma.TransactionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          createMany: {
+            args: Prisma.TransactionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TransactionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>[]
+          }
+          delete: {
+            args: Prisma.TransactionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          update: {
+            args: Prisma.TransactionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          deleteMany: {
+            args: Prisma.TransactionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TransactionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TransactionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>[]
+          }
+          upsert: {
+            args: Prisma.TransactionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TransactionPayload>
+          }
+          aggregate: {
+            args: Prisma.TransactionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTransaction>
+          }
+          groupBy: {
+            args: Prisma.TransactionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TransactionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TransactionCountArgs<ExtArgs>
+            result: $Utils.Optional<TransactionCountAggregateOutputType> | number
           }
         }
       }
@@ -849,6 +939,10 @@ export namespace Prisma {
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
     /**
+     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
+     */
+    adapter?: runtime.SqlDriverAdapterFactory | null
+    /**
      * Global configuration for omitting model fields by default.
      * 
      * @example
@@ -865,8 +959,9 @@ export namespace Prisma {
     omit?: Prisma.GlobalOmitConfig
   }
   export type GlobalOmitConfig = {
-    scanContract?: ScanContractOmit
-    scanBalance?: ScanBalanceOmit
+    tab?: TabOmit
+    stepper?: StepperOmit
+    transaction?: TransactionOmit
   }
 
   /* Types for Logging */
@@ -942,400 +1037,389 @@ export namespace Prisma {
    */
 
 
+  /**
+   * Count Type TabCountOutputType
+   */
+
+  export type TabCountOutputType = {
+    Stepper: number
+  }
+
+  export type TabCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Stepper?: boolean | TabCountOutputTypeCountStepperArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * TabCountOutputType without action
+   */
+  export type TabCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TabCountOutputType
+     */
+    select?: TabCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * TabCountOutputType without action
+   */
+  export type TabCountOutputTypeCountStepperArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StepperWhereInput
+  }
+
+
+  /**
+   * Count Type StepperCountOutputType
+   */
+
+  export type StepperCountOutputType = {
+    Transaction: number
+  }
+
+  export type StepperCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Transaction?: boolean | StepperCountOutputTypeCountTransactionArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * StepperCountOutputType without action
+   */
+  export type StepperCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StepperCountOutputType
+     */
+    select?: StepperCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * StepperCountOutputType without action
+   */
+  export type StepperCountOutputTypeCountTransactionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TransactionWhereInput
+  }
+
 
   /**
    * Models
    */
 
   /**
-   * Model ScanContract
+   * Model Tab
    */
 
-  export type AggregateScanContract = {
-    _count: ScanContractCountAggregateOutputType | null
-    _avg: ScanContractAvgAggregateOutputType | null
-    _sum: ScanContractSumAggregateOutputType | null
-    _min: ScanContractMinAggregateOutputType | null
-    _max: ScanContractMaxAggregateOutputType | null
+  export type AggregateTab = {
+    _count: TabCountAggregateOutputType | null
+    _min: TabMinAggregateOutputType | null
+    _max: TabMaxAggregateOutputType | null
   }
 
-  export type ScanContractAvgAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanContractSumAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanContractMinAggregateOutputType = {
+  export type TabMinAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    contract: string | null
-    balance: number | null
-    token: string | null
-    isAirdrop: boolean | null
     createdAt: Date | null
+    name: string | null
   }
 
-  export type ScanContractMaxAggregateOutputType = {
+  export type TabMaxAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    contract: string | null
-    balance: number | null
-    token: string | null
-    isAirdrop: boolean | null
     createdAt: Date | null
+    name: string | null
   }
 
-  export type ScanContractCountAggregateOutputType = {
+  export type TabCountAggregateOutputType = {
     id: number
-    wallet: number
-    contract: number
-    balance: number
-    token: number
-    isAirdrop: number
     createdAt: number
+    name: number
     _all: number
   }
 
 
-  export type ScanContractAvgAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanContractSumAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanContractMinAggregateInputType = {
+  export type TabMinAggregateInputType = {
     id?: true
-    wallet?: true
-    contract?: true
-    balance?: true
-    token?: true
-    isAirdrop?: true
     createdAt?: true
+    name?: true
   }
 
-  export type ScanContractMaxAggregateInputType = {
+  export type TabMaxAggregateInputType = {
     id?: true
-    wallet?: true
-    contract?: true
-    balance?: true
-    token?: true
-    isAirdrop?: true
     createdAt?: true
+    name?: true
   }
 
-  export type ScanContractCountAggregateInputType = {
+  export type TabCountAggregateInputType = {
     id?: true
-    wallet?: true
-    contract?: true
-    balance?: true
-    token?: true
-    isAirdrop?: true
     createdAt?: true
+    name?: true
     _all?: true
   }
 
-  export type ScanContractAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanContract to aggregate.
+     * Filter which Tab to aggregate.
      */
-    where?: ScanContractWhereInput
+    where?: TabWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of Tabs to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: TabOrderByWithRelationInput | TabOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: TabWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` Tabs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` Tabs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ScanContracts
+     * Count returned Tabs
     **/
-    _count?: true | ScanContractCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: ScanContractAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: ScanContractSumAggregateInputType
+    _count?: true | TabCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ScanContractMinAggregateInputType
+    _min?: TabMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ScanContractMaxAggregateInputType
+    _max?: TabMaxAggregateInputType
   }
 
-  export type GetScanContractAggregateType<T extends ScanContractAggregateArgs> = {
-        [P in keyof T & keyof AggregateScanContract]: P extends '_count' | 'count'
+  export type GetTabAggregateType<T extends TabAggregateArgs> = {
+        [P in keyof T & keyof AggregateTab]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateScanContract[P]>
-      : GetScalarType<T[P], AggregateScanContract[P]>
+        : GetScalarType<T[P], AggregateTab[P]>
+      : GetScalarType<T[P], AggregateTab[P]>
   }
 
 
 
 
-  export type ScanContractGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScanContractWhereInput
-    orderBy?: ScanContractOrderByWithAggregationInput | ScanContractOrderByWithAggregationInput[]
-    by: ScanContractScalarFieldEnum[] | ScanContractScalarFieldEnum
-    having?: ScanContractScalarWhereWithAggregatesInput
+  export type TabGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TabWhereInput
+    orderBy?: TabOrderByWithAggregationInput | TabOrderByWithAggregationInput[]
+    by: TabScalarFieldEnum[] | TabScalarFieldEnum
+    having?: TabScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ScanContractCountAggregateInputType | true
-    _avg?: ScanContractAvgAggregateInputType
-    _sum?: ScanContractSumAggregateInputType
-    _min?: ScanContractMinAggregateInputType
-    _max?: ScanContractMaxAggregateInputType
+    _count?: TabCountAggregateInputType | true
+    _min?: TabMinAggregateInputType
+    _max?: TabMaxAggregateInputType
   }
 
-  export type ScanContractGroupByOutputType = {
+  export type TabGroupByOutputType = {
     id: string
-    wallet: string
-    contract: string
-    balance: number
-    token: string | null
-    isAirdrop: boolean
     createdAt: Date
-    _count: ScanContractCountAggregateOutputType | null
-    _avg: ScanContractAvgAggregateOutputType | null
-    _sum: ScanContractSumAggregateOutputType | null
-    _min: ScanContractMinAggregateOutputType | null
-    _max: ScanContractMaxAggregateOutputType | null
+    name: string
+    _count: TabCountAggregateOutputType | null
+    _min: TabMinAggregateOutputType | null
+    _max: TabMaxAggregateOutputType | null
   }
 
-  type GetScanContractGroupByPayload<T extends ScanContractGroupByArgs> = Prisma.PrismaPromise<
+  type GetTabGroupByPayload<T extends TabGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ScanContractGroupByOutputType, T['by']> &
+      PickEnumerable<TabGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ScanContractGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof TabGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ScanContractGroupByOutputType[P]>
-            : GetScalarType<T[P], ScanContractGroupByOutputType[P]>
+              : GetScalarType<T[P], TabGroupByOutputType[P]>
+            : GetScalarType<T[P], TabGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ScanContractSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TabSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    contract?: boolean
-    balance?: boolean
-    token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+    name?: boolean
+    Stepper?: boolean | Tab$StepperArgs<ExtArgs>
+    _count?: boolean | TabCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tab"]>
 
-  export type ScanContractSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TabSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    contract?: boolean
-    balance?: boolean
-    token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+    name?: boolean
+  }, ExtArgs["result"]["tab"]>
 
-  export type ScanContractSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type TabSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    contract?: boolean
-    balance?: boolean
-    token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+    name?: boolean
+  }, ExtArgs["result"]["tab"]>
 
-  export type ScanContractSelectScalar = {
+  export type TabSelectScalar = {
     id?: boolean
-    wallet?: boolean
-    contract?: boolean
-    balance?: boolean
-    token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
+    name?: boolean
   }
 
-  export type ScanContractOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "contract" | "balance" | "token" | "isAirdrop" | "createdAt", ExtArgs["result"]["scanContract"]>
+  export type TabOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "name", ExtArgs["result"]["tab"]>
+  export type TabInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Stepper?: boolean | Tab$StepperArgs<ExtArgs>
+    _count?: boolean | TabCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type TabIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type TabIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $ScanContractPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScanContract"
-    objects: {}
+  export type $TabPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Tab"
+    objects: {
+      Stepper: Prisma.$StepperPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      wallet: string
-      contract: string
-      balance: number
-      token: string | null
-      isAirdrop: boolean
       createdAt: Date
-    }, ExtArgs["result"]["scanContract"]>
+      name: string
+    }, ExtArgs["result"]["tab"]>
     composites: {}
   }
 
-  type ScanContractGetPayload<S extends boolean | null | undefined | ScanContractDefaultArgs> = $Result.GetResult<Prisma.$ScanContractPayload, S>
+  type TabGetPayload<S extends boolean | null | undefined | TabDefaultArgs> = $Result.GetResult<Prisma.$TabPayload, S>
 
-  type ScanContractCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ScanContractFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ScanContractCountAggregateInputType | true
+  type TabCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TabFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TabCountAggregateInputType | true
     }
 
-  export interface ScanContractDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanContract'], meta: { name: 'ScanContract' } }
+  export interface TabDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Tab'], meta: { name: 'Tab' } }
     /**
-     * Find zero or one ScanContract that matches the filter.
-     * @param {ScanContractFindUniqueArgs} args - Arguments to find a ScanContract
+     * Find zero or one Tab that matches the filter.
+     * @param {TabFindUniqueArgs} args - Arguments to find a Tab
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findUnique({
+     * // Get one Tab
+     * const tab = await prisma.tab.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ScanContractFindUniqueArgs>(args: SelectSubset<T, ScanContractFindUniqueArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends TabFindUniqueArgs>(args: SelectSubset<T, TabFindUniqueArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one ScanContract that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Tab that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {ScanContractFindUniqueOrThrowArgs} args - Arguments to find a ScanContract
+     * @param {TabFindUniqueOrThrowArgs} args - Arguments to find a Tab
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findUniqueOrThrow({
+     * // Get one Tab
+     * const tab = await prisma.tab.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ScanContractFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanContractFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends TabFindUniqueOrThrowArgs>(args: SelectSubset<T, TabFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanContract that matches the filter.
+     * Find the first Tab that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindFirstArgs} args - Arguments to find a ScanContract
+     * @param {TabFindFirstArgs} args - Arguments to find a Tab
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findFirst({
+     * // Get one Tab
+     * const tab = await prisma.tab.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ScanContractFindFirstArgs>(args?: SelectSubset<T, ScanContractFindFirstArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends TabFindFirstArgs>(args?: SelectSubset<T, TabFindFirstArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanContract that matches the filter or
+     * Find the first Tab that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindFirstOrThrowArgs} args - Arguments to find a ScanContract
+     * @param {TabFindFirstOrThrowArgs} args - Arguments to find a Tab
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findFirstOrThrow({
+     * // Get one Tab
+     * const tab = await prisma.tab.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ScanContractFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanContractFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends TabFindFirstOrThrowArgs>(args?: SelectSubset<T, TabFindFirstOrThrowArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more ScanContracts that matches the filter.
+     * Find zero or more Tabs that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {TabFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ScanContracts
-     * const scanContracts = await prisma.scanContract.findMany()
+     * // Get all Tabs
+     * const tabs = await prisma.tab.findMany()
      * 
-     * // Get first 10 ScanContracts
-     * const scanContracts = await prisma.scanContract.findMany({ take: 10 })
+     * // Get first 10 Tabs
+     * const tabs = await prisma.tab.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.findMany({ select: { id: true } })
+     * const tabWithIdOnly = await prisma.tab.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ScanContractFindManyArgs>(args?: SelectSubset<T, ScanContractFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends TabFindManyArgs>(args?: SelectSubset<T, TabFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a ScanContract.
-     * @param {ScanContractCreateArgs} args - Arguments to create a ScanContract.
+     * Create a Tab.
+     * @param {TabCreateArgs} args - Arguments to create a Tab.
      * @example
-     * // Create one ScanContract
-     * const ScanContract = await prisma.scanContract.create({
+     * // Create one Tab
+     * const Tab = await prisma.tab.create({
      *   data: {
-     *     // ... data to create a ScanContract
+     *     // ... data to create a Tab
      *   }
      * })
      * 
      */
-    create<T extends ScanContractCreateArgs>(args: SelectSubset<T, ScanContractCreateArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends TabCreateArgs>(args: SelectSubset<T, TabCreateArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many ScanContracts.
-     * @param {ScanContractCreateManyArgs} args - Arguments to create many ScanContracts.
+     * Create many Tabs.
+     * @param {TabCreateManyArgs} args - Arguments to create many Tabs.
      * @example
-     * // Create many ScanContracts
-     * const scanContract = await prisma.scanContract.createMany({
+     * // Create many Tabs
+     * const tab = await prisma.tab.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ScanContractCreateManyArgs>(args?: SelectSubset<T, ScanContractCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends TabCreateManyArgs>(args?: SelectSubset<T, TabCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ScanContracts and returns the data saved in the database.
-     * @param {ScanContractCreateManyAndReturnArgs} args - Arguments to create many ScanContracts.
+     * Create many Tabs and returns the data saved in the database.
+     * @param {TabCreateManyAndReturnArgs} args - Arguments to create many Tabs.
      * @example
-     * // Create many ScanContracts
-     * const scanContract = await prisma.scanContract.createManyAndReturn({
+     * // Create many Tabs
+     * const tab = await prisma.tab.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ScanContracts and only return the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.createManyAndReturn({
+     * // Create many Tabs and only return the `id`
+     * const tabWithIdOnly = await prisma.tab.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -1345,28 +1429,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ScanContractCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanContractCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends TabCreateManyAndReturnArgs>(args?: SelectSubset<T, TabCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a ScanContract.
-     * @param {ScanContractDeleteArgs} args - Arguments to delete one ScanContract.
+     * Delete a Tab.
+     * @param {TabDeleteArgs} args - Arguments to delete one Tab.
      * @example
-     * // Delete one ScanContract
-     * const ScanContract = await prisma.scanContract.delete({
+     * // Delete one Tab
+     * const Tab = await prisma.tab.delete({
      *   where: {
-     *     // ... filter to delete one ScanContract
+     *     // ... filter to delete one Tab
      *   }
      * })
      * 
      */
-    delete<T extends ScanContractDeleteArgs>(args: SelectSubset<T, ScanContractDeleteArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends TabDeleteArgs>(args: SelectSubset<T, TabDeleteArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one ScanContract.
-     * @param {ScanContractUpdateArgs} args - Arguments to update one ScanContract.
+     * Update one Tab.
+     * @param {TabUpdateArgs} args - Arguments to update one Tab.
      * @example
-     * // Update one ScanContract
-     * const scanContract = await prisma.scanContract.update({
+     * // Update one Tab
+     * const tab = await prisma.tab.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1376,30 +1460,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ScanContractUpdateArgs>(args: SelectSubset<T, ScanContractUpdateArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends TabUpdateArgs>(args: SelectSubset<T, TabUpdateArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more ScanContracts.
-     * @param {ScanContractDeleteManyArgs} args - Arguments to filter ScanContracts to delete.
+     * Delete zero or more Tabs.
+     * @param {TabDeleteManyArgs} args - Arguments to filter Tabs to delete.
      * @example
-     * // Delete a few ScanContracts
-     * const { count } = await prisma.scanContract.deleteMany({
+     * // Delete a few Tabs
+     * const { count } = await prisma.tab.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ScanContractDeleteManyArgs>(args?: SelectSubset<T, ScanContractDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends TabDeleteManyArgs>(args?: SelectSubset<T, TabDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanContracts.
+     * Update zero or more Tabs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {TabUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ScanContracts
-     * const scanContract = await prisma.scanContract.updateMany({
+     * // Update many Tabs
+     * const tab = await prisma.tab.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1409,14 +1493,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ScanContractUpdateManyArgs>(args: SelectSubset<T, ScanContractUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends TabUpdateManyArgs>(args: SelectSubset<T, TabUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanContracts and returns the data updated in the database.
-     * @param {ScanContractUpdateManyAndReturnArgs} args - Arguments to update many ScanContracts.
+     * Update zero or more Tabs and returns the data updated in the database.
+     * @param {TabUpdateManyAndReturnArgs} args - Arguments to update many Tabs.
      * @example
-     * // Update many ScanContracts
-     * const scanContract = await prisma.scanContract.updateManyAndReturn({
+     * // Update many Tabs
+     * const tab = await prisma.tab.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1425,8 +1509,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more ScanContracts and only return the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.updateManyAndReturn({
+     * // Update zero or more Tabs and only return the `id`
+     * const tabWithIdOnly = await prisma.tab.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -1439,56 +1523,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ScanContractUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanContractUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends TabUpdateManyAndReturnArgs>(args: SelectSubset<T, TabUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one ScanContract.
-     * @param {ScanContractUpsertArgs} args - Arguments to update or create a ScanContract.
+     * Create or update one Tab.
+     * @param {TabUpsertArgs} args - Arguments to update or create a Tab.
      * @example
-     * // Update or create a ScanContract
-     * const scanContract = await prisma.scanContract.upsert({
+     * // Update or create a Tab
+     * const tab = await prisma.tab.upsert({
      *   create: {
-     *     // ... data to create a ScanContract
+     *     // ... data to create a Tab
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ScanContract we want to update
+     *     // ... the filter for the Tab we want to update
      *   }
      * })
      */
-    upsert<T extends ScanContractUpsertArgs>(args: SelectSubset<T, ScanContractUpsertArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends TabUpsertArgs>(args: SelectSubset<T, TabUpsertArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of ScanContracts.
+     * Count the number of Tabs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractCountArgs} args - Arguments to filter ScanContracts to count.
+     * @param {TabCountArgs} args - Arguments to filter Tabs to count.
      * @example
-     * // Count the number of ScanContracts
-     * const count = await prisma.scanContract.count({
+     * // Count the number of Tabs
+     * const count = await prisma.tab.count({
      *   where: {
-     *     // ... the filter for the ScanContracts we want to count
+     *     // ... the filter for the Tabs we want to count
      *   }
      * })
     **/
-    count<T extends ScanContractCountArgs>(
-      args?: Subset<T, ScanContractCountArgs>,
+    count<T extends TabCountArgs>(
+      args?: Subset<T, TabCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ScanContractCountAggregateOutputType>
+          : GetScalarType<T['select'], TabCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ScanContract.
+     * Allows you to perform aggregations operations on a Tab.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {TabAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -1508,13 +1592,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ScanContractAggregateArgs>(args: Subset<T, ScanContractAggregateArgs>): Prisma.PrismaPromise<GetScanContractAggregateType<T>>
+    aggregate<T extends TabAggregateArgs>(args: Subset<T, TabAggregateArgs>): Prisma.PrismaPromise<GetTabAggregateType<T>>
 
     /**
-     * Group by ScanContract.
+     * Group by Tab.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractGroupByArgs} args - Group by arguments.
+     * @param {TabGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -1529,14 +1613,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ScanContractGroupByArgs,
+      T extends TabGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScanContractGroupByArgs['orderBy'] }
-        : { orderBy?: ScanContractGroupByArgs['orderBy'] },
+        ? { orderBy: TabGroupByArgs['orderBy'] }
+        : { orderBy?: TabGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -1585,21 +1669,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ScanContractGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanContractGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, TabGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTabGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ScanContract model
+   * Fields of the Tab model
    */
-  readonly fields: ScanContractFieldRefs;
+  readonly fields: TabFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ScanContract.
+   * The delegate class that acts as a "Promise-like" for Tab.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ScanContractClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__TabClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    Stepper<T extends Tab$StepperArgs<ExtArgs> = {}>(args?: Subset<T, Tab$StepperArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1626,745 +1711,880 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ScanContract model
+   * Fields of the Tab model
    */
-  interface ScanContractFieldRefs {
-    readonly id: FieldRef<"ScanContract", 'String'>
-    readonly wallet: FieldRef<"ScanContract", 'String'>
-    readonly contract: FieldRef<"ScanContract", 'String'>
-    readonly balance: FieldRef<"ScanContract", 'Float'>
-    readonly token: FieldRef<"ScanContract", 'String'>
-    readonly isAirdrop: FieldRef<"ScanContract", 'Boolean'>
-    readonly createdAt: FieldRef<"ScanContract", 'DateTime'>
+  interface TabFieldRefs {
+    readonly id: FieldRef<"Tab", 'String'>
+    readonly createdAt: FieldRef<"Tab", 'DateTime'>
+    readonly name: FieldRef<"Tab", 'String'>
   }
     
 
   // Custom InputTypes
   /**
-   * ScanContract findUnique
+   * Tab findUnique
    */
-  export type ScanContractFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanContractWhereUniqueInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter, which Tab to fetch.
+     */
+    where: TabWhereUniqueInput
   }
 
   /**
-   * ScanContract findUniqueOrThrow
+   * Tab findUniqueOrThrow
    */
-  export type ScanContractFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanContractWhereUniqueInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter, which Tab to fetch.
+     */
+    where: TabWhereUniqueInput
   }
 
   /**
-   * ScanContract findFirst
+   * Tab findFirst
    */
-  export type ScanContractFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanContractWhereInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter, which Tab to fetch.
+     */
+    where?: TabWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of Tabs to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: TabOrderByWithRelationInput | TabOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanContracts.
+     * Sets the position for searching for Tabs.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: TabWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` Tabs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` Tabs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanContracts.
+     * Filter by unique combinations of Tabs.
      */
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: TabScalarFieldEnum | TabScalarFieldEnum[]
   }
 
   /**
-   * ScanContract findFirstOrThrow
+   * Tab findFirstOrThrow
    */
-  export type ScanContractFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanContractWhereInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter, which Tab to fetch.
+     */
+    where?: TabWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of Tabs to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: TabOrderByWithRelationInput | TabOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanContracts.
+     * Sets the position for searching for Tabs.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: TabWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` Tabs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` Tabs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanContracts.
+     * Filter by unique combinations of Tabs.
      */
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: TabScalarFieldEnum | TabScalarFieldEnum[]
   }
 
   /**
-   * ScanContract findMany
+   * Tab findMany
    */
-  export type ScanContractFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContracts to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanContractWhereInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter, which Tabs to fetch.
+     */
+    where?: TabWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of Tabs to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: TabOrderByWithRelationInput | TabOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ScanContracts.
+     * Sets the position for listing Tabs.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: TabWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` Tabs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` Tabs.
      */
     skip?: number
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: TabScalarFieldEnum | TabScalarFieldEnum[]
   }
 
   /**
-   * ScanContract create
+   * Tab create
    */
-  export type ScanContractCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * The data needed to create a ScanContract.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<ScanContractCreateInput, ScanContractUncheckedCreateInput>
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Tab.
+     */
+    data: XOR<TabCreateInput, TabUncheckedCreateInput>
   }
 
   /**
-   * ScanContract createMany
+   * Tab createMany
    */
-  export type ScanContractCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ScanContracts.
+     * The data used to create many Tabs.
      */
-    data: ScanContractCreateManyInput | ScanContractCreateManyInput[]
+    data: TabCreateManyInput | TabCreateManyInput[]
   }
 
   /**
-   * ScanContract createManyAndReturn
+   * Tab createManyAndReturn
    */
-  export type ScanContractCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelectCreateManyAndReturn<ExtArgs> | null
+    select?: TabSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * The data used to create many ScanContracts.
+     * The data used to create many Tabs.
      */
-    data: ScanContractCreateManyInput | ScanContractCreateManyInput[]
+    data: TabCreateManyInput | TabCreateManyInput[]
   }
 
   /**
-   * ScanContract update
+   * Tab update
    */
-  export type ScanContractUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * The data needed to update a ScanContract.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<ScanContractUpdateInput, ScanContractUncheckedUpdateInput>
+    include?: TabInclude<ExtArgs> | null
     /**
-     * Choose, which ScanContract to update.
+     * The data needed to update a Tab.
      */
-    where: ScanContractWhereUniqueInput
+    data: XOR<TabUpdateInput, TabUncheckedUpdateInput>
+    /**
+     * Choose, which Tab to update.
+     */
+    where: TabWhereUniqueInput
   }
 
   /**
-   * ScanContract updateMany
+   * Tab updateMany
    */
-  export type ScanContractUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ScanContracts.
+     * The data used to update Tabs.
      */
-    data: XOR<ScanContractUpdateManyMutationInput, ScanContractUncheckedUpdateManyInput>
+    data: XOR<TabUpdateManyMutationInput, TabUncheckedUpdateManyInput>
     /**
-     * Filter which ScanContracts to update
+     * Filter which Tabs to update
      */
-    where?: ScanContractWhereInput
+    where?: TabWhereInput
     /**
-     * Limit how many ScanContracts to update.
+     * Limit how many Tabs to update.
      */
     limit?: number
   }
 
   /**
-   * ScanContract updateManyAndReturn
+   * Tab updateManyAndReturn
    */
-  export type ScanContractUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: TabSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * The data used to update ScanContracts.
+     * The data used to update Tabs.
      */
-    data: XOR<ScanContractUpdateManyMutationInput, ScanContractUncheckedUpdateManyInput>
+    data: XOR<TabUpdateManyMutationInput, TabUncheckedUpdateManyInput>
     /**
-     * Filter which ScanContracts to update
+     * Filter which Tabs to update
      */
-    where?: ScanContractWhereInput
+    where?: TabWhereInput
     /**
-     * Limit how many ScanContracts to update.
+     * Limit how many Tabs to update.
      */
     limit?: number
   }
 
   /**
-   * ScanContract upsert
+   * Tab upsert
    */
-  export type ScanContractUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * The filter to search for the ScanContract to update in case it exists.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanContractWhereUniqueInput
+    include?: TabInclude<ExtArgs> | null
     /**
-     * In case the ScanContract found by the `where` argument doesn't exist, create a new ScanContract with this data.
+     * The filter to search for the Tab to update in case it exists.
      */
-    create: XOR<ScanContractCreateInput, ScanContractUncheckedCreateInput>
+    where: TabWhereUniqueInput
     /**
-     * In case the ScanContract was found with the provided `where` argument, update it with this data.
+     * In case the Tab found by the `where` argument doesn't exist, create a new Tab with this data.
      */
-    update: XOR<ScanContractUpdateInput, ScanContractUncheckedUpdateInput>
+    create: XOR<TabCreateInput, TabUncheckedCreateInput>
+    /**
+     * In case the Tab was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TabUpdateInput, TabUncheckedUpdateInput>
   }
 
   /**
-   * ScanContract delete
+   * Tab delete
    */
-  export type ScanContractDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Tab
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: TabSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Tab
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: TabOmit<ExtArgs> | null
     /**
-     * Filter which ScanContract to delete.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanContractWhereUniqueInput
+    include?: TabInclude<ExtArgs> | null
+    /**
+     * Filter which Tab to delete.
+     */
+    where: TabWhereUniqueInput
   }
 
   /**
-   * ScanContract deleteMany
+   * Tab deleteMany
    */
-  export type ScanContractDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TabDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanContracts to delete
+     * Filter which Tabs to delete
      */
-    where?: ScanContractWhereInput
+    where?: TabWhereInput
     /**
-     * Limit how many ScanContracts to delete.
+     * Limit how many Tabs to delete.
      */
     limit?: number
   }
 
   /**
-   * ScanContract without action
+   * Tab.Stepper
    */
-  export type ScanContractDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Tab$StepperArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StepperInclude<ExtArgs> | null
+    where?: StepperWhereInput
+    orderBy?: StepperOrderByWithRelationInput | StepperOrderByWithRelationInput[]
+    cursor?: StepperWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StepperScalarFieldEnum | StepperScalarFieldEnum[]
+  }
+
+  /**
+   * Tab without action
+   */
+  export type TabDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Tab
+     */
+    select?: TabSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Tab
+     */
+    omit?: TabOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TabInclude<ExtArgs> | null
   }
 
 
   /**
-   * Model ScanBalance
+   * Model Stepper
    */
 
-  export type AggregateScanBalance = {
-    _count: ScanBalanceCountAggregateOutputType | null
-    _avg: ScanBalanceAvgAggregateOutputType | null
-    _sum: ScanBalanceSumAggregateOutputType | null
-    _min: ScanBalanceMinAggregateOutputType | null
-    _max: ScanBalanceMaxAggregateOutputType | null
+  export type AggregateStepper = {
+    _count: StepperCountAggregateOutputType | null
+    _avg: StepperAvgAggregateOutputType | null
+    _sum: StepperSumAggregateOutputType | null
+    _min: StepperMinAggregateOutputType | null
+    _max: StepperMaxAggregateOutputType | null
   }
 
-  export type ScanBalanceAvgAggregateOutputType = {
-    balance: number | null
+  export type StepperAvgAggregateOutputType = {
+    value: number | null
+    gasLimit: number | null
+    gasPrice: number | null
   }
 
-  export type ScanBalanceSumAggregateOutputType = {
-    balance: number | null
+  export type StepperSumAggregateOutputType = {
+    value: number | null
+    gasLimit: number | null
+    gasPrice: number | null
   }
 
-  export type ScanBalanceMinAggregateOutputType = {
+  export type StepperMinAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    balance: number | null
-    token: string | null
     createdAt: Date | null
+    tabId: string | null
+    from: string | null
+    to: string | null
+    value: number | null
+    data: string | null
+    gasLimit: number | null
+    gasPrice: number | null
   }
 
-  export type ScanBalanceMaxAggregateOutputType = {
+  export type StepperMaxAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    balance: number | null
-    token: string | null
     createdAt: Date | null
+    tabId: string | null
+    from: string | null
+    to: string | null
+    value: number | null
+    data: string | null
+    gasLimit: number | null
+    gasPrice: number | null
   }
 
-  export type ScanBalanceCountAggregateOutputType = {
+  export type StepperCountAggregateOutputType = {
     id: number
-    wallet: number
-    balance: number
-    token: number
     createdAt: number
+    tabId: number
+    from: number
+    to: number
+    value: number
+    data: number
+    gasLimit: number
+    gasPrice: number
     _all: number
   }
 
 
-  export type ScanBalanceAvgAggregateInputType = {
-    balance?: true
+  export type StepperAvgAggregateInputType = {
+    value?: true
+    gasLimit?: true
+    gasPrice?: true
   }
 
-  export type ScanBalanceSumAggregateInputType = {
-    balance?: true
+  export type StepperSumAggregateInputType = {
+    value?: true
+    gasLimit?: true
+    gasPrice?: true
   }
 
-  export type ScanBalanceMinAggregateInputType = {
+  export type StepperMinAggregateInputType = {
     id?: true
-    wallet?: true
-    balance?: true
-    token?: true
     createdAt?: true
+    tabId?: true
+    from?: true
+    to?: true
+    value?: true
+    data?: true
+    gasLimit?: true
+    gasPrice?: true
   }
 
-  export type ScanBalanceMaxAggregateInputType = {
+  export type StepperMaxAggregateInputType = {
     id?: true
-    wallet?: true
-    balance?: true
-    token?: true
     createdAt?: true
+    tabId?: true
+    from?: true
+    to?: true
+    value?: true
+    data?: true
+    gasLimit?: true
+    gasPrice?: true
   }
 
-  export type ScanBalanceCountAggregateInputType = {
+  export type StepperCountAggregateInputType = {
     id?: true
-    wallet?: true
-    balance?: true
-    token?: true
     createdAt?: true
+    tabId?: true
+    from?: true
+    to?: true
+    value?: true
+    data?: true
+    gasLimit?: true
+    gasPrice?: true
     _all?: true
   }
 
-  export type ScanBalanceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanBalance to aggregate.
+     * Filter which Stepper to aggregate.
      */
-    where?: ScanBalanceWhereInput
+    where?: StepperWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanBalances to fetch.
+     * Determine the order of Steppers to fetch.
      */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
+    orderBy?: StepperOrderByWithRelationInput | StepperOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ScanBalanceWhereUniqueInput
+    cursor?: StepperWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanBalances from the position of the cursor.
+     * Take `±n` Steppers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanBalances.
+     * Skip the first `n` Steppers.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ScanBalances
+     * Count returned Steppers
     **/
-    _count?: true | ScanBalanceCountAggregateInputType
+    _count?: true | StepperCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: ScanBalanceAvgAggregateInputType
+    _avg?: StepperAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: ScanBalanceSumAggregateInputType
+    _sum?: StepperSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ScanBalanceMinAggregateInputType
+    _min?: StepperMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ScanBalanceMaxAggregateInputType
+    _max?: StepperMaxAggregateInputType
   }
 
-  export type GetScanBalanceAggregateType<T extends ScanBalanceAggregateArgs> = {
-        [P in keyof T & keyof AggregateScanBalance]: P extends '_count' | 'count'
+  export type GetStepperAggregateType<T extends StepperAggregateArgs> = {
+        [P in keyof T & keyof AggregateStepper]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateScanBalance[P]>
-      : GetScalarType<T[P], AggregateScanBalance[P]>
+        : GetScalarType<T[P], AggregateStepper[P]>
+      : GetScalarType<T[P], AggregateStepper[P]>
   }
 
 
 
 
-  export type ScanBalanceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScanBalanceWhereInput
-    orderBy?: ScanBalanceOrderByWithAggregationInput | ScanBalanceOrderByWithAggregationInput[]
-    by: ScanBalanceScalarFieldEnum[] | ScanBalanceScalarFieldEnum
-    having?: ScanBalanceScalarWhereWithAggregatesInput
+  export type StepperGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StepperWhereInput
+    orderBy?: StepperOrderByWithAggregationInput | StepperOrderByWithAggregationInput[]
+    by: StepperScalarFieldEnum[] | StepperScalarFieldEnum
+    having?: StepperScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ScanBalanceCountAggregateInputType | true
-    _avg?: ScanBalanceAvgAggregateInputType
-    _sum?: ScanBalanceSumAggregateInputType
-    _min?: ScanBalanceMinAggregateInputType
-    _max?: ScanBalanceMaxAggregateInputType
+    _count?: StepperCountAggregateInputType | true
+    _avg?: StepperAvgAggregateInputType
+    _sum?: StepperSumAggregateInputType
+    _min?: StepperMinAggregateInputType
+    _max?: StepperMaxAggregateInputType
   }
 
-  export type ScanBalanceGroupByOutputType = {
+  export type StepperGroupByOutputType = {
     id: string
-    wallet: string
-    balance: number
-    token: string | null
     createdAt: Date
-    _count: ScanBalanceCountAggregateOutputType | null
-    _avg: ScanBalanceAvgAggregateOutputType | null
-    _sum: ScanBalanceSumAggregateOutputType | null
-    _min: ScanBalanceMinAggregateOutputType | null
-    _max: ScanBalanceMaxAggregateOutputType | null
+    tabId: string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    _count: StepperCountAggregateOutputType | null
+    _avg: StepperAvgAggregateOutputType | null
+    _sum: StepperSumAggregateOutputType | null
+    _min: StepperMinAggregateOutputType | null
+    _max: StepperMaxAggregateOutputType | null
   }
 
-  type GetScanBalanceGroupByPayload<T extends ScanBalanceGroupByArgs> = Prisma.PrismaPromise<
+  type GetStepperGroupByPayload<T extends StepperGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ScanBalanceGroupByOutputType, T['by']> &
+      PickEnumerable<StepperGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ScanBalanceGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof StepperGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ScanBalanceGroupByOutputType[P]>
-            : GetScalarType<T[P], ScanBalanceGroupByOutputType[P]>
+              : GetScalarType<T[P], StepperGroupByOutputType[P]>
+            : GetScalarType<T[P], StepperGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ScanBalanceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type StepperSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
+    tabId?: boolean
+    from?: boolean
+    to?: boolean
+    value?: boolean
+    data?: boolean
+    gasLimit?: boolean
+    gasPrice?: boolean
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+    Transaction?: boolean | Stepper$TransactionArgs<ExtArgs>
+    _count?: boolean | StepperCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["stepper"]>
 
-  export type ScanBalanceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type StepperSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
+    tabId?: boolean
+    from?: boolean
+    to?: boolean
+    value?: boolean
+    data?: boolean
+    gasLimit?: boolean
+    gasPrice?: boolean
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["stepper"]>
 
-  export type ScanBalanceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type StepperSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
+    tabId?: boolean
+    from?: boolean
+    to?: boolean
+    value?: boolean
+    data?: boolean
+    gasLimit?: boolean
+    gasPrice?: boolean
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["stepper"]>
 
-  export type ScanBalanceSelectScalar = {
+  export type StepperSelectScalar = {
     id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
     createdAt?: boolean
+    tabId?: boolean
+    from?: boolean
+    to?: boolean
+    value?: boolean
+    data?: boolean
+    gasLimit?: boolean
+    gasPrice?: boolean
   }
 
-  export type ScanBalanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "balance" | "token" | "createdAt", ExtArgs["result"]["scanBalance"]>
+  export type StepperOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "tabId" | "from" | "to" | "value" | "data" | "gasLimit" | "gasPrice", ExtArgs["result"]["stepper"]>
+  export type StepperInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+    Transaction?: boolean | Stepper$TransactionArgs<ExtArgs>
+    _count?: boolean | StepperCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type StepperIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+  }
+  export type StepperIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tab?: boolean | TabDefaultArgs<ExtArgs>
+  }
 
-  export type $ScanBalancePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScanBalance"
-    objects: {}
+  export type $StepperPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Stepper"
+    objects: {
+      tab: Prisma.$TabPayload<ExtArgs>
+      Transaction: Prisma.$TransactionPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      wallet: string
-      balance: number
-      token: string | null
       createdAt: Date
-    }, ExtArgs["result"]["scanBalance"]>
+      tabId: string
+      from: string
+      to: string
+      value: number
+      data: string
+      gasLimit: number
+      gasPrice: number
+    }, ExtArgs["result"]["stepper"]>
     composites: {}
   }
 
-  type ScanBalanceGetPayload<S extends boolean | null | undefined | ScanBalanceDefaultArgs> = $Result.GetResult<Prisma.$ScanBalancePayload, S>
+  type StepperGetPayload<S extends boolean | null | undefined | StepperDefaultArgs> = $Result.GetResult<Prisma.$StepperPayload, S>
 
-  type ScanBalanceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ScanBalanceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ScanBalanceCountAggregateInputType | true
+  type StepperCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StepperFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StepperCountAggregateInputType | true
     }
 
-  export interface ScanBalanceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanBalance'], meta: { name: 'ScanBalance' } }
+  export interface StepperDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Stepper'], meta: { name: 'Stepper' } }
     /**
-     * Find zero or one ScanBalance that matches the filter.
-     * @param {ScanBalanceFindUniqueArgs} args - Arguments to find a ScanBalance
+     * Find zero or one Stepper that matches the filter.
+     * @param {StepperFindUniqueArgs} args - Arguments to find a Stepper
      * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findUnique({
+     * // Get one Stepper
+     * const stepper = await prisma.stepper.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ScanBalanceFindUniqueArgs>(args: SelectSubset<T, ScanBalanceFindUniqueArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends StepperFindUniqueArgs>(args: SelectSubset<T, StepperFindUniqueArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one ScanBalance that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Stepper that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {ScanBalanceFindUniqueOrThrowArgs} args - Arguments to find a ScanBalance
+     * @param {StepperFindUniqueOrThrowArgs} args - Arguments to find a Stepper
      * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findUniqueOrThrow({
+     * // Get one Stepper
+     * const stepper = await prisma.stepper.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ScanBalanceFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanBalanceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends StepperFindUniqueOrThrowArgs>(args: SelectSubset<T, StepperFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanBalance that matches the filter.
+     * Find the first Stepper that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindFirstArgs} args - Arguments to find a ScanBalance
+     * @param {StepperFindFirstArgs} args - Arguments to find a Stepper
      * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findFirst({
+     * // Get one Stepper
+     * const stepper = await prisma.stepper.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ScanBalanceFindFirstArgs>(args?: SelectSubset<T, ScanBalanceFindFirstArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends StepperFindFirstArgs>(args?: SelectSubset<T, StepperFindFirstArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanBalance that matches the filter or
+     * Find the first Stepper that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindFirstOrThrowArgs} args - Arguments to find a ScanBalance
+     * @param {StepperFindFirstOrThrowArgs} args - Arguments to find a Stepper
      * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findFirstOrThrow({
+     * // Get one Stepper
+     * const stepper = await prisma.stepper.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ScanBalanceFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanBalanceFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends StepperFindFirstOrThrowArgs>(args?: SelectSubset<T, StepperFindFirstOrThrowArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more ScanBalances that matches the filter.
+     * Find zero or more Steppers that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {StepperFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ScanBalances
-     * const scanBalances = await prisma.scanBalance.findMany()
+     * // Get all Steppers
+     * const steppers = await prisma.stepper.findMany()
      * 
-     * // Get first 10 ScanBalances
-     * const scanBalances = await prisma.scanBalance.findMany({ take: 10 })
+     * // Get first 10 Steppers
+     * const steppers = await prisma.stepper.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.findMany({ select: { id: true } })
+     * const stepperWithIdOnly = await prisma.stepper.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ScanBalanceFindManyArgs>(args?: SelectSubset<T, ScanBalanceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends StepperFindManyArgs>(args?: SelectSubset<T, StepperFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a ScanBalance.
-     * @param {ScanBalanceCreateArgs} args - Arguments to create a ScanBalance.
+     * Create a Stepper.
+     * @param {StepperCreateArgs} args - Arguments to create a Stepper.
      * @example
-     * // Create one ScanBalance
-     * const ScanBalance = await prisma.scanBalance.create({
+     * // Create one Stepper
+     * const Stepper = await prisma.stepper.create({
      *   data: {
-     *     // ... data to create a ScanBalance
+     *     // ... data to create a Stepper
      *   }
      * })
      * 
      */
-    create<T extends ScanBalanceCreateArgs>(args: SelectSubset<T, ScanBalanceCreateArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends StepperCreateArgs>(args: SelectSubset<T, StepperCreateArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many ScanBalances.
-     * @param {ScanBalanceCreateManyArgs} args - Arguments to create many ScanBalances.
+     * Create many Steppers.
+     * @param {StepperCreateManyArgs} args - Arguments to create many Steppers.
      * @example
-     * // Create many ScanBalances
-     * const scanBalance = await prisma.scanBalance.createMany({
+     * // Create many Steppers
+     * const stepper = await prisma.stepper.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ScanBalanceCreateManyArgs>(args?: SelectSubset<T, ScanBalanceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends StepperCreateManyArgs>(args?: SelectSubset<T, StepperCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ScanBalances and returns the data saved in the database.
-     * @param {ScanBalanceCreateManyAndReturnArgs} args - Arguments to create many ScanBalances.
+     * Create many Steppers and returns the data saved in the database.
+     * @param {StepperCreateManyAndReturnArgs} args - Arguments to create many Steppers.
      * @example
-     * // Create many ScanBalances
-     * const scanBalance = await prisma.scanBalance.createManyAndReturn({
+     * // Create many Steppers
+     * const stepper = await prisma.stepper.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ScanBalances and only return the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.createManyAndReturn({
+     * // Create many Steppers and only return the `id`
+     * const stepperWithIdOnly = await prisma.stepper.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -2374,28 +2594,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ScanBalanceCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanBalanceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends StepperCreateManyAndReturnArgs>(args?: SelectSubset<T, StepperCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a ScanBalance.
-     * @param {ScanBalanceDeleteArgs} args - Arguments to delete one ScanBalance.
+     * Delete a Stepper.
+     * @param {StepperDeleteArgs} args - Arguments to delete one Stepper.
      * @example
-     * // Delete one ScanBalance
-     * const ScanBalance = await prisma.scanBalance.delete({
+     * // Delete one Stepper
+     * const Stepper = await prisma.stepper.delete({
      *   where: {
-     *     // ... filter to delete one ScanBalance
+     *     // ... filter to delete one Stepper
      *   }
      * })
      * 
      */
-    delete<T extends ScanBalanceDeleteArgs>(args: SelectSubset<T, ScanBalanceDeleteArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends StepperDeleteArgs>(args: SelectSubset<T, StepperDeleteArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one ScanBalance.
-     * @param {ScanBalanceUpdateArgs} args - Arguments to update one ScanBalance.
+     * Update one Stepper.
+     * @param {StepperUpdateArgs} args - Arguments to update one Stepper.
      * @example
-     * // Update one ScanBalance
-     * const scanBalance = await prisma.scanBalance.update({
+     * // Update one Stepper
+     * const stepper = await prisma.stepper.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2405,30 +2625,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ScanBalanceUpdateArgs>(args: SelectSubset<T, ScanBalanceUpdateArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends StepperUpdateArgs>(args: SelectSubset<T, StepperUpdateArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more ScanBalances.
-     * @param {ScanBalanceDeleteManyArgs} args - Arguments to filter ScanBalances to delete.
+     * Delete zero or more Steppers.
+     * @param {StepperDeleteManyArgs} args - Arguments to filter Steppers to delete.
      * @example
-     * // Delete a few ScanBalances
-     * const { count } = await prisma.scanBalance.deleteMany({
+     * // Delete a few Steppers
+     * const { count } = await prisma.stepper.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ScanBalanceDeleteManyArgs>(args?: SelectSubset<T, ScanBalanceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends StepperDeleteManyArgs>(args?: SelectSubset<T, StepperDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanBalances.
+     * Update zero or more Steppers.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {StepperUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ScanBalances
-     * const scanBalance = await prisma.scanBalance.updateMany({
+     * // Update many Steppers
+     * const stepper = await prisma.stepper.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2438,14 +2658,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ScanBalanceUpdateManyArgs>(args: SelectSubset<T, ScanBalanceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends StepperUpdateManyArgs>(args: SelectSubset<T, StepperUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanBalances and returns the data updated in the database.
-     * @param {ScanBalanceUpdateManyAndReturnArgs} args - Arguments to update many ScanBalances.
+     * Update zero or more Steppers and returns the data updated in the database.
+     * @param {StepperUpdateManyAndReturnArgs} args - Arguments to update many Steppers.
      * @example
-     * // Update many ScanBalances
-     * const scanBalance = await prisma.scanBalance.updateManyAndReturn({
+     * // Update many Steppers
+     * const stepper = await prisma.stepper.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2454,8 +2674,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more ScanBalances and only return the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.updateManyAndReturn({
+     * // Update zero or more Steppers and only return the `id`
+     * const stepperWithIdOnly = await prisma.stepper.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -2468,56 +2688,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ScanBalanceUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanBalanceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends StepperUpdateManyAndReturnArgs>(args: SelectSubset<T, StepperUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one ScanBalance.
-     * @param {ScanBalanceUpsertArgs} args - Arguments to update or create a ScanBalance.
+     * Create or update one Stepper.
+     * @param {StepperUpsertArgs} args - Arguments to update or create a Stepper.
      * @example
-     * // Update or create a ScanBalance
-     * const scanBalance = await prisma.scanBalance.upsert({
+     * // Update or create a Stepper
+     * const stepper = await prisma.stepper.upsert({
      *   create: {
-     *     // ... data to create a ScanBalance
+     *     // ... data to create a Stepper
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ScanBalance we want to update
+     *     // ... the filter for the Stepper we want to update
      *   }
      * })
      */
-    upsert<T extends ScanBalanceUpsertArgs>(args: SelectSubset<T, ScanBalanceUpsertArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends StepperUpsertArgs>(args: SelectSubset<T, StepperUpsertArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of ScanBalances.
+     * Count the number of Steppers.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceCountArgs} args - Arguments to filter ScanBalances to count.
+     * @param {StepperCountArgs} args - Arguments to filter Steppers to count.
      * @example
-     * // Count the number of ScanBalances
-     * const count = await prisma.scanBalance.count({
+     * // Count the number of Steppers
+     * const count = await prisma.stepper.count({
      *   where: {
-     *     // ... the filter for the ScanBalances we want to count
+     *     // ... the filter for the Steppers we want to count
      *   }
      * })
     **/
-    count<T extends ScanBalanceCountArgs>(
-      args?: Subset<T, ScanBalanceCountArgs>,
+    count<T extends StepperCountArgs>(
+      args?: Subset<T, StepperCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ScanBalanceCountAggregateOutputType>
+          : GetScalarType<T['select'], StepperCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ScanBalance.
+     * Allows you to perform aggregations operations on a Stepper.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {StepperAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -2537,13 +2757,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ScanBalanceAggregateArgs>(args: Subset<T, ScanBalanceAggregateArgs>): Prisma.PrismaPromise<GetScanBalanceAggregateType<T>>
+    aggregate<T extends StepperAggregateArgs>(args: Subset<T, StepperAggregateArgs>): Prisma.PrismaPromise<GetStepperAggregateType<T>>
 
     /**
-     * Group by ScanBalance.
+     * Group by Stepper.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceGroupByArgs} args - Group by arguments.
+     * @param {StepperGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -2558,14 +2778,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ScanBalanceGroupByArgs,
+      T extends StepperGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScanBalanceGroupByArgs['orderBy'] }
-        : { orderBy?: ScanBalanceGroupByArgs['orderBy'] },
+        ? { orderBy: StepperGroupByArgs['orderBy'] }
+        : { orderBy?: StepperGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -2614,21 +2834,23 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ScanBalanceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanBalanceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, StepperGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStepperGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ScanBalance model
+   * Fields of the Stepper model
    */
-  readonly fields: ScanBalanceFieldRefs;
+  readonly fields: StepperFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ScanBalance.
+   * The delegate class that acts as a "Promise-like" for Stepper.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ScanBalanceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__StepperClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    tab<T extends TabDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TabDefaultArgs<ExtArgs>>): Prisma__TabClient<$Result.GetResult<Prisma.$TabPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    Transaction<T extends Stepper$TransactionArgs<ExtArgs> = {}>(args?: Subset<T, Stepper$TransactionArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2655,375 +2877,1541 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ScanBalance model
+   * Fields of the Stepper model
    */
-  interface ScanBalanceFieldRefs {
-    readonly id: FieldRef<"ScanBalance", 'String'>
-    readonly wallet: FieldRef<"ScanBalance", 'String'>
-    readonly balance: FieldRef<"ScanBalance", 'Float'>
-    readonly token: FieldRef<"ScanBalance", 'String'>
-    readonly createdAt: FieldRef<"ScanBalance", 'DateTime'>
+  interface StepperFieldRefs {
+    readonly id: FieldRef<"Stepper", 'String'>
+    readonly createdAt: FieldRef<"Stepper", 'DateTime'>
+    readonly tabId: FieldRef<"Stepper", 'String'>
+    readonly from: FieldRef<"Stepper", 'String'>
+    readonly to: FieldRef<"Stepper", 'String'>
+    readonly value: FieldRef<"Stepper", 'Float'>
+    readonly data: FieldRef<"Stepper", 'String'>
+    readonly gasLimit: FieldRef<"Stepper", 'Int'>
+    readonly gasPrice: FieldRef<"Stepper", 'Int'>
   }
     
 
   // Custom InputTypes
   /**
-   * ScanBalance findUnique
+   * Stepper findUnique
    */
-  export type ScanBalanceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter, which ScanBalance to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanBalanceWhereUniqueInput
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter, which Stepper to fetch.
+     */
+    where: StepperWhereUniqueInput
   }
 
   /**
-   * ScanBalance findUniqueOrThrow
+   * Stepper findUniqueOrThrow
    */
-  export type ScanBalanceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter, which ScanBalance to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanBalanceWhereUniqueInput
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter, which Stepper to fetch.
+     */
+    where: StepperWhereUniqueInput
   }
 
   /**
-   * ScanBalance findFirst
+   * Stepper findFirst
    */
-  export type ScanBalanceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter, which ScanBalance to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanBalanceWhereInput
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter, which Stepper to fetch.
+     */
+    where?: StepperWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanBalances to fetch.
+     * Determine the order of Steppers to fetch.
      */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
+    orderBy?: StepperOrderByWithRelationInput | StepperOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanBalances.
+     * Sets the position for searching for Steppers.
      */
-    cursor?: ScanBalanceWhereUniqueInput
+    cursor?: StepperWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanBalances from the position of the cursor.
+     * Take `±n` Steppers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanBalances.
+     * Skip the first `n` Steppers.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanBalances.
+     * Filter by unique combinations of Steppers.
      */
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
+    distinct?: StepperScalarFieldEnum | StepperScalarFieldEnum[]
   }
 
   /**
-   * ScanBalance findFirstOrThrow
+   * Stepper findFirstOrThrow
    */
-  export type ScanBalanceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter, which ScanBalance to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanBalanceWhereInput
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter, which Stepper to fetch.
+     */
+    where?: StepperWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanBalances to fetch.
+     * Determine the order of Steppers to fetch.
      */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
+    orderBy?: StepperOrderByWithRelationInput | StepperOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanBalances.
+     * Sets the position for searching for Steppers.
      */
-    cursor?: ScanBalanceWhereUniqueInput
+    cursor?: StepperWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanBalances from the position of the cursor.
+     * Take `±n` Steppers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanBalances.
+     * Skip the first `n` Steppers.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanBalances.
+     * Filter by unique combinations of Steppers.
      */
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
+    distinct?: StepperScalarFieldEnum | StepperScalarFieldEnum[]
   }
 
   /**
-   * ScanBalance findMany
+   * Stepper findMany
    */
-  export type ScanBalanceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter, which ScanBalances to fetch.
+     * Choose, which related nodes to fetch as well
      */
-    where?: ScanBalanceWhereInput
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter, which Steppers to fetch.
+     */
+    where?: StepperWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanBalances to fetch.
+     * Determine the order of Steppers to fetch.
      */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
+    orderBy?: StepperOrderByWithRelationInput | StepperOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ScanBalances.
+     * Sets the position for listing Steppers.
      */
-    cursor?: ScanBalanceWhereUniqueInput
+    cursor?: StepperWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanBalances from the position of the cursor.
+     * Take `±n` Steppers from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanBalances.
+     * Skip the first `n` Steppers.
      */
     skip?: number
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
+    distinct?: StepperScalarFieldEnum | StepperScalarFieldEnum[]
   }
 
   /**
-   * ScanBalance create
+   * Stepper create
    */
-  export type ScanBalanceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * The data needed to create a ScanBalance.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<ScanBalanceCreateInput, ScanBalanceUncheckedCreateInput>
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Stepper.
+     */
+    data: XOR<StepperCreateInput, StepperUncheckedCreateInput>
   }
 
   /**
-   * ScanBalance createMany
+   * Stepper createMany
    */
-  export type ScanBalanceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ScanBalances.
+     * The data used to create many Steppers.
      */
-    data: ScanBalanceCreateManyInput | ScanBalanceCreateManyInput[]
+    data: StepperCreateManyInput | StepperCreateManyInput[]
   }
 
   /**
-   * ScanBalance createManyAndReturn
+   * Stepper createManyAndReturn
    */
-  export type ScanBalanceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelectCreateManyAndReturn<ExtArgs> | null
+    select?: StepperSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * The data used to create many ScanBalances.
+     * The data used to create many Steppers.
      */
-    data: ScanBalanceCreateManyInput | ScanBalanceCreateManyInput[]
+    data: StepperCreateManyInput | StepperCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StepperIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * ScanBalance update
+   * Stepper update
    */
-  export type ScanBalanceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * The data needed to update a ScanBalance.
+     * Choose, which related nodes to fetch as well
      */
-    data: XOR<ScanBalanceUpdateInput, ScanBalanceUncheckedUpdateInput>
+    include?: StepperInclude<ExtArgs> | null
     /**
-     * Choose, which ScanBalance to update.
+     * The data needed to update a Stepper.
      */
-    where: ScanBalanceWhereUniqueInput
+    data: XOR<StepperUpdateInput, StepperUncheckedUpdateInput>
+    /**
+     * Choose, which Stepper to update.
+     */
+    where: StepperWhereUniqueInput
   }
 
   /**
-   * ScanBalance updateMany
+   * Stepper updateMany
    */
-  export type ScanBalanceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ScanBalances.
+     * The data used to update Steppers.
      */
-    data: XOR<ScanBalanceUpdateManyMutationInput, ScanBalanceUncheckedUpdateManyInput>
+    data: XOR<StepperUpdateManyMutationInput, StepperUncheckedUpdateManyInput>
     /**
-     * Filter which ScanBalances to update
+     * Filter which Steppers to update
      */
-    where?: ScanBalanceWhereInput
+    where?: StepperWhereInput
     /**
-     * Limit how many ScanBalances to update.
+     * Limit how many Steppers to update.
      */
     limit?: number
   }
 
   /**
-   * ScanBalance updateManyAndReturn
+   * Stepper updateManyAndReturn
    */
-  export type ScanBalanceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: StepperSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * The data used to update ScanBalances.
+     * The data used to update Steppers.
      */
-    data: XOR<ScanBalanceUpdateManyMutationInput, ScanBalanceUncheckedUpdateManyInput>
+    data: XOR<StepperUpdateManyMutationInput, StepperUncheckedUpdateManyInput>
     /**
-     * Filter which ScanBalances to update
+     * Filter which Steppers to update
      */
-    where?: ScanBalanceWhereInput
+    where?: StepperWhereInput
     /**
-     * Limit how many ScanBalances to update.
+     * Limit how many Steppers to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StepperIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Stepper upsert
+   */
+  export type StepperUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Stepper
+     */
+    select?: StepperSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Stepper
+     */
+    omit?: StepperOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Stepper to update in case it exists.
+     */
+    where: StepperWhereUniqueInput
+    /**
+     * In case the Stepper found by the `where` argument doesn't exist, create a new Stepper with this data.
+     */
+    create: XOR<StepperCreateInput, StepperUncheckedCreateInput>
+    /**
+     * In case the Stepper was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StepperUpdateInput, StepperUncheckedUpdateInput>
+  }
+
+  /**
+   * Stepper delete
+   */
+  export type StepperDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Stepper
+     */
+    select?: StepperSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Stepper
+     */
+    omit?: StepperOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StepperInclude<ExtArgs> | null
+    /**
+     * Filter which Stepper to delete.
+     */
+    where: StepperWhereUniqueInput
+  }
+
+  /**
+   * Stepper deleteMany
+   */
+  export type StepperDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Steppers to delete
+     */
+    where?: StepperWhereInput
+    /**
+     * Limit how many Steppers to delete.
      */
     limit?: number
   }
 
   /**
-   * ScanBalance upsert
+   * Stepper.Transaction
    */
-  export type ScanBalanceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Stepper$TransactionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Transaction
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: TransactionSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Transaction
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: TransactionOmit<ExtArgs> | null
     /**
-     * The filter to search for the ScanBalance to update in case it exists.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanBalanceWhereUniqueInput
-    /**
-     * In case the ScanBalance found by the `where` argument doesn't exist, create a new ScanBalance with this data.
-     */
-    create: XOR<ScanBalanceCreateInput, ScanBalanceUncheckedCreateInput>
-    /**
-     * In case the ScanBalance was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<ScanBalanceUpdateInput, ScanBalanceUncheckedUpdateInput>
+    include?: TransactionInclude<ExtArgs> | null
+    where?: TransactionWhereInput
+    orderBy?: TransactionOrderByWithRelationInput | TransactionOrderByWithRelationInput[]
+    cursor?: TransactionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TransactionScalarFieldEnum | TransactionScalarFieldEnum[]
   }
 
   /**
-   * ScanBalance delete
+   * Stepper without action
    */
-  export type ScanBalanceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type StepperDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Stepper
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: StepperSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Stepper
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: StepperOmit<ExtArgs> | null
     /**
-     * Filter which ScanBalance to delete.
+     * Choose, which related nodes to fetch as well
      */
-    where: ScanBalanceWhereUniqueInput
+    include?: StepperInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Transaction
+   */
+
+  export type AggregateTransaction = {
+    _count: TransactionCountAggregateOutputType | null
+    _avg: TransactionAvgAggregateOutputType | null
+    _sum: TransactionSumAggregateOutputType | null
+    _min: TransactionMinAggregateOutputType | null
+    _max: TransactionMaxAggregateOutputType | null
+  }
+
+  export type TransactionAvgAggregateOutputType = {
+    gasUsed: number | null
+  }
+
+  export type TransactionSumAggregateOutputType = {
+    gasUsed: number | null
+  }
+
+  export type TransactionMinAggregateOutputType = {
+    id: string | null
+    createdAt: Date | null
+    stepperId: string | null
+    hash: string | null
+    gasUsed: number | null
+  }
+
+  export type TransactionMaxAggregateOutputType = {
+    id: string | null
+    createdAt: Date | null
+    stepperId: string | null
+    hash: string | null
+    gasUsed: number | null
+  }
+
+  export type TransactionCountAggregateOutputType = {
+    id: number
+    createdAt: number
+    stepperId: number
+    hash: number
+    gasUsed: number
+    _all: number
+  }
+
+
+  export type TransactionAvgAggregateInputType = {
+    gasUsed?: true
+  }
+
+  export type TransactionSumAggregateInputType = {
+    gasUsed?: true
+  }
+
+  export type TransactionMinAggregateInputType = {
+    id?: true
+    createdAt?: true
+    stepperId?: true
+    hash?: true
+    gasUsed?: true
+  }
+
+  export type TransactionMaxAggregateInputType = {
+    id?: true
+    createdAt?: true
+    stepperId?: true
+    hash?: true
+    gasUsed?: true
+  }
+
+  export type TransactionCountAggregateInputType = {
+    id?: true
+    createdAt?: true
+    stepperId?: true
+    hash?: true
+    gasUsed?: true
+    _all?: true
+  }
+
+  export type TransactionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Transaction to aggregate.
+     */
+    where?: TransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Transactions to fetch.
+     */
+    orderBy?: TransactionOrderByWithRelationInput | TransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Transactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Transactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Transactions
+    **/
+    _count?: true | TransactionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TransactionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TransactionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TransactionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TransactionMaxAggregateInputType
+  }
+
+  export type GetTransactionAggregateType<T extends TransactionAggregateArgs> = {
+        [P in keyof T & keyof AggregateTransaction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTransaction[P]>
+      : GetScalarType<T[P], AggregateTransaction[P]>
+  }
+
+
+
+
+  export type TransactionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TransactionWhereInput
+    orderBy?: TransactionOrderByWithAggregationInput | TransactionOrderByWithAggregationInput[]
+    by: TransactionScalarFieldEnum[] | TransactionScalarFieldEnum
+    having?: TransactionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TransactionCountAggregateInputType | true
+    _avg?: TransactionAvgAggregateInputType
+    _sum?: TransactionSumAggregateInputType
+    _min?: TransactionMinAggregateInputType
+    _max?: TransactionMaxAggregateInputType
+  }
+
+  export type TransactionGroupByOutputType = {
+    id: string
+    createdAt: Date
+    stepperId: string
+    hash: string
+    gasUsed: number
+    _count: TransactionCountAggregateOutputType | null
+    _avg: TransactionAvgAggregateOutputType | null
+    _sum: TransactionSumAggregateOutputType | null
+    _min: TransactionMinAggregateOutputType | null
+    _max: TransactionMaxAggregateOutputType | null
+  }
+
+  type GetTransactionGroupByPayload<T extends TransactionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TransactionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TransactionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TransactionGroupByOutputType[P]>
+            : GetScalarType<T[P], TransactionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TransactionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    createdAt?: boolean
+    stepperId?: boolean
+    hash?: boolean
+    gasUsed?: boolean
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["transaction"]>
+
+  export type TransactionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    createdAt?: boolean
+    stepperId?: boolean
+    hash?: boolean
+    gasUsed?: boolean
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["transaction"]>
+
+  export type TransactionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    createdAt?: boolean
+    stepperId?: boolean
+    hash?: boolean
+    gasUsed?: boolean
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["transaction"]>
+
+  export type TransactionSelectScalar = {
+    id?: boolean
+    createdAt?: boolean
+    stepperId?: boolean
+    hash?: boolean
+    gasUsed?: boolean
+  }
+
+  export type TransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "stepperId" | "hash" | "gasUsed", ExtArgs["result"]["transaction"]>
+  export type TransactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }
+  export type TransactionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }
+  export type TransactionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    stepper?: boolean | StepperDefaultArgs<ExtArgs>
+  }
+
+  export type $TransactionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Transaction"
+    objects: {
+      stepper: Prisma.$StepperPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      createdAt: Date
+      stepperId: string
+      hash: string
+      gasUsed: number
+    }, ExtArgs["result"]["transaction"]>
+    composites: {}
+  }
+
+  type TransactionGetPayload<S extends boolean | null | undefined | TransactionDefaultArgs> = $Result.GetResult<Prisma.$TransactionPayload, S>
+
+  type TransactionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TransactionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TransactionCountAggregateInputType | true
+    }
+
+  export interface TransactionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Transaction'], meta: { name: 'Transaction' } }
+    /**
+     * Find zero or one Transaction that matches the filter.
+     * @param {TransactionFindUniqueArgs} args - Arguments to find a Transaction
+     * @example
+     * // Get one Transaction
+     * const transaction = await prisma.transaction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TransactionFindUniqueArgs>(args: SelectSubset<T, TransactionFindUniqueArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Transaction that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TransactionFindUniqueOrThrowArgs} args - Arguments to find a Transaction
+     * @example
+     * // Get one Transaction
+     * const transaction = await prisma.transaction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TransactionFindUniqueOrThrowArgs>(args: SelectSubset<T, TransactionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Transaction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionFindFirstArgs} args - Arguments to find a Transaction
+     * @example
+     * // Get one Transaction
+     * const transaction = await prisma.transaction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TransactionFindFirstArgs>(args?: SelectSubset<T, TransactionFindFirstArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Transaction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionFindFirstOrThrowArgs} args - Arguments to find a Transaction
+     * @example
+     * // Get one Transaction
+     * const transaction = await prisma.transaction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TransactionFindFirstOrThrowArgs>(args?: SelectSubset<T, TransactionFindFirstOrThrowArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Transactions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Transactions
+     * const transactions = await prisma.transaction.findMany()
+     * 
+     * // Get first 10 Transactions
+     * const transactions = await prisma.transaction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const transactionWithIdOnly = await prisma.transaction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TransactionFindManyArgs>(args?: SelectSubset<T, TransactionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Transaction.
+     * @param {TransactionCreateArgs} args - Arguments to create a Transaction.
+     * @example
+     * // Create one Transaction
+     * const Transaction = await prisma.transaction.create({
+     *   data: {
+     *     // ... data to create a Transaction
+     *   }
+     * })
+     * 
+     */
+    create<T extends TransactionCreateArgs>(args: SelectSubset<T, TransactionCreateArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Transactions.
+     * @param {TransactionCreateManyArgs} args - Arguments to create many Transactions.
+     * @example
+     * // Create many Transactions
+     * const transaction = await prisma.transaction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TransactionCreateManyArgs>(args?: SelectSubset<T, TransactionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Transactions and returns the data saved in the database.
+     * @param {TransactionCreateManyAndReturnArgs} args - Arguments to create many Transactions.
+     * @example
+     * // Create many Transactions
+     * const transaction = await prisma.transaction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Transactions and only return the `id`
+     * const transactionWithIdOnly = await prisma.transaction.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TransactionCreateManyAndReturnArgs>(args?: SelectSubset<T, TransactionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Transaction.
+     * @param {TransactionDeleteArgs} args - Arguments to delete one Transaction.
+     * @example
+     * // Delete one Transaction
+     * const Transaction = await prisma.transaction.delete({
+     *   where: {
+     *     // ... filter to delete one Transaction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TransactionDeleteArgs>(args: SelectSubset<T, TransactionDeleteArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Transaction.
+     * @param {TransactionUpdateArgs} args - Arguments to update one Transaction.
+     * @example
+     * // Update one Transaction
+     * const transaction = await prisma.transaction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TransactionUpdateArgs>(args: SelectSubset<T, TransactionUpdateArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Transactions.
+     * @param {TransactionDeleteManyArgs} args - Arguments to filter Transactions to delete.
+     * @example
+     * // Delete a few Transactions
+     * const { count } = await prisma.transaction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TransactionDeleteManyArgs>(args?: SelectSubset<T, TransactionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Transactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Transactions
+     * const transaction = await prisma.transaction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TransactionUpdateManyArgs>(args: SelectSubset<T, TransactionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Transactions and returns the data updated in the database.
+     * @param {TransactionUpdateManyAndReturnArgs} args - Arguments to update many Transactions.
+     * @example
+     * // Update many Transactions
+     * const transaction = await prisma.transaction.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Transactions and only return the `id`
+     * const transactionWithIdOnly = await prisma.transaction.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TransactionUpdateManyAndReturnArgs>(args: SelectSubset<T, TransactionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Transaction.
+     * @param {TransactionUpsertArgs} args - Arguments to update or create a Transaction.
+     * @example
+     * // Update or create a Transaction
+     * const transaction = await prisma.transaction.upsert({
+     *   create: {
+     *     // ... data to create a Transaction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Transaction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TransactionUpsertArgs>(args: SelectSubset<T, TransactionUpsertArgs<ExtArgs>>): Prisma__TransactionClient<$Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Transactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionCountArgs} args - Arguments to filter Transactions to count.
+     * @example
+     * // Count the number of Transactions
+     * const count = await prisma.transaction.count({
+     *   where: {
+     *     // ... the filter for the Transactions we want to count
+     *   }
+     * })
+    **/
+    count<T extends TransactionCountArgs>(
+      args?: Subset<T, TransactionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TransactionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Transaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TransactionAggregateArgs>(args: Subset<T, TransactionAggregateArgs>): Prisma.PrismaPromise<GetTransactionAggregateType<T>>
+
+    /**
+     * Group by Transaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TransactionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TransactionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TransactionGroupByArgs['orderBy'] }
+        : { orderBy?: TransactionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TransactionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTransactionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Transaction model
+   */
+  readonly fields: TransactionFieldRefs;
   }
 
   /**
-   * ScanBalance deleteMany
+   * The delegate class that acts as a "Promise-like" for Transaction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export type ScanBalanceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export interface Prisma__TransactionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    stepper<T extends StepperDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StepperDefaultArgs<ExtArgs>>): Prisma__StepperClient<$Result.GetResult<Prisma.$StepperPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
-     * Filter which ScanBalances to delete
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
      */
-    where?: ScanBalanceWhereInput
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
     /**
-     * Limit how many ScanBalances to delete.
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Transaction model
+   */
+  interface TransactionFieldRefs {
+    readonly id: FieldRef<"Transaction", 'String'>
+    readonly createdAt: FieldRef<"Transaction", 'DateTime'>
+    readonly stepperId: FieldRef<"Transaction", 'String'>
+    readonly hash: FieldRef<"Transaction", 'String'>
+    readonly gasUsed: FieldRef<"Transaction", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Transaction findUnique
+   */
+  export type TransactionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which Transaction to fetch.
+     */
+    where: TransactionWhereUniqueInput
+  }
+
+  /**
+   * Transaction findUniqueOrThrow
+   */
+  export type TransactionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which Transaction to fetch.
+     */
+    where: TransactionWhereUniqueInput
+  }
+
+  /**
+   * Transaction findFirst
+   */
+  export type TransactionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which Transaction to fetch.
+     */
+    where?: TransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Transactions to fetch.
+     */
+    orderBy?: TransactionOrderByWithRelationInput | TransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Transactions.
+     */
+    cursor?: TransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Transactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Transactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Transactions.
+     */
+    distinct?: TransactionScalarFieldEnum | TransactionScalarFieldEnum[]
+  }
+
+  /**
+   * Transaction findFirstOrThrow
+   */
+  export type TransactionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which Transaction to fetch.
+     */
+    where?: TransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Transactions to fetch.
+     */
+    orderBy?: TransactionOrderByWithRelationInput | TransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Transactions.
+     */
+    cursor?: TransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Transactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Transactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Transactions.
+     */
+    distinct?: TransactionScalarFieldEnum | TransactionScalarFieldEnum[]
+  }
+
+  /**
+   * Transaction findMany
+   */
+  export type TransactionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter, which Transactions to fetch.
+     */
+    where?: TransactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Transactions to fetch.
+     */
+    orderBy?: TransactionOrderByWithRelationInput | TransactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Transactions.
+     */
+    cursor?: TransactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Transactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Transactions.
+     */
+    skip?: number
+    distinct?: TransactionScalarFieldEnum | TransactionScalarFieldEnum[]
+  }
+
+  /**
+   * Transaction create
+   */
+  export type TransactionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Transaction.
+     */
+    data: XOR<TransactionCreateInput, TransactionUncheckedCreateInput>
+  }
+
+  /**
+   * Transaction createMany
+   */
+  export type TransactionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Transactions.
+     */
+    data: TransactionCreateManyInput | TransactionCreateManyInput[]
+  }
+
+  /**
+   * Transaction createManyAndReturn
+   */
+  export type TransactionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * The data used to create many Transactions.
+     */
+    data: TransactionCreateManyInput | TransactionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Transaction update
+   */
+  export type TransactionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Transaction.
+     */
+    data: XOR<TransactionUpdateInput, TransactionUncheckedUpdateInput>
+    /**
+     * Choose, which Transaction to update.
+     */
+    where: TransactionWhereUniqueInput
+  }
+
+  /**
+   * Transaction updateMany
+   */
+  export type TransactionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Transactions.
+     */
+    data: XOR<TransactionUpdateManyMutationInput, TransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which Transactions to update
+     */
+    where?: TransactionWhereInput
+    /**
+     * Limit how many Transactions to update.
      */
     limit?: number
   }
 
   /**
-   * ScanBalance without action
+   * Transaction updateManyAndReturn
    */
-  export type ScanBalanceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type TransactionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanBalance
+     * Select specific fields to fetch from the Transaction
      */
-    select?: ScanBalanceSelect<ExtArgs> | null
+    select?: TransactionSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanBalance
+     * Omit specific fields from the Transaction
      */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * The data used to update Transactions.
+     */
+    data: XOR<TransactionUpdateManyMutationInput, TransactionUncheckedUpdateManyInput>
+    /**
+     * Filter which Transactions to update
+     */
+    where?: TransactionWhereInput
+    /**
+     * Limit how many Transactions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Transaction upsert
+   */
+  export type TransactionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Transaction to update in case it exists.
+     */
+    where: TransactionWhereUniqueInput
+    /**
+     * In case the Transaction found by the `where` argument doesn't exist, create a new Transaction with this data.
+     */
+    create: XOR<TransactionCreateInput, TransactionUncheckedCreateInput>
+    /**
+     * In case the Transaction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TransactionUpdateInput, TransactionUncheckedUpdateInput>
+  }
+
+  /**
+   * Transaction delete
+   */
+  export type TransactionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
+    /**
+     * Filter which Transaction to delete.
+     */
+    where: TransactionWhereUniqueInput
+  }
+
+  /**
+   * Transaction deleteMany
+   */
+  export type TransactionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Transactions to delete
+     */
+    where?: TransactionWhereInput
+    /**
+     * Limit how many Transactions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Transaction without action
+   */
+  export type TransactionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Transaction
+     */
+    select?: TransactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Transaction
+     */
+    omit?: TransactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TransactionInclude<ExtArgs> | null
   }
 
 
@@ -3038,28 +4426,39 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-  export const ScanContractScalarFieldEnum: {
+  export const TabScalarFieldEnum: {
     id: 'id',
-    wallet: 'wallet',
-    contract: 'contract',
-    balance: 'balance',
-    token: 'token',
-    isAirdrop: 'isAirdrop',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    name: 'name'
   };
 
-  export type ScanContractScalarFieldEnum = (typeof ScanContractScalarFieldEnum)[keyof typeof ScanContractScalarFieldEnum]
+  export type TabScalarFieldEnum = (typeof TabScalarFieldEnum)[keyof typeof TabScalarFieldEnum]
 
 
-  export const ScanBalanceScalarFieldEnum: {
+  export const StepperScalarFieldEnum: {
     id: 'id',
-    wallet: 'wallet',
-    balance: 'balance',
-    token: 'token',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    tabId: 'tabId',
+    from: 'from',
+    to: 'to',
+    value: 'value',
+    data: 'data',
+    gasLimit: 'gasLimit',
+    gasPrice: 'gasPrice'
   };
 
-  export type ScanBalanceScalarFieldEnum = (typeof ScanBalanceScalarFieldEnum)[keyof typeof ScanBalanceScalarFieldEnum]
+  export type StepperScalarFieldEnum = (typeof StepperScalarFieldEnum)[keyof typeof StepperScalarFieldEnum]
+
+
+  export const TransactionScalarFieldEnum: {
+    id: 'id',
+    createdAt: 'createdAt',
+    stepperId: 'stepperId',
+    hash: 'hash',
+    gasUsed: 'gasUsed'
+  };
+
+  export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -3068,14 +4467,6 @@ export namespace Prisma {
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-  export const NullsOrder: {
-    first: 'first',
-    last: 'last'
-  };
-
-  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -3091,23 +4482,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 
@@ -3121,248 +4505,374 @@ export namespace Prisma {
    */
 
 
-  export type ScanContractWhereInput = {
-    AND?: ScanContractWhereInput | ScanContractWhereInput[]
-    OR?: ScanContractWhereInput[]
-    NOT?: ScanContractWhereInput | ScanContractWhereInput[]
-    id?: StringFilter<"ScanContract"> | string
-    wallet?: StringFilter<"ScanContract"> | string
-    contract?: StringFilter<"ScanContract"> | string
-    balance?: FloatFilter<"ScanContract"> | number
-    token?: StringNullableFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeFilter<"ScanContract"> | Date | string
+  export type TabWhereInput = {
+    AND?: TabWhereInput | TabWhereInput[]
+    OR?: TabWhereInput[]
+    NOT?: TabWhereInput | TabWhereInput[]
+    id?: StringFilter<"Tab"> | string
+    createdAt?: DateTimeFilter<"Tab"> | Date | string
+    name?: StringFilter<"Tab"> | string
+    Stepper?: StepperListRelationFilter
   }
 
-  export type ScanContractOrderByWithRelationInput = {
+  export type TabOrderByWithRelationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
+    name?: SortOrder
+    Stepper?: StepperOrderByRelationAggregateInput
   }
 
-  export type ScanContractWhereUniqueInput = Prisma.AtLeast<{
+  export type TabWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: ScanContractWhereInput | ScanContractWhereInput[]
-    OR?: ScanContractWhereInput[]
-    NOT?: ScanContractWhereInput | ScanContractWhereInput[]
-    wallet?: StringFilter<"ScanContract"> | string
-    contract?: StringFilter<"ScanContract"> | string
-    balance?: FloatFilter<"ScanContract"> | number
-    token?: StringNullableFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeFilter<"ScanContract"> | Date | string
+    AND?: TabWhereInput | TabWhereInput[]
+    OR?: TabWhereInput[]
+    NOT?: TabWhereInput | TabWhereInput[]
+    createdAt?: DateTimeFilter<"Tab"> | Date | string
+    name?: StringFilter<"Tab"> | string
+    Stepper?: StepperListRelationFilter
   }, "id">
 
-  export type ScanContractOrderByWithAggregationInput = {
+  export type TabOrderByWithAggregationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
-    _count?: ScanContractCountOrderByAggregateInput
-    _avg?: ScanContractAvgOrderByAggregateInput
-    _max?: ScanContractMaxOrderByAggregateInput
-    _min?: ScanContractMinOrderByAggregateInput
-    _sum?: ScanContractSumOrderByAggregateInput
+    name?: SortOrder
+    _count?: TabCountOrderByAggregateInput
+    _max?: TabMaxOrderByAggregateInput
+    _min?: TabMinOrderByAggregateInput
   }
 
-  export type ScanContractScalarWhereWithAggregatesInput = {
-    AND?: ScanContractScalarWhereWithAggregatesInput | ScanContractScalarWhereWithAggregatesInput[]
-    OR?: ScanContractScalarWhereWithAggregatesInput[]
-    NOT?: ScanContractScalarWhereWithAggregatesInput | ScanContractScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanContract"> | string
-    wallet?: StringWithAggregatesFilter<"ScanContract"> | string
-    contract?: StringWithAggregatesFilter<"ScanContract"> | string
-    balance?: FloatWithAggregatesFilter<"ScanContract"> | number
-    token?: StringNullableWithAggregatesFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolWithAggregatesFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeWithAggregatesFilter<"ScanContract"> | Date | string
+  export type TabScalarWhereWithAggregatesInput = {
+    AND?: TabScalarWhereWithAggregatesInput | TabScalarWhereWithAggregatesInput[]
+    OR?: TabScalarWhereWithAggregatesInput[]
+    NOT?: TabScalarWhereWithAggregatesInput | TabScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Tab"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Tab"> | Date | string
+    name?: StringWithAggregatesFilter<"Tab"> | string
   }
 
-  export type ScanBalanceWhereInput = {
-    AND?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    OR?: ScanBalanceWhereInput[]
-    NOT?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    id?: StringFilter<"ScanBalance"> | string
-    wallet?: StringFilter<"ScanBalance"> | string
-    balance?: FloatFilter<"ScanBalance"> | number
-    token?: StringNullableFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeFilter<"ScanBalance"> | Date | string
+  export type StepperWhereInput = {
+    AND?: StepperWhereInput | StepperWhereInput[]
+    OR?: StepperWhereInput[]
+    NOT?: StepperWhereInput | StepperWhereInput[]
+    id?: StringFilter<"Stepper"> | string
+    createdAt?: DateTimeFilter<"Stepper"> | Date | string
+    tabId?: StringFilter<"Stepper"> | string
+    from?: StringFilter<"Stepper"> | string
+    to?: StringFilter<"Stepper"> | string
+    value?: FloatFilter<"Stepper"> | number
+    data?: StringFilter<"Stepper"> | string
+    gasLimit?: IntFilter<"Stepper"> | number
+    gasPrice?: IntFilter<"Stepper"> | number
+    tab?: XOR<TabScalarRelationFilter, TabWhereInput>
+    Transaction?: TransactionListRelationFilter
   }
 
-  export type ScanBalanceOrderByWithRelationInput = {
+  export type StepperOrderByWithRelationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    tabId?: SortOrder
+    from?: SortOrder
+    to?: SortOrder
+    value?: SortOrder
+    data?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+    tab?: TabOrderByWithRelationInput
+    Transaction?: TransactionOrderByRelationAggregateInput
   }
 
-  export type ScanBalanceWhereUniqueInput = Prisma.AtLeast<{
+  export type StepperWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    OR?: ScanBalanceWhereInput[]
-    NOT?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    wallet?: StringFilter<"ScanBalance"> | string
-    balance?: FloatFilter<"ScanBalance"> | number
-    token?: StringNullableFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeFilter<"ScanBalance"> | Date | string
+    AND?: StepperWhereInput | StepperWhereInput[]
+    OR?: StepperWhereInput[]
+    NOT?: StepperWhereInput | StepperWhereInput[]
+    createdAt?: DateTimeFilter<"Stepper"> | Date | string
+    tabId?: StringFilter<"Stepper"> | string
+    from?: StringFilter<"Stepper"> | string
+    to?: StringFilter<"Stepper"> | string
+    value?: FloatFilter<"Stepper"> | number
+    data?: StringFilter<"Stepper"> | string
+    gasLimit?: IntFilter<"Stepper"> | number
+    gasPrice?: IntFilter<"Stepper"> | number
+    tab?: XOR<TabScalarRelationFilter, TabWhereInput>
+    Transaction?: TransactionListRelationFilter
   }, "id">
 
-  export type ScanBalanceOrderByWithAggregationInput = {
+  export type StepperOrderByWithAggregationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
     createdAt?: SortOrder
-    _count?: ScanBalanceCountOrderByAggregateInput
-    _avg?: ScanBalanceAvgOrderByAggregateInput
-    _max?: ScanBalanceMaxOrderByAggregateInput
-    _min?: ScanBalanceMinOrderByAggregateInput
-    _sum?: ScanBalanceSumOrderByAggregateInput
+    tabId?: SortOrder
+    from?: SortOrder
+    to?: SortOrder
+    value?: SortOrder
+    data?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+    _count?: StepperCountOrderByAggregateInput
+    _avg?: StepperAvgOrderByAggregateInput
+    _max?: StepperMaxOrderByAggregateInput
+    _min?: StepperMinOrderByAggregateInput
+    _sum?: StepperSumOrderByAggregateInput
   }
 
-  export type ScanBalanceScalarWhereWithAggregatesInput = {
-    AND?: ScanBalanceScalarWhereWithAggregatesInput | ScanBalanceScalarWhereWithAggregatesInput[]
-    OR?: ScanBalanceScalarWhereWithAggregatesInput[]
-    NOT?: ScanBalanceScalarWhereWithAggregatesInput | ScanBalanceScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanBalance"> | string
-    wallet?: StringWithAggregatesFilter<"ScanBalance"> | string
-    balance?: FloatWithAggregatesFilter<"ScanBalance"> | number
-    token?: StringNullableWithAggregatesFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"ScanBalance"> | Date | string
+  export type StepperScalarWhereWithAggregatesInput = {
+    AND?: StepperScalarWhereWithAggregatesInput | StepperScalarWhereWithAggregatesInput[]
+    OR?: StepperScalarWhereWithAggregatesInput[]
+    NOT?: StepperScalarWhereWithAggregatesInput | StepperScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Stepper"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Stepper"> | Date | string
+    tabId?: StringWithAggregatesFilter<"Stepper"> | string
+    from?: StringWithAggregatesFilter<"Stepper"> | string
+    to?: StringWithAggregatesFilter<"Stepper"> | string
+    value?: FloatWithAggregatesFilter<"Stepper"> | number
+    data?: StringWithAggregatesFilter<"Stepper"> | string
+    gasLimit?: IntWithAggregatesFilter<"Stepper"> | number
+    gasPrice?: IntWithAggregatesFilter<"Stepper"> | number
   }
 
-  export type ScanContractCreateInput = {
+  export type TransactionWhereInput = {
+    AND?: TransactionWhereInput | TransactionWhereInput[]
+    OR?: TransactionWhereInput[]
+    NOT?: TransactionWhereInput | TransactionWhereInput[]
+    id?: StringFilter<"Transaction"> | string
+    createdAt?: DateTimeFilter<"Transaction"> | Date | string
+    stepperId?: StringFilter<"Transaction"> | string
+    hash?: StringFilter<"Transaction"> | string
+    gasUsed?: IntFilter<"Transaction"> | number
+    stepper?: XOR<StepperScalarRelationFilter, StepperWhereInput>
+  }
+
+  export type TransactionOrderByWithRelationInput = {
+    id?: SortOrder
+    createdAt?: SortOrder
+    stepperId?: SortOrder
+    hash?: SortOrder
+    gasUsed?: SortOrder
+    stepper?: StepperOrderByWithRelationInput
+  }
+
+  export type TransactionWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
-    createdAt?: Date | string
+    hash?: string
+    AND?: TransactionWhereInput | TransactionWhereInput[]
+    OR?: TransactionWhereInput[]
+    NOT?: TransactionWhereInput | TransactionWhereInput[]
+    createdAt?: DateTimeFilter<"Transaction"> | Date | string
+    stepperId?: StringFilter<"Transaction"> | string
+    gasUsed?: IntFilter<"Transaction"> | number
+    stepper?: XOR<StepperScalarRelationFilter, StepperWhereInput>
+  }, "id" | "hash">
+
+  export type TransactionOrderByWithAggregationInput = {
+    id?: SortOrder
+    createdAt?: SortOrder
+    stepperId?: SortOrder
+    hash?: SortOrder
+    gasUsed?: SortOrder
+    _count?: TransactionCountOrderByAggregateInput
+    _avg?: TransactionAvgOrderByAggregateInput
+    _max?: TransactionMaxOrderByAggregateInput
+    _min?: TransactionMinOrderByAggregateInput
+    _sum?: TransactionSumOrderByAggregateInput
   }
 
-  export type ScanContractUncheckedCreateInput = {
+  export type TransactionScalarWhereWithAggregatesInput = {
+    AND?: TransactionScalarWhereWithAggregatesInput | TransactionScalarWhereWithAggregatesInput[]
+    OR?: TransactionScalarWhereWithAggregatesInput[]
+    NOT?: TransactionScalarWhereWithAggregatesInput | TransactionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Transaction"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Transaction"> | Date | string
+    stepperId?: StringWithAggregatesFilter<"Transaction"> | string
+    hash?: StringWithAggregatesFilter<"Transaction"> | string
+    gasUsed?: IntWithAggregatesFilter<"Transaction"> | number
+  }
+
+  export type TabCreateInput = {
     id?: string
-    wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
     createdAt?: Date | string
+    name: string
+    Stepper?: StepperCreateNestedManyWithoutTabInput
   }
 
-  export type ScanContractUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanContractUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanContractCreateManyInput = {
+  export type TabUncheckedCreateInput = {
     id?: string
-    wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
     createdAt?: Date | string
+    name: string
+    Stepper?: StepperUncheckedCreateNestedManyWithoutTabInput
   }
 
-  export type ScanContractUpdateManyMutationInput = {
+  export type TabUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+    Stepper?: StepperUpdateManyWithoutTabNestedInput
   }
 
-  export type ScanContractUncheckedUpdateManyInput = {
+  export type TabUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+    Stepper?: StepperUncheckedUpdateManyWithoutTabNestedInput
   }
 
-  export type ScanBalanceCreateInput = {
+  export type TabCreateManyInput = {
     id?: string
-    wallet: string
-    balance?: number
-    token?: string | null
     createdAt?: Date | string
+    name: string
   }
 
-  export type ScanBalanceUncheckedCreateInput = {
+  export type TabUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TabUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StepperCreateInput = {
     id?: string
-    wallet: string
-    balance?: number
-    token?: string | null
     createdAt?: Date | string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    tab: TabCreateNestedOneWithoutStepperInput
+    Transaction?: TransactionCreateNestedManyWithoutStepperInput
   }
 
-  export type ScanBalanceUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanBalanceUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanBalanceCreateManyInput = {
+  export type StepperUncheckedCreateInput = {
     id?: string
-    wallet: string
-    balance?: number
-    token?: string | null
     createdAt?: Date | string
+    tabId: string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    Transaction?: TransactionUncheckedCreateNestedManyWithoutStepperInput
   }
 
-  export type ScanBalanceUpdateManyMutationInput = {
+  export type StepperUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+    tab?: TabUpdateOneRequiredWithoutStepperNestedInput
+    Transaction?: TransactionUpdateManyWithoutStepperNestedInput
   }
 
-  export type ScanBalanceUncheckedUpdateManyInput = {
+  export type StepperUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tabId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+    Transaction?: TransactionUncheckedUpdateManyWithoutStepperNestedInput
+  }
+
+  export type StepperCreateManyInput = {
+    id?: string
+    createdAt?: Date | string
+    tabId: string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+  }
+
+  export type StepperUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type StepperUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tabId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionCreateInput = {
+    id?: string
+    createdAt?: Date | string
+    hash: string
+    gasUsed: number
+    stepper: StepperCreateNestedOneWithoutTransactionInput
+  }
+
+  export type TransactionUncheckedCreateInput = {
+    id?: string
+    createdAt?: Date | string
+    stepperId: string
+    hash: string
+    gasUsed: number
+  }
+
+  export type TransactionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
+    stepper?: StepperUpdateOneRequiredWithoutTransactionNestedInput
+  }
+
+  export type TransactionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    stepperId?: StringFieldUpdateOperationsInput | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionCreateManyInput = {
+    id?: string
+    createdAt?: Date | string
+    stepperId: string
+    hash: string
+    gasUsed: number
+  }
+
+  export type TransactionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    stepperId?: StringFieldUpdateOperationsInput | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -3379,36 +4889,6 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type FloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -3420,47 +4900,32 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
+  export type StepperListRelationFilter = {
+    every?: StepperWhereInput
+    some?: StepperWhereInput
+    none?: StepperWhereInput
   }
 
-  export type ScanContractCountOrderByAggregateInput = {
+  export type StepperOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TabCountOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
+    name?: SortOrder
   }
 
-  export type ScanContractAvgOrderByAggregateInput = {
-    balance?: SortOrder
-  }
-
-  export type ScanContractMaxOrderByAggregateInput = {
+  export type TabMaxOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
+    name?: SortOrder
   }
 
-  export type ScanContractMinOrderByAggregateInput = {
+  export type TabMinOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type ScanContractSumOrderByAggregateInput = {
-    balance?: SortOrder
+    name?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -3480,6 +4945,105 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type TabScalarRelationFilter = {
+    is?: TabWhereInput
+    isNot?: TabWhereInput
+  }
+
+  export type TransactionListRelationFilter = {
+    every?: TransactionWhereInput
+    some?: TransactionWhereInput
+    none?: TransactionWhereInput
+  }
+
+  export type TransactionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type StepperCountOrderByAggregateInput = {
+    id?: SortOrder
+    createdAt?: SortOrder
+    tabId?: SortOrder
+    from?: SortOrder
+    to?: SortOrder
+    value?: SortOrder
+    data?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+  }
+
+  export type StepperAvgOrderByAggregateInput = {
+    value?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+  }
+
+  export type StepperMaxOrderByAggregateInput = {
+    id?: SortOrder
+    createdAt?: SortOrder
+    tabId?: SortOrder
+    from?: SortOrder
+    to?: SortOrder
+    value?: SortOrder
+    data?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+  }
+
+  export type StepperMinOrderByAggregateInput = {
+    id?: SortOrder
+    createdAt?: SortOrder
+    tabId?: SortOrder
+    from?: SortOrder
+    to?: SortOrder
+    value?: SortOrder
+    data?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+  }
+
+  export type StepperSumOrderByAggregateInput = {
+    value?: SortOrder
+    gasLimit?: SortOrder
+    gasPrice?: SortOrder
+  }
+
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[]
@@ -3496,79 +5060,127 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
+  export type StepperScalarRelationFilter = {
+    is?: StepperWhereInput
+    isNot?: StepperWhereInput
   }
 
-  export type ScanBalanceCountOrderByAggregateInput = {
+  export type TransactionCountOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
     createdAt?: SortOrder
+    stepperId?: SortOrder
+    hash?: SortOrder
+    gasUsed?: SortOrder
   }
 
-  export type ScanBalanceAvgOrderByAggregateInput = {
-    balance?: SortOrder
+  export type TransactionAvgOrderByAggregateInput = {
+    gasUsed?: SortOrder
   }
 
-  export type ScanBalanceMaxOrderByAggregateInput = {
+  export type TransactionMaxOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
     createdAt?: SortOrder
+    stepperId?: SortOrder
+    hash?: SortOrder
+    gasUsed?: SortOrder
   }
 
-  export type ScanBalanceMinOrderByAggregateInput = {
+  export type TransactionMinOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
     createdAt?: SortOrder
+    stepperId?: SortOrder
+    hash?: SortOrder
+    gasUsed?: SortOrder
   }
 
-  export type ScanBalanceSumOrderByAggregateInput = {
-    balance?: SortOrder
+  export type TransactionSumOrderByAggregateInput = {
+    gasUsed?: SortOrder
+  }
+
+  export type StepperCreateNestedManyWithoutTabInput = {
+    create?: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput> | StepperCreateWithoutTabInput[] | StepperUncheckedCreateWithoutTabInput[]
+    connectOrCreate?: StepperCreateOrConnectWithoutTabInput | StepperCreateOrConnectWithoutTabInput[]
+    createMany?: StepperCreateManyTabInputEnvelope
+    connect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+  }
+
+  export type StepperUncheckedCreateNestedManyWithoutTabInput = {
+    create?: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput> | StepperCreateWithoutTabInput[] | StepperUncheckedCreateWithoutTabInput[]
+    connectOrCreate?: StepperCreateOrConnectWithoutTabInput | StepperCreateOrConnectWithoutTabInput[]
+    createMany?: StepperCreateManyTabInputEnvelope
+    connect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
     set?: string
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
+  }
+
+  export type StepperUpdateManyWithoutTabNestedInput = {
+    create?: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput> | StepperCreateWithoutTabInput[] | StepperUncheckedCreateWithoutTabInput[]
+    connectOrCreate?: StepperCreateOrConnectWithoutTabInput | StepperCreateOrConnectWithoutTabInput[]
+    upsert?: StepperUpsertWithWhereUniqueWithoutTabInput | StepperUpsertWithWhereUniqueWithoutTabInput[]
+    createMany?: StepperCreateManyTabInputEnvelope
+    set?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    disconnect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    delete?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    connect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    update?: StepperUpdateWithWhereUniqueWithoutTabInput | StepperUpdateWithWhereUniqueWithoutTabInput[]
+    updateMany?: StepperUpdateManyWithWhereWithoutTabInput | StepperUpdateManyWithWhereWithoutTabInput[]
+    deleteMany?: StepperScalarWhereInput | StepperScalarWhereInput[]
+  }
+
+  export type StepperUncheckedUpdateManyWithoutTabNestedInput = {
+    create?: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput> | StepperCreateWithoutTabInput[] | StepperUncheckedCreateWithoutTabInput[]
+    connectOrCreate?: StepperCreateOrConnectWithoutTabInput | StepperCreateOrConnectWithoutTabInput[]
+    upsert?: StepperUpsertWithWhereUniqueWithoutTabInput | StepperUpsertWithWhereUniqueWithoutTabInput[]
+    createMany?: StepperCreateManyTabInputEnvelope
+    set?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    disconnect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    delete?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    connect?: StepperWhereUniqueInput | StepperWhereUniqueInput[]
+    update?: StepperUpdateWithWhereUniqueWithoutTabInput | StepperUpdateWithWhereUniqueWithoutTabInput[]
+    updateMany?: StepperUpdateManyWithWhereWithoutTabInput | StepperUpdateManyWithWhereWithoutTabInput[]
+    deleteMany?: StepperScalarWhereInput | StepperScalarWhereInput[]
+  }
+
+  export type TabCreateNestedOneWithoutStepperInput = {
+    create?: XOR<TabCreateWithoutStepperInput, TabUncheckedCreateWithoutStepperInput>
+    connectOrCreate?: TabCreateOrConnectWithoutStepperInput
+    connect?: TabWhereUniqueInput
+  }
+
+  export type TransactionCreateNestedManyWithoutStepperInput = {
+    create?: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput> | TransactionCreateWithoutStepperInput[] | TransactionUncheckedCreateWithoutStepperInput[]
+    connectOrCreate?: TransactionCreateOrConnectWithoutStepperInput | TransactionCreateOrConnectWithoutStepperInput[]
+    createMany?: TransactionCreateManyStepperInputEnvelope
+    connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+  }
+
+  export type TransactionUncheckedCreateNestedManyWithoutStepperInput = {
+    create?: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput> | TransactionCreateWithoutStepperInput[] | TransactionUncheckedCreateWithoutStepperInput[]
+    connectOrCreate?: TransactionCreateOrConnectWithoutStepperInput | TransactionCreateOrConnectWithoutStepperInput[]
+    createMany?: TransactionCreateManyStepperInputEnvelope
+    connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -3579,16 +5191,62 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
+  export type TabUpdateOneRequiredWithoutStepperNestedInput = {
+    create?: XOR<TabCreateWithoutStepperInput, TabUncheckedCreateWithoutStepperInput>
+    connectOrCreate?: TabCreateOrConnectWithoutStepperInput
+    upsert?: TabUpsertWithoutStepperInput
+    connect?: TabWhereUniqueInput
+    update?: XOR<XOR<TabUpdateToOneWithWhereWithoutStepperInput, TabUpdateWithoutStepperInput>, TabUncheckedUpdateWithoutStepperInput>
   }
 
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
+  export type TransactionUpdateManyWithoutStepperNestedInput = {
+    create?: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput> | TransactionCreateWithoutStepperInput[] | TransactionUncheckedCreateWithoutStepperInput[]
+    connectOrCreate?: TransactionCreateOrConnectWithoutStepperInput | TransactionCreateOrConnectWithoutStepperInput[]
+    upsert?: TransactionUpsertWithWhereUniqueWithoutStepperInput | TransactionUpsertWithWhereUniqueWithoutStepperInput[]
+    createMany?: TransactionCreateManyStepperInputEnvelope
+    set?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    disconnect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    delete?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    update?: TransactionUpdateWithWhereUniqueWithoutStepperInput | TransactionUpdateWithWhereUniqueWithoutStepperInput[]
+    updateMany?: TransactionUpdateManyWithWhereWithoutStepperInput | TransactionUpdateManyWithWhereWithoutStepperInput[]
+    deleteMany?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+  }
+
+  export type TransactionUncheckedUpdateManyWithoutStepperNestedInput = {
+    create?: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput> | TransactionCreateWithoutStepperInput[] | TransactionUncheckedCreateWithoutStepperInput[]
+    connectOrCreate?: TransactionCreateOrConnectWithoutStepperInput | TransactionCreateOrConnectWithoutStepperInput[]
+    upsert?: TransactionUpsertWithWhereUniqueWithoutStepperInput | TransactionUpsertWithWhereUniqueWithoutStepperInput[]
+    createMany?: TransactionCreateManyStepperInputEnvelope
+    set?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    disconnect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    delete?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    connect?: TransactionWhereUniqueInput | TransactionWhereUniqueInput[]
+    update?: TransactionUpdateWithWhereUniqueWithoutStepperInput | TransactionUpdateWithWhereUniqueWithoutStepperInput[]
+    updateMany?: TransactionUpdateManyWithWhereWithoutStepperInput | TransactionUpdateManyWithWhereWithoutStepperInput[]
+    deleteMany?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+  }
+
+  export type StepperCreateNestedOneWithoutTransactionInput = {
+    create?: XOR<StepperCreateWithoutTransactionInput, StepperUncheckedCreateWithoutTransactionInput>
+    connectOrCreate?: StepperCreateOrConnectWithoutTransactionInput
+    connect?: StepperWhereUniqueInput
+  }
+
+  export type StepperUpdateOneRequiredWithoutTransactionNestedInput = {
+    create?: XOR<StepperCreateWithoutTransactionInput, StepperUncheckedCreateWithoutTransactionInput>
+    connectOrCreate?: StepperCreateOrConnectWithoutTransactionInput
+    upsert?: StepperUpsertWithoutTransactionInput
+    connect?: StepperWhereUniqueInput
+    update?: XOR<XOR<StepperUpdateToOneWithWhereWithoutTransactionInput, StepperUpdateWithoutTransactionInput>, StepperUncheckedUpdateWithoutTransactionInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -3603,36 +5261,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -3674,6 +5302,31 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[]
@@ -3690,54 +5343,312 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
+  export type StepperCreateWithoutTabInput = {
+    id?: string
+    createdAt?: Date | string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    Transaction?: TransactionCreateNestedManyWithoutStepperInput
   }
 
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
+  export type StepperUncheckedCreateWithoutTabInput = {
+    id?: string
+    createdAt?: Date | string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    Transaction?: TransactionUncheckedCreateNestedManyWithoutStepperInput
+  }
+
+  export type StepperCreateOrConnectWithoutTabInput = {
+    where: StepperWhereUniqueInput
+    create: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput>
+  }
+
+  export type StepperCreateManyTabInputEnvelope = {
+    data: StepperCreateManyTabInput | StepperCreateManyTabInput[]
+  }
+
+  export type StepperUpsertWithWhereUniqueWithoutTabInput = {
+    where: StepperWhereUniqueInput
+    update: XOR<StepperUpdateWithoutTabInput, StepperUncheckedUpdateWithoutTabInput>
+    create: XOR<StepperCreateWithoutTabInput, StepperUncheckedCreateWithoutTabInput>
+  }
+
+  export type StepperUpdateWithWhereUniqueWithoutTabInput = {
+    where: StepperWhereUniqueInput
+    data: XOR<StepperUpdateWithoutTabInput, StepperUncheckedUpdateWithoutTabInput>
+  }
+
+  export type StepperUpdateManyWithWhereWithoutTabInput = {
+    where: StepperScalarWhereInput
+    data: XOR<StepperUpdateManyMutationInput, StepperUncheckedUpdateManyWithoutTabInput>
+  }
+
+  export type StepperScalarWhereInput = {
+    AND?: StepperScalarWhereInput | StepperScalarWhereInput[]
+    OR?: StepperScalarWhereInput[]
+    NOT?: StepperScalarWhereInput | StepperScalarWhereInput[]
+    id?: StringFilter<"Stepper"> | string
+    createdAt?: DateTimeFilter<"Stepper"> | Date | string
+    tabId?: StringFilter<"Stepper"> | string
+    from?: StringFilter<"Stepper"> | string
+    to?: StringFilter<"Stepper"> | string
+    value?: FloatFilter<"Stepper"> | number
+    data?: StringFilter<"Stepper"> | string
+    gasLimit?: IntFilter<"Stepper"> | number
+    gasPrice?: IntFilter<"Stepper"> | number
+  }
+
+  export type TabCreateWithoutStepperInput = {
+    id?: string
+    createdAt?: Date | string
+    name: string
+  }
+
+  export type TabUncheckedCreateWithoutStepperInput = {
+    id?: string
+    createdAt?: Date | string
+    name: string
+  }
+
+  export type TabCreateOrConnectWithoutStepperInput = {
+    where: TabWhereUniqueInput
+    create: XOR<TabCreateWithoutStepperInput, TabUncheckedCreateWithoutStepperInput>
+  }
+
+  export type TransactionCreateWithoutStepperInput = {
+    id?: string
+    createdAt?: Date | string
+    hash: string
+    gasUsed: number
+  }
+
+  export type TransactionUncheckedCreateWithoutStepperInput = {
+    id?: string
+    createdAt?: Date | string
+    hash: string
+    gasUsed: number
+  }
+
+  export type TransactionCreateOrConnectWithoutStepperInput = {
+    where: TransactionWhereUniqueInput
+    create: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput>
+  }
+
+  export type TransactionCreateManyStepperInputEnvelope = {
+    data: TransactionCreateManyStepperInput | TransactionCreateManyStepperInput[]
+  }
+
+  export type TabUpsertWithoutStepperInput = {
+    update: XOR<TabUpdateWithoutStepperInput, TabUncheckedUpdateWithoutStepperInput>
+    create: XOR<TabCreateWithoutStepperInput, TabUncheckedCreateWithoutStepperInput>
+    where?: TabWhereInput
+  }
+
+  export type TabUpdateToOneWithWhereWithoutStepperInput = {
+    where?: TabWhereInput
+    data: XOR<TabUpdateWithoutStepperInput, TabUncheckedUpdateWithoutStepperInput>
+  }
+
+  export type TabUpdateWithoutStepperInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TabUncheckedUpdateWithoutStepperInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type TransactionUpsertWithWhereUniqueWithoutStepperInput = {
+    where: TransactionWhereUniqueInput
+    update: XOR<TransactionUpdateWithoutStepperInput, TransactionUncheckedUpdateWithoutStepperInput>
+    create: XOR<TransactionCreateWithoutStepperInput, TransactionUncheckedCreateWithoutStepperInput>
+  }
+
+  export type TransactionUpdateWithWhereUniqueWithoutStepperInput = {
+    where: TransactionWhereUniqueInput
+    data: XOR<TransactionUpdateWithoutStepperInput, TransactionUncheckedUpdateWithoutStepperInput>
+  }
+
+  export type TransactionUpdateManyWithWhereWithoutStepperInput = {
+    where: TransactionScalarWhereInput
+    data: XOR<TransactionUpdateManyMutationInput, TransactionUncheckedUpdateManyWithoutStepperInput>
+  }
+
+  export type TransactionScalarWhereInput = {
+    AND?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+    OR?: TransactionScalarWhereInput[]
+    NOT?: TransactionScalarWhereInput | TransactionScalarWhereInput[]
+    id?: StringFilter<"Transaction"> | string
+    createdAt?: DateTimeFilter<"Transaction"> | Date | string
+    stepperId?: StringFilter<"Transaction"> | string
+    hash?: StringFilter<"Transaction"> | string
+    gasUsed?: IntFilter<"Transaction"> | number
+  }
+
+  export type StepperCreateWithoutTransactionInput = {
+    id?: string
+    createdAt?: Date | string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+    tab: TabCreateNestedOneWithoutStepperInput
+  }
+
+  export type StepperUncheckedCreateWithoutTransactionInput = {
+    id?: string
+    createdAt?: Date | string
+    tabId: string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+  }
+
+  export type StepperCreateOrConnectWithoutTransactionInput = {
+    where: StepperWhereUniqueInput
+    create: XOR<StepperCreateWithoutTransactionInput, StepperUncheckedCreateWithoutTransactionInput>
+  }
+
+  export type StepperUpsertWithoutTransactionInput = {
+    update: XOR<StepperUpdateWithoutTransactionInput, StepperUncheckedUpdateWithoutTransactionInput>
+    create: XOR<StepperCreateWithoutTransactionInput, StepperUncheckedCreateWithoutTransactionInput>
+    where?: StepperWhereInput
+  }
+
+  export type StepperUpdateToOneWithWhereWithoutTransactionInput = {
+    where?: StepperWhereInput
+    data: XOR<StepperUpdateWithoutTransactionInput, StepperUncheckedUpdateWithoutTransactionInput>
+  }
+
+  export type StepperUpdateWithoutTransactionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+    tab?: TabUpdateOneRequiredWithoutStepperNestedInput
+  }
+
+  export type StepperUncheckedUpdateWithoutTransactionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tabId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type StepperCreateManyTabInput = {
+    id?: string
+    createdAt?: Date | string
+    from: string
+    to: string
+    value: number
+    data: string
+    gasLimit: number
+    gasPrice: number
+  }
+
+  export type StepperUpdateWithoutTabInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+    Transaction?: TransactionUpdateManyWithoutStepperNestedInput
+  }
+
+  export type StepperUncheckedUpdateWithoutTabInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+    Transaction?: TransactionUncheckedUpdateManyWithoutStepperNestedInput
+  }
+
+  export type StepperUncheckedUpdateManyWithoutTabInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    from?: StringFieldUpdateOperationsInput | string
+    to?: StringFieldUpdateOperationsInput | string
+    value?: FloatFieldUpdateOperationsInput | number
+    data?: StringFieldUpdateOperationsInput | string
+    gasLimit?: IntFieldUpdateOperationsInput | number
+    gasPrice?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionCreateManyStepperInput = {
+    id?: string
+    createdAt?: Date | string
+    hash: string
+    gasUsed: number
+  }
+
+  export type TransactionUpdateWithoutStepperInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionUncheckedUpdateWithoutStepperInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TransactionUncheckedUpdateManyWithoutStepperInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hash?: StringFieldUpdateOperationsInput | string
+    gasUsed?: IntFieldUpdateOperationsInput | number
   }
 
 

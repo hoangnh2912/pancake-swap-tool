@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.15.0
- * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
+ * Prisma Client JS version: 6.16.3
+ * Query Engine version: bb420e667c1820a8c05a38023385f6cc7ef8e83a
  */
 Prisma.prismaVersion = {
-  client: "6.15.0",
-  engine: "85179d7826409ee107a6ba334b5e305ae3fba9fb"
+  client: "6.16.3",
+  engine: "bb420e667c1820a8c05a38023385f6cc7ef8e83a"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -117,22 +117,30 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.ScanContractScalarFieldEnum = {
+exports.Prisma.TabScalarFieldEnum = {
   id: 'id',
-  wallet: 'wallet',
-  contract: 'contract',
-  balance: 'balance',
-  token: 'token',
-  isAirdrop: 'isAirdrop',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  name: 'name'
 };
 
-exports.Prisma.ScanBalanceScalarFieldEnum = {
+exports.Prisma.StepperScalarFieldEnum = {
   id: 'id',
-  wallet: 'wallet',
-  balance: 'balance',
-  token: 'token',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  tabId: 'tabId',
+  from: 'from',
+  to: 'to',
+  value: 'value',
+  data: 'data',
+  gasLimit: 'gasLimit',
+  gasPrice: 'gasPrice'
+};
+
+exports.Prisma.TransactionScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  stepperId: 'stepperId',
+  hash: 'hash',
+  gasUsed: 'gasUsed'
 };
 
 exports.Prisma.SortOrder = {
@@ -140,15 +148,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
 
 exports.Prisma.ModelName = {
-  ScanContract: 'ScanContract',
-  ScanBalance: 'ScanBalance'
+  Tab: 'Tab',
+  Stepper: 'Stepper',
+  Transaction: 'Transaction'
 };
 
 /**
