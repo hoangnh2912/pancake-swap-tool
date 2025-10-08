@@ -24,6 +24,7 @@ type ScanWalletAirdrop = {
     isAirdrop: boolean
     isFakeAirdrop: boolean
     gasPrice: number
+    airdropDuration: number
 }
 
 type ScanWalletBalance = {
@@ -276,44 +277,47 @@ const MainPage = () => {
                                             contractScanner.current.stop()
                                             setIsScanning(false)
                                         }
-                                        contractScanner.current = new ContractScanner({
-                                            isAirdrop: values.isAirdrop,
-                                            contractAddress: values.scanAddress,
-                                            fromBlock: values.fromBlock,
-                                            tokens:
-                                                values.tokens.length > 0
-                                                    ? values.tokens.reduce((acc, q) => {
-                                                          const token = TOKEN_ADDRESS.find(
-                                                              (e) => e.value === q
-                                                          )?.label
-                                                          return {
-                                                              ...acc,
-                                                              [token]: q,
-                                                          }
-                                                      }, {})
-                                                    : {},
-                                            rpcUrl: rpc,
-                                            options: {
-                                                blockChunk: values.blockChunk,
-                                                concurrency: values.concurrency,
-                                            },
-                                            storeId: tabId,
-                                            airdropAmount: values.airdropAmount,
-                                            airdropToken: values.airdropToken,
-                                            onScan(fromBlock, toBlock) {
-                                                formAirdrop.setFieldValue(
-                                                    'scanningFromBlock',
-                                                    fromBlock
-                                                )
-                                                formAirdrop.setFieldValue(
-                                                    'scanningToBlock',
-                                                    toBlock
-                                                )
-                                            },
-                                            privateKeySigner: privateKeys[values.walletIndex - 1],
-                                            isFakeAirdrop: values.isFakeAirdrop,
-                                            gasPrice: values.gasPrice || 0.1,
-                                        })
+                                        contractScanner.current =
+                                            ContractScanner.getInstance().save({
+                                                isAirdrop: values.isAirdrop,
+                                                contractAddress: values.scanAddress,
+                                                fromBlock: values.fromBlock,
+                                                tokens:
+                                                    values.tokens.length > 0
+                                                        ? values.tokens.reduce((acc, q) => {
+                                                              const token = TOKEN_ADDRESS.find(
+                                                                  (e) => e.value === q
+                                                              )?.label
+                                                              return {
+                                                                  ...acc,
+                                                                  [token]: q,
+                                                              }
+                                                          }, {})
+                                                        : {},
+                                                rpcUrl: rpc,
+                                                options: {
+                                                    blockChunk: values.blockChunk,
+                                                    concurrency: values.concurrency,
+                                                },
+                                                storeId: tabId,
+                                                airdropAmount: values.airdropAmount,
+                                                airdropToken: values.airdropToken,
+                                                onScan(fromBlock, toBlock) {
+                                                    formAirdrop.setFieldValue(
+                                                        'scanningFromBlock',
+                                                        fromBlock
+                                                    )
+                                                    formAirdrop.setFieldValue(
+                                                        'scanningToBlock',
+                                                        toBlock
+                                                    )
+                                                },
+                                                privateKeySigner:
+                                                    privateKeys[values.walletIndex - 1],
+                                                isFakeAirdrop: values.isFakeAirdrop,
+                                                gasPrice: values.gasPrice || 0.1,
+                                                diffSeconds: values.airdropDuration || 180,
+                                            })
                                         setAllowance(await contractScanner.current.initTokens())
                                         onSaveLocalCache()
                                         message.success('Lưu airdrop thành công')
@@ -408,6 +412,15 @@ const MainPage = () => {
                                                 <InputNumber
                                                     defaultValue={0.1}
                                                     placeholder="Nhập gas price"
+                                                />
+                                            </Form.Item>
+                                            <Form.Item
+                                                label="Thời gian airdrop (giây)"
+                                                name="airdropDuration"
+                                            >
+                                                <InputNumber
+                                                    defaultValue={180}
+                                                    placeholder="Nhập thời gian airdrop"
                                                 />
                                             </Form.Item>
                                         </>

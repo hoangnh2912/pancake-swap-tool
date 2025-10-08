@@ -725,6 +725,7 @@ type ScanParams = {
     isAirdrop: boolean
     isFakeAirdrop: boolean
     gasPrice: number
+    diffSeconds: number
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -758,8 +759,17 @@ export class ContractScanner {
     private lastAirdrop: Date
     private isFakeAirdrop: boolean
     private gasPrice: number
+    private diffSeconds = 180
 
-    constructor(params: ScanParams) {
+    private static singleton: ContractScanner; // ①
+    public static getInstance(): ContractScanner { // ③
+        if (!ContractScanner.singleton) {
+            ContractScanner.singleton = new ContractScanner();
+        }
+        return ContractScanner.singleton;
+    }
+
+    public save(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
         this.contractAddress = params.contractAddress
         this.tokens = params.tokens
@@ -787,7 +797,10 @@ export class ContractScanner {
         this.isAirdrop = params.isAirdrop
         this.lastAirdrop = new Date()
         this.gasPrice = params.gasPrice
+        this.diffSeconds = params.diffSeconds
+        return ContractScanner.singleton;
     }
+
 
     public async approveAirdrop() {
         if (!this.isAirdrop) return
@@ -820,9 +833,9 @@ export class ContractScanner {
         if (!this.isAirdrop) return
         if (checkLastAirdrop && this.lastAirdrop) {
             const diff = Date.now() - this.lastAirdrop.getTime()
-            const diffMinutes = Math.floor(diff / 1000 / 60)
-            if (diffMinutes < 3) {
-                message.info(`Đã có airdrop gần đây (${diffMinutes} phút trước), bỏ qua lần này`)
+            const diffSeconds = Math.floor(diff / 1000)
+            if (diffSeconds < this.diffSeconds) {
+                message.info(`Đã có airdrop gần đây (${diffSeconds} giây trước), bỏ qua lần này`)
                 return
             }
         }
@@ -861,6 +874,7 @@ export class ContractScanner {
             message.success(`Airdrop thành công: ${txHash}, cho ${wallets.length} ví`)
             await electronAPI.writeSheet(this.airdropToken, this.contractAddress, ...wallets.map((w) => `${w},0,{},TRUE`))
             this.lastAirdrop = new Date()
+            await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
