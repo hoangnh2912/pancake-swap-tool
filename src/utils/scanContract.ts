@@ -874,7 +874,12 @@ export class ContractScanner {
             message.success(`Airdrop thành công: ${txHash}, cho ${wallets.length} ví`)
             await electronAPI.writeSheet(this.airdropToken, this.contractAddress, ...wallets.map((w) => `${w},0,{},TRUE`))
             this.lastAirdrop = new Date()
-            await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
+
+            const { countAll } = await electronAPI.countSheet(this.airdropToken, this.contractAddress)
+            if (countAll >= 10000) {
+                await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
+                message.info('Đã airdrop hơn 10,000 ví, đã xóa dữ liệu trong sheet để tránh đầy bộ nhớ')
+            }
         } catch (err) {
             message.error(
                 `Airdrop thất bại: ${err instanceof Error ? err.message : 'Unknown error'}`
