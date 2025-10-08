@@ -415,12 +415,12 @@ const MainPage = () => {
                                                 />
                                             </Form.Item>
                                             <Form.Item
-                                                label="Thời gian airdrop (giây)"
+                                                label="Thời gian giữa mỗi lần airdrop (giây)"
                                                 name="airdropDuration"
                                             >
                                                 <InputNumber
                                                     defaultValue={180}
-                                                    placeholder="Nhập thời gian airdrop"
+                                                    placeholder="Nhập giây"
                                                 />
                                             </Form.Item>
                                         </>
