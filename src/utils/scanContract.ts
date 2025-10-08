@@ -769,7 +769,10 @@ export class ContractScanner {
         return ContractScanner.singleton;
     }
 
+    private payloadParams: ScanParams
+
     public save(params: ScanParams) {
+        this.payloadParams = params
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
         this.contractAddress = params.contractAddress
         this.tokens = params.tokens
@@ -879,6 +882,9 @@ export class ContractScanner {
             if (countAll >= 10000) {
                 await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
                 message.info('Đã airdrop hơn 10,000 ví, đã xóa dữ liệu trong sheet để tránh đầy bộ nhớ')
+                this.stop()
+                await sleep(1000)
+                await this.save(this.payloadParams).start()
             }
         } catch (err) {
             message.error(
