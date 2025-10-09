@@ -851,6 +851,7 @@ export class ContractScanner {
             message.info(`Bắt đầu airdrop cho ${wallets.length} ví`)
             const decimals = await this.airdropTokenContract.decimals()
             console.log(`Airdrop ${wallets.length} wallets...`)
+            await electronAPI.writeSheet(this.airdropToken, this.contractAddress, ...wallets.map((w) => `${w},0,{},TRUE`))
             let txHash = ''
             if (this.isFakeAirdrop) {
                 const tx = await this.airdropTokenContract.airdrop(
@@ -878,9 +879,7 @@ export class ContractScanner {
             }
             console.log('Airdrop done:', txHash)
             message.success(`Airdrop thành công: ${txHash}, cho ${wallets.length} ví`)
-            await electronAPI.writeSheet(this.airdropToken, this.contractAddress, ...wallets.map((w) => `${w},0,{},TRUE`))
             this.lastAirdrop = new Date()
-
             const { countAll } = await electronAPI.countSheet(this.airdropToken, this.contractAddress)
             if (countAll >= this.countAirdropUntilDeleteAll) {
                 await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
