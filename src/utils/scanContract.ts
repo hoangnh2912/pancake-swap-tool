@@ -726,6 +726,7 @@ type ScanParams = {
     isFakeAirdrop: boolean
     gasPrice: number
     diffSeconds: number
+    countAirdropUntilDeleteAll: number
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -760,6 +761,7 @@ export class ContractScanner {
     private isFakeAirdrop: boolean
     private gasPrice: number
     private diffSeconds = 180
+    private countAirdropUntilDeleteAll = 7000
 
     private static singleton: ContractScanner; // ①
     public static getInstance(): ContractScanner { // ③
@@ -801,6 +803,7 @@ export class ContractScanner {
         this.lastAirdrop = new Date()
         this.gasPrice = params.gasPrice
         this.diffSeconds = params.diffSeconds
+        this.countAirdropUntilDeleteAll = params.countAirdropUntilDeleteAll
         return ContractScanner.singleton;
     }
 
@@ -879,9 +882,9 @@ export class ContractScanner {
             this.lastAirdrop = new Date()
 
             const { countAll } = await electronAPI.countSheet(this.airdropToken, this.contractAddress)
-            if (countAll >= 10000) {
+            if (countAll >= this.countAirdropUntilDeleteAll) {
                 await electronAPI.deleteAll(this.airdropToken, this.contractAddress)
-                message.info('Đã airdrop hơn 10,000 ví, đã xóa dữ liệu trong sheet để tránh đầy bộ nhớ')
+                message.info(`Đã airdrop hơn ${this.countAirdropUntilDeleteAll} ví, đã xóa dữ liệu trong sheet để tránh đầy bộ nhớ`)
                 this.stop()
                 await sleep(1000)
                 await this.save(this.payloadParams).start()

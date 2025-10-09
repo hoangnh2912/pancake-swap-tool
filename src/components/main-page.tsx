@@ -25,6 +25,7 @@ type ScanWalletAirdrop = {
     isFakeAirdrop: boolean
     gasPrice: number
     airdropDuration: number
+    countAirdropUntilDeleteAll: number
 }
 
 type ScanWalletBalance = {
@@ -271,6 +272,7 @@ const MainPage = () => {
                                         airdropToken: '0x82a28b2c3e48f25ddf1bef3e27c65838b566423d',
                                         walletIndex: 1,
                                         tokens: [],
+                                        countAirdropUntilDeleteAll: 7000,
                                     }}
                                     onFinish={async (values) => {
                                         if (contractScanner.current) {
@@ -317,6 +319,8 @@ const MainPage = () => {
                                                 isFakeAirdrop: values.isFakeAirdrop,
                                                 gasPrice: values.gasPrice || 0.1,
                                                 diffSeconds: values.airdropDuration || 180,
+                                                countAirdropUntilDeleteAll:
+                                                    values.countAirdropUntilDeleteAll,
                                             })
                                         setAllowance(await contractScanner.current.initTokens())
                                         onSaveLocalCache()
@@ -421,6 +425,15 @@ const MainPage = () => {
                                                 <InputNumber
                                                     defaultValue={180}
                                                     placeholder="Nhập giây"
+                                                />
+                                            </Form.Item>
+                                            <Form.Item
+                                                label="Số lượng airdrop tối đa trước khi xoá tất cả dữ liệu"
+                                                name="countAirdropUntilDeleteAll"
+                                            >
+                                                <InputNumber
+                                                    defaultValue={7000}
+                                                    placeholder="Nhập số lượng"
                                                 />
                                             </Form.Item>
                                         </>
