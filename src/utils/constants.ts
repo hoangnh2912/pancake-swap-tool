@@ -36,6 +36,11 @@ const ENVIRONMENT_TYPE = {
     Testnet: 'Testnet',
 }
 
+const STEPPER_TYPES = [
+    { label: 'Deploy', value: 'deploy' },
+    { label: 'Send', value: 'send' },
+]
+
 const ENVIRONMENT: string = ENVIRONMENT_TYPE.Mainnet
 const DEFAULT_PAGINATE_SIZE = 10
 const electronAPI: {
@@ -43,8 +48,9 @@ const electronAPI: {
     onMessage: (callback: (message: string) => void) => void
 } = (window as any).electronAPI
 export {
+    STEPPER_TYPES,
     PANCAKE_ADDRESS,
-    ENVIRONMENT as ENVIROMENT,
+    ENVIRONMENT,
     electronAPI,
     ZERO_ADDRESS,
     ENVIRONMENT_TYPE,

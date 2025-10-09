@@ -43,7 +43,7 @@ const Main = () => {
             }}
             items={tabs.map((tab) => ({
                 key: tab.id,
-                label: tab.name,
+                label: tab.id,
                 children: <MainPage key={tab.id} tabId={tab.id} />,
             }))}
         />

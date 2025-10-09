@@ -1,45 +1,26 @@
 import { Flex, Stack, Text, useToast } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Select, Switch, Table } from 'antd'
-import { ethers } from 'ethers'
+import { Button, Col, Form, Input, InputNumber, message, Row, Select, Table, Upload } from 'antd'
 import { useRef, useState } from 'react'
-import { TOKEN_ADDRESS } from '../utils/constants'
+import { type Stepper } from '../../prisma/client'
+import { STEPPER_TYPES, TOKEN_ADDRESS } from '../utils/constants'
 import { ContractScanner } from '../utils/scanContract'
 import { tryPrivateKeyToAddress } from '../utils/utils'
 
-type ScanWalletAirdrop = {
-    fromBlock: number
-    scanAddress: string
-    concurrency: number
-    blockChunk: number
-    tokens: string[]
-    scanningFromBlock: number
-    scanningToBlock: number
-    airdropAmount: number
-    airdropToken: string
-    walletIndex: number
-    isAirdrop: boolean
-    isFakeAirdrop: boolean
-    gasPrice: number
-}
-
-type ScanWalletBalance = {
-    concurrency: number
-    tokens: string[]
-    fileName: string
+type StepperForm = Stepper & {
+    stepperType: (typeof STEPPER_TYPES)[number]['value']
+    deployTokenFile?: File
+    abi?: string
+    function?: string
+    steps: Stepper[]
 }
 
 const MainPage = ({ tabId }: { tabId: string }) => {
-    const [formAirdrop] = Form.useForm<ScanWalletAirdrop>()
+    const [form] = Form.useForm<StepperForm>()
 
     const contractScanner = useRef<ContractScanner | null>(null)
 
-    const scanningFromBlock = Form.useWatch('scanningFromBlock', formAirdrop)
-    const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
-    const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
-    const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
-    const scanAddress = Form.useWatch('scanAddress', formAirdrop)
-    const airdropToken = Form.useWatch('airdropToken', formAirdrop)
-
+    const stepperType = Form.useWatch('stepperType', form) || 'send'
+    const steps = Form.useWatch('steps', form) || []
     const [privateKeys, setPrivateKeys] = useState([
         '4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042',
     ])
@@ -125,7 +106,6 @@ const MainPage = ({ tabId }: { tabId: string }) => {
 
     return (
         <Stack flex={1} boxShadow="md" p="4" bg={'white'} rounded={'md'}>
-            <Text>{tabId}</Text>
             <Flex gap={'10px'}>
                 <Flex flex={1} direction={'column'}>
                     <Flex gap={'5px'} alignItems={'center'}>
@@ -213,282 +193,83 @@ const MainPage = ({ tabId }: { tabId: string }) => {
                     address: tryPrivateKeyToAddress(key),
                 }))}
             />
-            <Stack flex={1} gap={'0px'}>
-                <Form
-                    form={formAirdrop}
-                    initialValues={{
-                        scanAddress: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d', // USDT contract address
-                        blockChunk: 1000,
-                        concurrency: 1,
-                        airdropAmount: 1,
-                        airdropToken: '0x82a28b2c3e48f25ddf1bef3e27c65838b566423d',
-                        walletIndex: 1,
-                        tokens: [],
-                    }}
-                    onFinish={async (values) => {
-                        if (contractScanner.current) {
-                            contractScanner.current.stop()
-                            setIsScanning(false)
-                        }
-                        contractScanner.current = new ContractScanner({
-                            isAirdrop: values.isAirdrop,
-                            contractAddress: values.scanAddress,
-                            fromBlock: values.fromBlock,
-                            tokens:
-                                values.tokens.length > 0
-                                    ? values.tokens.reduce((acc, q) => {
-                                          const token = TOKEN_ADDRESS.find(
-                                              (e) => e.value === q
-                                          )?.label
-                                          return {
-                                              ...acc,
-                                              [token]: q,
-                                          }
-                                      }, {})
-                                    : {},
-                            rpcUrl: rpc,
-                            options: {
-                                blockChunk: values.blockChunk,
-                                concurrency: values.concurrency,
-                            },
-                            storeId: tabId,
-                            airdropAmount: values.airdropAmount,
-                            airdropToken: values.airdropToken,
-                            onScan(fromBlock, toBlock) {
-                                formAirdrop.setFieldValue('scanningFromBlock', fromBlock)
-                                formAirdrop.setFieldValue('scanningToBlock', toBlock)
-                            },
-                            privateKeySigner: privateKeys[values.walletIndex - 1],
-                            isFakeAirdrop: values.isFakeAirdrop,
-                            gasPrice: values.gasPrice || 0.1,
-                        })
-                        setAllowance(await contractScanner.current.initTokens())
-                        message.success('Lưu airdrop thành công')
-                    }}
-                >
-                    <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
-                        <Switch />
-                    </Form.Item>
-                    {isAirdrop && (
-                        <Form.Item label="Chọn ví" name="walletIndex" required>
-                            <InputNumber placeholder="Chọn ví theo thứ tự" defaultValue={1} />
-                        </Form.Item>
-                    )}
-                    {walletIndex && privateKeys.length > 0 && privateKeys[walletIndex - 1] && (
-                        <Text
-                            style={{
-                                marginBottom: '10px',
-                            }}
-                        >
-                            Ví gửi token: {tryPrivateKeyToAddress(privateKeys[walletIndex - 1])}
-                        </Text>
-                    )}
-                    <Form.Item
-                        label="Địa chỉ quét"
-                        name="scanAddress"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Vui lòng nhập địa chỉ quét',
-                            },
-                            {
-                                validator: async (_, value) => {
-                                    if (!ethers.utils.isAddress(value)) {
-                                        return Promise.reject(
-                                            new Error('Địa chỉ quét không hợp lệ')
-                                        )
-                                    }
-                                },
-                            },
-                        ]}
-                    >
-                        <Input placeholder="Nhập địa chỉ quét" />
-                    </Form.Item>
-                    {isAirdrop && (
-                        <>
-                            <Form.Item
-                                label="Địa chỉ token airdrop"
-                                name="airdropToken"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Vui lòng nhập địa chỉ quét',
-                                    },
-                                    {
-                                        validator: async (_, value) => {
-                                            if (!ethers.utils.isAddress(value)) {
-                                                return Promise.reject(
-                                                    new Error('Địa chỉ quét không hợp lệ')
-                                                )
-                                            }
-                                        },
-                                    },
-                                ]}
-                            >
-                                <Input placeholder="Nhập địa chỉ token airdrop" />
-                            </Form.Item>
-                            <Form.Item label="Số lượng airdrop" name="airdropAmount">
-                                <InputNumber placeholder="Nhập số lượng airdrop" />
-                            </Form.Item>
-                            <Form.Item
-                                label="Airdrop giả (không thực hiện chuyển token)"
-                                name="isFakeAirdrop"
-                            >
-                                <Switch />
-                            </Form.Item>
-                            <Form.Item label="Gas Price (Gwei)" name="gasPrice">
-                                <InputNumber defaultValue={0.1} placeholder="Nhập gas price" />
-                            </Form.Item>
-                        </>
-                    )}
-
-                    <Form.Item label="Kích thước quét block" name="blockChunk">
-                        <InputNumber min={1} placeholder="Kích thước quét block" />
-                    </Form.Item>
-                    <Form.Item label="Số lượt quét đồng thời" name="concurrency">
-                        <InputNumber min={1} placeholder="Số lượt quét đồng thời" />
-                    </Form.Item>
-                    <Form.Item label="Chọn loại token" name="tokens">
-                        <Select
-                            placeholder="Chọn loại token"
-                            mode="multiple"
-                            options={TOKEN_ADDRESS}
-                        />
-                    </Form.Item>
-                    <Form.Item hidden name="wallets" />
-                    <Form.Item hidden name="scanningFromBlock" />
-                    <Form.Item hidden name="scanningToBlock" />
-                    <Button htmlType="submit" type="primary">
-                        Lưu cài đặt
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        type="primary"
-                        style={{
-                            marginLeft: '8px',
+            <Row gutter={12}>
+                <Col span={12}>
+                    <Form
+                        form={form}
+                        initialValues={{
+                            stepperType: 'send',
+                            gasPrice: 0.01,
+                            value: 0,
+                            steps: [],
                         }}
-                        loading={isScanning}
-                        disabled={isAirdrop && !allowance}
-                        onClick={() => {
-                            setIsScanning(true)
-                            contractScanner.current?.start()
-                        }}
-                    >
-                        Quét
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        type="dashed"
-                        style={{
-                            marginLeft: '8px',
-                            backgroundColor: 'yellow',
-                        }}
-                        onClick={() => {}}
-                    >
-                        Nhập file
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        type="dashed"
-                        style={{
-                            marginLeft: '8px',
-                            backgroundColor: 'yellow',
-                        }}
-                        onClick={() => {}}
-                    >
-                        Xuất file
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        style={{
-                            marginLeft: '8px',
-                            backgroundColor: 'red',
-                        }}
-                        type="primary"
-                        onClick={async () => {
-                            try {
-                                message.success('Xoá dữ liệu thành công')
-                            } catch (error) {
-                                message.error(`Xoá dữ liệu thất bại: ${error}`)
-                            }
-                        }}
-                    >
-                        Xoá dữ liệu đã quét
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        style={{
-                            marginLeft: '8px',
-                            backgroundColor: 'red',
-                        }}
-                        type="primary"
-                        onClick={async () => {
-                            try {
-                                message.success('Xoá dữ liệu thành công')
-                            } catch (error) {
-                                message.error(`Xoá dữ liệu thất bại: ${error}`)
-                            }
-                        }}
-                    >
-                        Xoá ví đã airdrop
-                    </Button>
-                    {isAirdrop && (
-                        <Button
-                            htmlType="button"
-                            style={{
-                                marginLeft: '8px',
-                                backgroundColor: 'green',
-                            }}
-                            type="primary"
-                            onClick={() => {
-                                contractScanner.current?.doAirdrop()
-                            }}
-                        >
-                            Transfer thủ công
-                        </Button>
-                    )}
-                    {isScanning && (
-                        <Button
-                            htmlType="button"
-                            type="primary"
-                            style={{
-                                backgroundColor: 'red',
-                                marginLeft: '8px',
-                            }}
-                            onClick={() => {
-                                contractScanner.current?.stop()
+                        onFinish={async (values) => {
+                            if (contractScanner.current) {
+                                contractScanner.current.stop()
                                 setIsScanning(false)
-                            }}
-                        >
-                            Dừng quét
+                            }
+                            contractScanner.current = new ContractScanner()
+                            setAllowance(await contractScanner.current.initTokens())
+                            message.success('Lưu airdrop thành công')
+                        }}
+                    >
+                        <Form.Item label="Ví" name="from">
+                            <Select
+                                showSearch
+                                placeholder="Chọn ví"
+                                options={privateKeys.map((key, idx) => ({
+                                    label:
+                                        tryPrivateKeyToAddress(key) || 'Private key không hợp lệ',
+                                    value: idx + 1,
+                                }))}
+                            />
+                        </Form.Item>
+                        <Form.Item label="Thực hiện" name="stepperType">
+                            <Select options={STEPPER_TYPES} />
+                        </Form.Item>
+                        {stepperType === 'deploy' ? (
+                            <Form.Item label="File token" name="deployTokenFile">
+                                <Upload.Dragger
+                                    beforeUpload={(file) => {
+                                        form.setFieldValue('deployTokenFile', file)
+                                        return false
+                                    }}
+                                    multiple={false}
+                                    maxCount={1}
+                                />
+                            </Form.Item>
+                        ) : (
+                            <>
+                                <Form.Item label="Địa chỉ tới" name="to">
+                                    <Input placeholder="Nhập địa chỉ tới" />
+                                </Form.Item>
+                                <Form.Item label="ABI" name="abi">
+                                    <Input placeholder="Nhập ABI" />
+                                </Form.Item>
+                                <Form.Item label="Hàm" name="function">
+                                    <Select showSearch placeholder="Chọn hàm" />
+                                </Form.Item>
+                            </>
+                        )}
+                        <Form.Item label="Số lượng BNB" name="value">
+                            <InputNumber
+                                placeholder="Nhập số lượng BNB"
+                                style={{ width: '100%' }}
+                            />
+                        </Form.Item>
+                        <Form.Item label="Gas Price (Gwei)" name="gasPrice">
+                            <InputNumber placeholder="Nhập gas price" />
+                        </Form.Item>
+                        <Form.Item hidden name="steps" />
+                        <Button htmlType="submit" type="primary">
+                            Thêm step
                         </Button>
-                    )}
-                    {isAirdrop && (
-                        <Button
-                            htmlType="button"
-                            type="primary"
-                            style={{
-                                backgroundColor: 'red',
-                                marginLeft: '8px',
-                            }}
-                            loading={isApproving}
-                            onClick={async () => {
-                                console.log('Approving airdrop...')
-                                setIsApproving(true)
-                                setAllowance(await contractScanner.current?.approveAirdrop())
-                                setIsApproving(false)
-                            }}
-                        >
-                            {allowance ? allowance : '0'} Approve airdrop
-                        </Button>
-                    )}
-                </Form>
-                {scanningFromBlock !== undefined && scanningToBlock !== undefined && (
-                    <Text fontWeight={'bold'}>
-                        Đang quét từ block {scanningFromBlock} đến block {scanningToBlock}
-                    </Text>
-                )}
-            </Stack>
+                    </Form>
+                </Col>
+                <Col span={12}>
+                    <Table />
+                </Col>
+            </Row>
         </Stack>
     )
 }
