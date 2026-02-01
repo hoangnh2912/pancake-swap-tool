@@ -4,15 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import MainPage from '../components/main-page'
 import useStorage from '../hooks/useStorage'
 import { getStore, type StorePayload } from '../redux/store'
-const formatNiceBytes = (x: string) => {
-    const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-    let l = 0
-    let n = Number.parseInt(x, 10) || 0
-    while (n >= 1024 && ++l) {
-        n = n / 1024
-    }
-    return `${n.toFixed(n < 10 && l > 0 ? 1 : 0)} ${units[l]}`
-}
 
 const Main = () => {
     const isLoadCacheDone = useRef(false)

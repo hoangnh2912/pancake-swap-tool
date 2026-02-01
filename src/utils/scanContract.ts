@@ -1,6 +1,5 @@
 import { notification } from 'antd/es'
 import { ethers } from 'ethers'
-import pLimit from 'p-limit'
 
 const ERC20_ABI = [
     {
@@ -666,11 +665,28 @@ const ERC20_ABI = [
 
 type ScanParams = {
     rpcUrl: string
-    contractAddress: string
+    wallet: string
     fromBlock: number
     options?: { blockChunk?: number; concurrency?: number; interval?: number }
     storeId: string
     onScan?: (fromBlock: number, toBlock: number) => void
+    onSave?: (transfers: TokenTransfer[]) => Promise<void>
+}
+
+type TokenTransfer = {
+    blockNumber: number
+    transactionHash: string
+    tokenAddress: string
+    from: string
+    to: string
+    amount: string
+    decimals?: number
+}
+
+type WalletScanResult = {
+    destinationWallets: Set<string>
+    tokenTransfers: TokenTransfer[]
+    uniqueTokens: Set<string>
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -681,13 +697,23 @@ const message = {
     info: (content: string) => notification.info({ message: content }),
 }
 
+const ERC20_TRANSFER_EVENT_SIGNATURE = 'Transfer(address,address,uint256)'
+const ERC20_TRANSFER_TOPIC = ethers.utils.id(ERC20_TRANSFER_EVENT_SIGNATURE)
+
 export class WalletScanner {
     private provider: ethers.providers.JsonRpcProvider
     private options?: { blockChunk: number; concurrency: number; interval: number }
     private onScan?: (fromBlock: number, toBlock: number) => void
+    private onSave?: (transfers: TokenTransfer[]) => Promise<void>
     private stopped = false
     public isScanning = false
     private currentBlock = 0
+    private wallet: string
+
+    // Local variables to store scan results
+    private destinationWallets: Set<string> = new Set()
+    private tokenTransfers: TokenTransfer[] = []
+    private uniqueTokens: Set<string> = new Set()
 
     private static singleton: WalletScanner // ①
     public static getInstance(): WalletScanner {
@@ -705,8 +731,10 @@ export class WalletScanner {
             concurrency: params.options?.concurrency ?? 8,
             interval: params.options?.interval ?? 2000, // ms giữa mỗi vòng quét
         }
+        this.wallet = params.wallet.toLowerCase()
         this.onScan = params.onScan
         this.currentBlock = params.fromBlock ?? 0
+        this.onSave = params.onSave
         return WalletScanner.singleton
     }
 
@@ -716,14 +744,58 @@ export class WalletScanner {
         this.isScanning = false
     }
 
+    /**
+     * Get all destination wallets that received tokens from the scanned wallet
+     */
+    getDestinationWallets(): string[] {
+        return Array.from(this.destinationWallets)
+    }
+
+    /**
+     * Get all token transfer events
+     */
+    getTokenTransfers(): TokenTransfer[] {
+        return [...this.tokenTransfers]
+    }
+
+    /**
+     * Get all unique token addresses involved in transfers
+     */
+    getUniqueTokens(): string[] {
+        return Array.from(this.uniqueTokens)
+    }
+
+    /**
+     * Get scan results as an object
+     */
+    getScanResults(): WalletScanResult {
+        return {
+            destinationWallets: new Set(this.destinationWallets),
+            tokenTransfers: [...this.tokenTransfers],
+            uniqueTokens: new Set(this.uniqueTokens),
+        }
+    }
+
+    /**
+     * Clear all stored scan results
+     */
+    clearResults() {
+        this.destinationWallets.clear()
+        this.tokenTransfers = []
+        this.uniqueTokens.clear()
+        this.currentBlock = 0
+    }
+
     async start() {
         if (this.isScanning) return
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
-        let scannedWallet: Array<{
-            address: string
-        }> = []
+
+        // Clear previous scan results
+        this.destinationWallets.clear()
+        this.tokenTransfers = []
+        this.uniqueTokens.clear()
 
         const blockChunk = this.options?.blockChunk || 5000
         const concurrency = this.options?.concurrency || 8
@@ -741,68 +813,16 @@ export class WalletScanner {
                     console.log(`Scanning [${this.currentBlock}-${end}]`)
                     message.info(`Bắt đầu quét từ block ${this.currentBlock} đến ${end}`)
                     this.onScan?.(this.currentBlock, end)
-                    const counterparties = new Set<string>()
-                    const txLimit = pLimit(concurrency)
 
-                    await Promise.all(
-                        new Array(end - this.currentBlock + 1).fill(0).map((_, i) =>
-                            txLimit(async () => {
-                                const block = await this.provider.getBlockWithTransactions(
-                                    this.currentBlock + i
-                                )
-                                for (const tx of block.transactions) {
-                                    const checkIsExist = false
-                                    if (!checkIsExist) {
-                                        counterparties.add(tx.from.toLowerCase())
-                                    }
-                                }
-                            })
-                        )
-                    )
+                    // Get all ERC20 Transfer events from this wallet
+                    await this.scanERC20Transfers(this.currentBlock, end)
+                    await this.onSave?.(this.tokenTransfers)
+                    this.tokenTransfers = [] // clear after save
                     console.log(
-                        `Scanned [${this.currentBlock}-${end}] found ${counterparties.size} addresses`
+                        `Scanned [${this.currentBlock}-${end}] found ${this.destinationWallets.size} destination addresses`
                     )
                     message.info(
-                        `Quét từ block ${this.currentBlock} đến ${end}, tìm thấy ${counterparties.size} ví, đang tiến hành quét balance`
-                    )
-                    // Balance scan
-                    const balLimit = pLimit(concurrency)
-                    await Promise.all(
-                        Array.from(counterparties).map((addr) =>
-                            balLimit(async () => {
-                                if (this.stopped) return
-                                // if (this.isAirdrop) {
-                                //     const isAirdropped = await this.airdropContract.sended(
-                                //         addr,
-                                //         this.airdropToken
-                                //     )
-                                //     if (isAirdropped) return
-                                // }
-                                // const nativeWei = await this.provider.getBalance(addr)
-                                // const tokensBalance: Record<string, string> = {}
-
-                                // for (const [sym, t] of Object.entries(this.erc20s)) {
-                                //     let bn = ethers.constants.Zero
-                                //     try {
-                                //         bn = await t.contract.balanceOf(addr)
-                                //     } catch {}
-                                //     tokensBalance[sym] = ethers.utils.formatUnits(bn, t.decimals)
-                                // }
-
-                                // const nativeFormatted = ethers.utils.formatEther(nativeWei)
-                                // const hasNative = !nativeWei.isZero()
-                                // const hasToken = Object.values(tokensBalance).some(
-                                //     (v) => Number.parseFloat(v) > 0
-                                // )
-
-                                // if (hasNative || hasToken) {
-                                const wallet = {
-                                    address: addr,
-                                }
-                                scannedWallet.push(wallet)
-                                // }
-                            })
-                        )
+                        `Quét từ block ${this.currentBlock} đến ${end}, tìm thấy ${this.destinationWallets.size} ví nhận token, ${this.uniqueTokens.size} token khác nhau`
                     )
 
                     this.currentBlock = end + 1
@@ -814,7 +834,6 @@ export class WalletScanner {
                 console.error('Loop error:', (err as Error).message)
             }
 
-            scannedWallet = []
             // nghỉ một chút rồi scan tiếp
             if (!this.stopped) {
                 await sleep(this.options?.interval || 1000)
@@ -823,5 +842,67 @@ export class WalletScanner {
 
         console.log('Scanner stopped')
         this.isScanning = false
+    }
+
+    /**
+     * Scan for ERC20 Transfer events in the block range
+     * Extracts all token transfers from the wallet address
+     * Populates: destinationWallets, tokenTransfers, uniqueTokens
+     */
+    private async scanERC20Transfers(fromBlock: number, toBlock: number) {
+        try {
+            // Query all logs matching the Transfer event signature
+            // where the wallet is the 'from' address (indexed topic at position 1)
+            const logs = await this.provider.getLogs({
+                fromBlock: fromBlock,
+                toBlock: toBlock,
+                topics: [
+                    ERC20_TRANSFER_TOPIC,
+                    ethers.utils.hexZeroPad(this.wallet, 32), // from address (indexed, position 1)
+                    null, // to address (indexed, position 2) - any value
+                ],
+            })
+
+            console.log(`Found ${logs.length} transfer events from wallet ${this.wallet}`)
+
+            // Process each transfer event
+            for (const log of logs) {
+                try {
+                    // Decode the Transfer event
+                    // Transfer(address indexed from, address indexed to, uint256 value)
+                    const topics = log.topics
+                    const from = ethers.utils.getAddress('0x' + topics[1].slice(26)) // Remove '0x' and take last 40 chars
+                    const to = ethers.utils.getAddress('0x' + topics[2].slice(26))
+                    const amount = ethers.BigNumber.from(log.data).toString()
+
+                    const tokenAddress = log.address.toLowerCase()
+
+                    // Add destination wallet to set
+                    this.destinationWallets.add(to.toLowerCase())
+                    this.uniqueTokens.add(tokenAddress)
+
+                    // Store the transfer details
+                    const transfer: TokenTransfer = {
+                        blockNumber: log.blockNumber,
+                        transactionHash: log.transactionHash,
+                        tokenAddress: tokenAddress,
+                        from: from.toLowerCase(),
+                        to: to.toLowerCase(),
+                        amount: amount,
+                    }
+
+                    this.tokenTransfers.push(transfer)
+
+                    console.log(
+                        `Transfer: ${transfer.from} -> ${transfer.to} | Token: ${tokenAddress} | Amount: ${amount}`
+                    )
+                } catch (err) {
+                    console.warn('Error parsing transfer log:', err)
+                }
+            }
+        } catch (err) {
+            console.error(`Error scanning ERC20 transfers [${fromBlock}-${toBlock}]:`, err)
+            throw err
+        }
     }
 }

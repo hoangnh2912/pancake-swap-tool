@@ -327,7 +327,7 @@ export function useSuspenseCountScanWallet<TArgs extends Prisma.ScanWalletCountA
     return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/count`, args, options, fetch);
 }
 
-export function useCheckScanWallet<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; wallet?: string; destination?: string }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
+export function useCheckScanWallet<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; wallet?: string; tx?: string; token?: string; destination?: string; amount?: string }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
     const { endpoint, fetch } = getHooksContext();
     return useModelQuery<boolean, boolean, TError>('ScanWallet', `${endpoint}/scanWallet/check`, args, options, fetch);
 }

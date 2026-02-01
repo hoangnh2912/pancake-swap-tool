@@ -121,7 +121,10 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.ScanWalletScalarFieldEnum = {
   id: 'id',
   wallet: 'wallet',
+  tx: 'tx',
+  token: 'token',
   destination: 'destination',
+  amount: 'amount',
   createdAt: 'createdAt'
 };
 

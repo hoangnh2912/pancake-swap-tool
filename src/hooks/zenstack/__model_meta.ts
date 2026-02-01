@@ -18,8 +18,19 @@ const metadata: ModelMeta = {
                 }, wallet: {
                     name: "wallet",
                     type: "String",
+                }, tx: {
+                    name: "tx",
+                    type: "String",
+                }, token: {
+                    name: "token",
+                    type: "String",
+                    isOptional: true,
                 }, destination: {
                     name: "destination",
+                    type: "String",
+                    isOptional: true,
+                }, amount: {
+                    name: "amount",
                     type: "String",
                     isOptional: true,
                 }, createdAt: {
@@ -31,6 +42,9 @@ const metadata: ModelMeta = {
                 id: {
                     name: "id",
                     fields: ["id"]
+                }, tx: {
+                    name: "tx",
+                    fields: ["tx"]
                 },
             },
         },

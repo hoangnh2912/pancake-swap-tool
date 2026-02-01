@@ -24,6 +24,10 @@ plugin hooks {
 model ScanWallet {
   id          String   @id @default(cuid())
   wallet      String
+  tx          String   @unique
+  token       String?
   destination String?
+  amount      String?
   createdAt   DateTime @default(now())
+  @@index([destination])
 }

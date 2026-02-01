@@ -1,11 +1,11 @@
 import { Flex, Stack, Text } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Tabs } from 'antd'
+import { Button, Form, Input, InputNumber, message, Table, Tabs } from 'antd'
 import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreState } from '../redux/hook'
 import { WalletScanner } from '../utils/scanContract'
-import { useFindManyScanWallet } from '../hooks/zenstack'
+import { useCreateManyScanWallet, useFindManyScanWallet } from '../hooks/zenstack'
 
 type ScanWalletForm = {
     fromBlock: number
@@ -24,9 +24,23 @@ const MainPage = () => {
     const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
     const scanAddress = Form.useWatch('scanAddress', formAirdrop)
 
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const [pageSize, setPageSize] = useState<number>(10)
+
     const walletCount = 0
 
-    const { data: scanWallets = [] } = useFindManyScanWallet({})
+    const { data: scanWallets = [] } = useFindManyScanWallet({
+        where: {
+            wallet: {
+                equals: scanAddress?.toLowerCase() || '0x',
+            },
+        },
+        skip: (currentPage - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+            createdAt: 'desc',
+        },
+    })
 
     const [isScanning, setIsScanning] = useState<boolean>()
     const [rpc, setRpc] = useState<string>('https://bsc.drpc.org')
@@ -52,6 +66,8 @@ const MainPage = () => {
             scanAddress: formAirdrop.getFieldValue('scanAddress'),
         })
     }
+
+    const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
 
     return (
         <Stack flex={1} boxShadow="md" p="4" bg={'white'} rounded={'md'}>
@@ -86,7 +102,7 @@ const MainPage = () => {
                                             setIsScanning(false)
                                         }
                                         contractScanner.current = WalletScanner.getInstance().save({
-                                            contractAddress: values.scanAddress,
+                                            wallet: values.scanAddress,
                                             fromBlock: values.fromBlock,
                                             rpcUrl: rpc,
                                             options: {
@@ -103,6 +119,17 @@ const MainPage = () => {
                                                     'scanningToBlock',
                                                     toBlock
                                                 )
+                                            },
+                                            onSave: async (transfers) => {
+                                                await createManyScanWallet({
+                                                    data: transfers.map((transfer) => ({
+                                                        tx: transfer.transactionHash,
+                                                        wallet: transfer.from?.toLowerCase(),
+                                                        token: transfer.tokenAddress?.toLowerCase(),
+                                                        destination: transfer.to?.toLowerCase(),
+                                                        amount: transfer.amount,
+                                                    })),
+                                                })
                                             },
                                         })
                                         onSaveLocalCache()
@@ -220,6 +247,88 @@ const MainPage = () => {
                                             {scanningToBlock}
                                         </Text>
                                     )}
+                                <Table
+                                    size="small"
+                                    dataSource={scanWallets}
+                                    pagination={{
+                                        current: currentPage,
+                                        pageSize: pageSize,
+                                        onChange: (page, pageSize) => {
+                                            setCurrentPage(page)
+                                            setPageSize(pageSize)
+                                        },
+                                    }}
+                                    columns={[
+                                        {
+                                            title: 'STT',
+                                            key: 'index',
+                                            render: (_text, _record, index) =>
+                                                (currentPage - 1) * pageSize + index + 1,
+                                        }
+                                        ,
+                                        {
+                                            title: 'Mã giao dịch',
+                                            dataIndex: 'tx',
+                                            key: 'tx',
+                                            render: (text) => (
+                                                <a
+                                                    href={`https://bscscan.com/tx/${text}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {text}
+                                                </a>
+                                            ),
+                                        },
+                                        {
+                                            title: 'Ví quét',
+                                            dataIndex: 'wallet',
+                                            key: 'wallet',
+                                            render: (text) => (
+                                                <a
+                                                    href={`https://bscscan.com/address/${text}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {text}
+                                                </a>
+                                            ),
+                                        },
+                                        {
+                                            title: 'Token',
+                                            dataIndex: 'token',
+                                            key: 'token',
+                                            render: (text) => (
+                                                <a
+                                                    href={`https://bscscan.com/address/${text}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {text}
+                                                </a>
+                                            ),
+                                        },
+                                        {
+                                            title: 'Ví nhận',
+                                            dataIndex: 'destination',
+                                            key: 'destination',
+                                            render: (text) => (
+                                                <a
+                                                    href={`https://bscscan.com/address/${text}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {text}
+                                                </a>
+                                            ),
+                                        },
+                                        {
+                                            title: 'Số lượng',
+                                            dataIndex: 'amount',
+                                            key: 'amount',
+                                        },
+                                    ]}
+                                />
                             </Stack>
                         ),
                     },
