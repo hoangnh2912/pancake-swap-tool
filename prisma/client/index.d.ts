@@ -204,8 +204,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.15.0
-   * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
+   * Prisma Client JS version: 6.19.2
+   * Query Engine version: c2990dca591cba766e3b7ef5d9e8a84796e47ab7
    */
   export type PrismaVersion = {
     client: string
@@ -218,6 +218,7 @@ export namespace Prisma {
    */
 
 
+  export import Bytes = runtime.Bytes
   export import JsonObject = runtime.JsonObject
   export import JsonArray = runtime.JsonArray
   export import JsonValue = runtime.JsonValue
@@ -759,6 +760,10 @@ export namespace Prisma {
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
     /**
+     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
+     */
+    adapter?: runtime.SqlDriverAdapterFactory | null
+    /**
      * Global configuration for omitting model fields by default.
      * 
      * @example
@@ -869,21 +874,21 @@ export namespace Prisma {
   export type ScanWalletMinAggregateOutputType = {
     id: string | null
     wallet: string | null
-    token: string | null
+    destination: string | null
     createdAt: Date | null
   }
 
   export type ScanWalletMaxAggregateOutputType = {
     id: string | null
     wallet: string | null
-    token: string | null
+    destination: string | null
     createdAt: Date | null
   }
 
   export type ScanWalletCountAggregateOutputType = {
     id: number
     wallet: number
-    token: number
+    destination: number
     createdAt: number
     _all: number
   }
@@ -892,21 +897,21 @@ export namespace Prisma {
   export type ScanWalletMinAggregateInputType = {
     id?: true
     wallet?: true
-    token?: true
+    destination?: true
     createdAt?: true
   }
 
   export type ScanWalletMaxAggregateInputType = {
     id?: true
     wallet?: true
-    token?: true
+    destination?: true
     createdAt?: true
   }
 
   export type ScanWalletCountAggregateInputType = {
     id?: true
     wallet?: true
-    token?: true
+    destination?: true
     createdAt?: true
     _all?: true
   }
@@ -986,7 +991,7 @@ export namespace Prisma {
   export type ScanWalletGroupByOutputType = {
     id: string
     wallet: string
-    token: string | null
+    destination: string | null
     createdAt: Date
     _count: ScanWalletCountAggregateOutputType | null
     _min: ScanWalletMinAggregateOutputType | null
@@ -1010,32 +1015,32 @@ export namespace Prisma {
   export type ScanWalletSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    token?: boolean
+    destination?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
   export type ScanWalletSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    token?: boolean
+    destination?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
   export type ScanWalletSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    token?: boolean
+    destination?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
   export type ScanWalletSelectScalar = {
     id?: boolean
     wallet?: boolean
-    token?: boolean
+    destination?: boolean
     createdAt?: boolean
   }
 
-  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "token" | "createdAt", ExtArgs["result"]["scanWallet"]>
+  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "destination" | "createdAt", ExtArgs["result"]["scanWallet"]>
 
   export type $ScanWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ScanWallet"
@@ -1043,7 +1048,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       wallet: string
-      token: string | null
+      destination: string | null
       createdAt: Date
     }, ExtArgs["result"]["scanWallet"]>
     composites: {}
@@ -1470,7 +1475,7 @@ export namespace Prisma {
   interface ScanWalletFieldRefs {
     readonly id: FieldRef<"ScanWallet", 'String'>
     readonly wallet: FieldRef<"ScanWallet", 'String'>
-    readonly token: FieldRef<"ScanWallet", 'String'>
+    readonly destination: FieldRef<"ScanWallet", 'String'>
     readonly createdAt: FieldRef<"ScanWallet", 'DateTime'>
   }
     
@@ -1850,7 +1855,7 @@ export namespace Prisma {
   export const ScanWalletScalarFieldEnum: {
     id: 'id',
     wallet: 'wallet',
-    token: 'token',
+    destination: 'destination',
     createdAt: 'createdAt'
   };
 
@@ -1908,14 +1913,14 @@ export namespace Prisma {
     NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
     id?: StringFilter<"ScanWallet"> | string
     wallet?: StringFilter<"ScanWallet"> | string
-    token?: StringNullableFilter<"ScanWallet"> | string | null
+    destination?: StringNullableFilter<"ScanWallet"> | string | null
     createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
   }
 
   export type ScanWalletOrderByWithRelationInput = {
     id?: SortOrder
     wallet?: SortOrder
-    token?: SortOrderInput | SortOrder
+    destination?: SortOrderInput | SortOrder
     createdAt?: SortOrder
   }
 
@@ -1925,14 +1930,14 @@ export namespace Prisma {
     OR?: ScanWalletWhereInput[]
     NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
     wallet?: StringFilter<"ScanWallet"> | string
-    token?: StringNullableFilter<"ScanWallet"> | string | null
+    destination?: StringNullableFilter<"ScanWallet"> | string | null
     createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
   }, "id">
 
   export type ScanWalletOrderByWithAggregationInput = {
     id?: SortOrder
     wallet?: SortOrder
-    token?: SortOrderInput | SortOrder
+    destination?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: ScanWalletCountOrderByAggregateInput
     _max?: ScanWalletMaxOrderByAggregateInput
@@ -1945,56 +1950,56 @@ export namespace Prisma {
     NOT?: ScanWalletScalarWhereWithAggregatesInput | ScanWalletScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ScanWallet"> | string
     wallet?: StringWithAggregatesFilter<"ScanWallet"> | string
-    token?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
+    destination?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ScanWallet"> | Date | string
   }
 
   export type ScanWalletCreateInput = {
     id?: string
     wallet: string
-    token?: string | null
+    destination?: string | null
     createdAt?: Date | string
   }
 
   export type ScanWalletUncheckedCreateInput = {
     id?: string
     wallet: string
-    token?: string | null
+    destination?: string | null
     createdAt?: Date | string
   }
 
   export type ScanWalletUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
+    destination?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ScanWalletUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
+    destination?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ScanWalletCreateManyInput = {
     id?: string
     wallet: string
-    token?: string | null
+    destination?: string | null
     createdAt?: Date | string
   }
 
   export type ScanWalletUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
+    destination?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ScanWalletUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
+    destination?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2045,21 +2050,21 @@ export namespace Prisma {
   export type ScanWalletCountOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    token?: SortOrder
+    destination?: SortOrder
     createdAt?: SortOrder
   }
 
   export type ScanWalletMaxOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    token?: SortOrder
+    destination?: SortOrder
     createdAt?: SortOrder
   }
 
   export type ScanWalletMinOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    token?: SortOrder
+    destination?: SortOrder
     createdAt?: SortOrder
   }
 

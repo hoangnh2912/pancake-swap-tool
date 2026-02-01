@@ -1,12 +1,13 @@
 import { Flex, Stack, Text } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message,  Tabs } from 'antd'
+import { Button, Form, Input, InputNumber, message, Tabs } from 'antd'
 import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
 import { useStoreState } from '../redux/hook'
 import { WalletScanner } from '../utils/scanContract'
+import { useFindManyScanWallet } from '../hooks/zenstack'
 
-type ScanWalletAirdrop = {
+type ScanWalletForm = {
     fromBlock: number
     scanAddress: string
     concurrency: number
@@ -16,7 +17,7 @@ type ScanWalletAirdrop = {
 }
 
 const MainPage = () => {
-    const [formAirdrop] = Form.useForm<ScanWalletAirdrop>()
+    const [formAirdrop] = Form.useForm<ScanWalletForm>()
     const contractScanner = useRef<WalletScanner | null>(null)
 
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formAirdrop)
@@ -24,6 +25,9 @@ const MainPage = () => {
     const scanAddress = Form.useWatch('scanAddress', formAirdrop)
 
     const walletCount = 0
+
+    const { data: scanWallets = [] } = useFindManyScanWallet({})
+
     const [isScanning, setIsScanning] = useState<boolean>()
     const [rpc, setRpc] = useState<string>('https://bsc.drpc.org')
 
@@ -33,7 +37,6 @@ const MainPage = () => {
 
     useEffect(() => {
         const cache = getItem<{
-            privateKeys: string[]
             rpc: string
             scanAddress: string
         }>(getKeyCacheByTabId(tabId))
@@ -82,27 +85,26 @@ const MainPage = () => {
                                             contractScanner.current.stop()
                                             setIsScanning(false)
                                         }
-                                        contractScanner.current =
-                                            WalletScanner.getInstance().save({
-                                                contractAddress: values.scanAddress,
-                                                fromBlock: values.fromBlock,
-                                                rpcUrl: rpc,
-                                                options: {
-                                                    blockChunk: values.blockChunk,
-                                                    concurrency: values.concurrency,
-                                                },
-                                                storeId: tabId,
-                                                onScan(fromBlock, toBlock) {
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningFromBlock',
-                                                        fromBlock
-                                                    )
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningToBlock',
-                                                        toBlock
-                                                    )
-                                                },
-                                            })
+                                        contractScanner.current = WalletScanner.getInstance().save({
+                                            contractAddress: values.scanAddress,
+                                            fromBlock: values.fromBlock,
+                                            rpcUrl: rpc,
+                                            options: {
+                                                blockChunk: values.blockChunk,
+                                                concurrency: values.concurrency,
+                                            },
+                                            storeId: tabId,
+                                            onScan(fromBlock, toBlock) {
+                                                formAirdrop.setFieldValue(
+                                                    'scanningFromBlock',
+                                                    fromBlock
+                                                )
+                                                formAirdrop.setFieldValue(
+                                                    'scanningToBlock',
+                                                    toBlock
+                                                )
+                                            },
+                                        })
                                         onSaveLocalCache()
                                         message.success('Lưu airdrop thành công')
                                     }}

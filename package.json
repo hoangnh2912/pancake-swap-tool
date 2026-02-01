@@ -11,7 +11,7 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "format": "biome format --write --verbose --fix",
-    "generate": "prisma generate",
+    "generate": "zenstack generate",
     "db:push": "prisma db push"
   },
   "keywords": [],
@@ -41,7 +41,8 @@
     "style-loader": "^3.0.0",
     "ts-loader": "^9.2.2",
     "ts-node": "^10.0.0",
-    "typescript": "~4.5.4"
+    "typescript": "~4.5.4",
+    "zenstack": "2.22.1"
   },
   "dependencies": {
     "@ajna/pagination": "^1.4.19",
@@ -49,7 +50,12 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@hono/node-server": "^1.19.9",
     "@prisma/client": "^6.15.0",
+    "@tanstack/react-query": "^5.90.20",
+    "@zenstackhq/runtime": "2.22.1",
+    "@zenstackhq/server": "2.22.1",
+    "@zenstackhq/tanstack-query": "2.22.1",
     "antd": "^5.27.0",
     "axios": "^1.6.7",
     "dayjs": "^1.11.18",
@@ -58,12 +64,14 @@
     "ethers": "5",
     "framer-motion": "^11.0.5",
     "googleapis": "^157.0.0",
+    "hono": "^4.11.7",
     "jquery": "^3.7.1",
-    "prisma": "^6.15.0",
+    "prisma": "6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "zod": "^4.3.6"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
