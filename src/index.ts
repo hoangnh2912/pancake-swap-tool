@@ -8,7 +8,7 @@ import './server'
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 const prisma = new PrismaClient({
-    datasourceUrl: app.isPackaged ? `file:${path.join(app.getAppPath(), '..', 'prisma', 'scan-wallet.sqlite')}` : `file:${path.join(app.getAppPath(), 'prisma', 'scan-wallet.sqlite')}`,
+    datasourceUrl: app.isPackaged ? `file:${path.join(app.getAppPath(), '..', 'prisma', 'scan-transfer.sqlite')}` : `file:${path.join(app.getAppPath(), 'prisma', 'scan-transfer.sqlite')}`,
 });
 // Gracefully disconnect Prisma when app is closing
 app.on('before-quit', async () => {

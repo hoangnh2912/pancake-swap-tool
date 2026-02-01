@@ -1,6 +1,6 @@
 {
-  "name": "scan-wallet",
-  "productName": "scan-wallet",
+  "name": "scan-transfer",
+  "productName": "scan-transfer",
   "version": "1.0.0",
   "description": "",
   "main": ".webpack/main",

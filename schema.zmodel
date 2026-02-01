@@ -12,7 +12,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./scan-wallet.sqlite"
+  url      = "file:./scan-transfer.sqlite"
 }
 
 plugin hooks {
