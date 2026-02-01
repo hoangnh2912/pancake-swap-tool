@@ -1,11 +1,14 @@
 import { Flex, Stack, Text } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Table, Tabs } from 'antd'
+import { Button, Form, Input, InputNumber, message, Table, Tabs, Typography } from 'antd'
 import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
-import { useStoreState } from '../redux/hook'
-import { WalletScanner } from '../utils/scanContract'
 import { useCreateManyScanWallet, useFindManyScanWallet } from '../hooks/zenstack'
+import { useStoreState } from '../redux/hook'
+import { WalletScanner } from '../utils/scanWallet'
+import { getHooksContext } from '@zenstackhq/tanstack-query/runtime-v5/react'
+import type { Prisma } from '../../prisma/client'
+import dayjs from 'dayjs'
 
 type ScanWalletForm = {
     fromBlock: number
@@ -17,18 +20,18 @@ type ScanWalletForm = {
 }
 
 const MainPage = () => {
-    const [formAirdrop] = Form.useForm<ScanWalletForm>()
+    const [formScanWallet] = Form.useForm<ScanWalletForm>()
     const contractScanner = useRef<WalletScanner | null>(null)
 
-    const scanningFromBlock = Form.useWatch('scanningFromBlock', formAirdrop)
-    const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
-    const scanAddress = Form.useWatch('scanAddress', formAirdrop)
+    const scanningFromBlock = Form.useWatch('scanningFromBlock', formScanWallet)
+    const scanningToBlock = Form.useWatch('scanningToBlock', formScanWallet)
+    const scanAddress = Form.useWatch('scanAddress', formScanWallet)
 
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [pageSize, setPageSize] = useState<number>(10)
 
     const walletCount = 0
-
+    const { endpoint, fetch } = getHooksContext()
     const { data: scanWallets = [] } = useFindManyScanWallet({
         where: {
             wallet: {
@@ -56,14 +59,15 @@ const MainPage = () => {
         }>(getKeyCacheByTabId(tabId))
         if (cache) {
             setRpc(cache.rpc)
-            formAirdrop.setFieldValue('scanAddress', cache.scanAddress)
+            formScanWallet.setFieldValue('scanAddress', cache.scanAddress)
         }
+        message.info('Đã tải cài đặt từ bộ nhớ local')
     }, [])
 
     const onSaveLocalCache = () => {
         setItem(getKeyCacheByTabId(tabId), {
             rpc,
-            scanAddress: formAirdrop.getFieldValue('scanAddress'),
+            scanAddress: formScanWallet.getFieldValue('scanAddress'),
         })
     }
 
@@ -71,7 +75,6 @@ const MainPage = () => {
 
     return (
         <Stack flex={1} boxShadow="md" p="4" bg={'white'} rounded={'md'}>
-            <Text>{tabId}</Text>
             <Flex gap={'10px'}>
                 <Flex flex={1} direction={'column'}>
                     <Flex gap={'5px'} alignItems={'center'}>
@@ -89,7 +92,7 @@ const MainPage = () => {
                         children: (
                             <Stack flex={1} gap={'0px'}>
                                 <Form
-                                    form={formAirdrop}
+                                    form={formScanWallet}
                                     initialValues={{
                                         scanAddress: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d', // USDT contract address
                                         blockChunk: 1000,
@@ -111,11 +114,11 @@ const MainPage = () => {
                                             },
                                             storeId: tabId,
                                             onScan(fromBlock, toBlock) {
-                                                formAirdrop.setFieldValue(
+                                                formScanWallet.setFieldValue(
                                                     'scanningFromBlock',
                                                     fromBlock
                                                 )
-                                                formAirdrop.setFieldValue(
+                                                formScanWallet.setFieldValue(
                                                     'scanningToBlock',
                                                     toBlock
                                                 )
@@ -191,18 +194,51 @@ const MainPage = () => {
                                             marginLeft: '8px',
                                             backgroundColor: 'yellow',
                                         }}
-                                        onClick={() => {}}
-                                    >
-                                        Nhập file
-                                    </Button>
-                                    <Button
-                                        htmlType="button"
-                                        type="dashed"
-                                        style={{
-                                            marginLeft: '8px',
-                                            backgroundColor: 'yellow',
+                                        onClick={async () => {
+                                            const res = await fetch(
+                                                `${endpoint}/scanWallet/findMany?q=${JSON.stringify(
+                                                    {
+                                                        where: {
+                                                            wallet: {
+                                                                equals:
+                                                                    scanAddress?.toLowerCase() ||
+                                                                    '0x',
+                                                            },
+                                                        },
+                                                        skip: (currentPage - 1) * pageSize,
+                                                        take: pageSize,
+                                                        orderBy: {
+                                                            createdAt: 'desc',
+                                                        },
+                                                    }
+                                                )}`,
+                                                {
+                                                    method: 'GET',
+                                                }
+                                            )
+                                            const data = await res.json()
+                                            // Generate CSV content
+                                            let csvContent = 'stt,tx,scan,token,to,amount\n'
+                                            data?.data?.forEach(
+                                                (
+                                                    item: Prisma.ScanWalletGetPayload<{}>,
+                                                    index: number
+                                                ) => {
+                                                    csvContent += `${index + 1},${item.tx},${item.wallet},${item.token},${item.destination},${item.amount}\n`
+                                                }
+                                            )
+                                            // Create a blob and trigger download
+                                            const blob = new Blob([csvContent], {
+                                                type: 'text/csv;charset=utf-8;',
+                                            })
+                                            const link = document.createElement('a')
+                                            const url = URL.createObjectURL(blob)
+                                            link.href = url
+                                            link.download = `scan-${scanAddress || ''}-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.csv`
+                                            document.body.appendChild(link)
+                                            link.click()
+                                            document.body.removeChild(link)
                                         }}
-                                        onClick={() => {}}
                                     >
                                         Xuất file
                                     </Button>
@@ -261,71 +297,69 @@ const MainPage = () => {
                                     columns={[
                                         {
                                             title: 'STT',
-                                            key: 'index',
+                                            width: 40,
                                             render: (_text, _record, index) =>
                                                 (currentPage - 1) * pageSize + index + 1,
-                                        }
-                                        ,
+                                        },
                                         {
                                             title: 'Mã giao dịch',
-                                            dataIndex: 'tx',
-                                            key: 'tx',
-                                            render: (text) => (
-                                                <a
+                                            width: 200,
+                                            render: (_, { tx: text }) => (
+                                                <Typography.Link
                                                     href={`https://bscscan.com/tx/${text}`}
                                                     target="_blank"
+                                                    style={{
+                                                        width: 200,
+                                                    }}
+                                                    ellipsis
                                                     rel="noreferrer"
                                                 >
                                                     {text}
-                                                </a>
+                                                </Typography.Link>
                                             ),
                                         },
                                         {
                                             title: 'Ví quét',
-                                            dataIndex: 'wallet',
-                                            key: 'wallet',
-                                            render: (text) => (
-                                                <a
+                                            render: (_, { wallet: text }) => (
+                                                <Typography.Link
                                                     href={`https://bscscan.com/address/${text}`}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
                                                     {text}
-                                                </a>
+                                                </Typography.Link>
                                             ),
                                         },
                                         {
                                             title: 'Token',
-                                            dataIndex: 'token',
-                                            key: 'token',
-                                            render: (text) => (
-                                                <a
+                                            render: (_, { token: text }) => (
+                                                <Typography.Link
                                                     href={`https://bscscan.com/address/${text}`}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
                                                     {text}
-                                                </a>
+                                                </Typography.Link>
                                             ),
                                         },
                                         {
                                             title: 'Ví nhận',
-                                            dataIndex: 'destination',
-                                            key: 'destination',
-                                            render: (text) => (
-                                                <a
+                                            render: (_, { destination: text }) => (
+                                                <Typography.Link
                                                     href={`https://bscscan.com/address/${text}`}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                 >
                                                     {text}
-                                                </a>
+                                                </Typography.Link>
                                             ),
                                         },
                                         {
                                             title: 'Số lượng',
-                                            dataIndex: 'amount',
                                             key: 'amount',
+                                            render: (_text, record) => (
+                                                <span>{record.amount.toString()}</span>
+                                            ),
                                         },
                                     ]}
                                 />
