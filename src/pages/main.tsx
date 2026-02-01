@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import MainPage from '../components/main-page'
 import useStorage from '../hooks/useStorage'
 import { getStore, type StorePayload } from '../redux/store'
-import useMemoryInfo from '../hooks/useMemoryInfo'
 const formatNiceBytes = (x: string) => {
     const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
     let l = 0
@@ -94,17 +93,8 @@ const Main = () => {
             return prev.filter((v) => v.id !== idCloseTab)
         })
     }
-    const memory = useMemoryInfo()
     return (
         <>
-            {memory && (
-                <div>
-                    <div>App Path: {memory.appPath}</div>
-                    <div>Private: {formatNiceBytes(`${memory.private}`)}</div>
-                    <div>residentSet Set Size: {formatNiceBytes(`${memory.residentSet}`)}</div>
-                    <div>shared Bytes: {formatNiceBytes(`${memory.shared}`)}</div>
-                </div>
-            )}
             <Tabs
                 defaultActiveKey="1a2b3c4d"
                 type="editable-card"

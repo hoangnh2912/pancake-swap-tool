@@ -14,15 +14,10 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
- * Model ScanContract
+ * Model ScanWallet
  * 
  */
-export type ScanContract = $Result.DefaultSelection<Prisma.$ScanContractPayload>
-/**
- * Model ScanBalance
- * 
- */
-export type ScanBalance = $Result.DefaultSelection<Prisma.$ScanBalancePayload>
+export type ScanWallet = $Result.DefaultSelection<Prisma.$ScanWalletPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -31,8 +26,8 @@ export type ScanBalance = $Result.DefaultSelection<Prisma.$ScanBalancePayload>
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more ScanContracts
- * const scanContracts = await prisma.scanContract.findMany()
+ * // Fetch zero or more ScanWallets
+ * const scanWallets = await prisma.scanWallet.findMany()
  * ```
  *
  *
@@ -52,8 +47,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more ScanContracts
-   * const scanContracts = await prisma.scanContract.findMany()
+   * // Fetch zero or more ScanWallets
+   * const scanWallets = await prisma.scanWallet.findMany()
    * ```
    *
    *
@@ -143,24 +138,14 @@ export class PrismaClient<
   }>>
 
       /**
-   * `prisma.scanContract`: Exposes CRUD operations for the **ScanContract** model.
+   * `prisma.scanWallet`: Exposes CRUD operations for the **ScanWallet** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ScanContracts
-    * const scanContracts = await prisma.scanContract.findMany()
+    * // Fetch zero or more ScanWallets
+    * const scanWallets = await prisma.scanWallet.findMany()
     * ```
     */
-  get scanContract(): Prisma.ScanContractDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.scanBalance`: Exposes CRUD operations for the **ScanBalance** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more ScanBalances
-    * const scanBalances = await prisma.scanBalance.findMany()
-    * ```
-    */
-  get scanBalance(): Prisma.ScanBalanceDelegate<ExtArgs, ClientOptions>;
+  get scanWallet(): Prisma.ScanWalletDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -601,8 +586,7 @@ export namespace Prisma {
 
 
   export const ModelName: {
-    ScanContract: 'ScanContract',
-    ScanBalance: 'ScanBalance'
+    ScanWallet: 'ScanWallet'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -621,155 +605,81 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "scanContract" | "scanBalance"
+      modelProps: "scanWallet"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
-      ScanContract: {
-        payload: Prisma.$ScanContractPayload<ExtArgs>
-        fields: Prisma.ScanContractFieldRefs
+      ScanWallet: {
+        payload: Prisma.$ScanWalletPayload<ExtArgs>
+        fields: Prisma.ScanWalletFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ScanContractFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload> | null
+            args: Prisma.ScanWalletFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ScanContractFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           findFirst: {
-            args: Prisma.ScanContractFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload> | null
+            args: Prisma.ScanWalletFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ScanContractFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           findMany: {
-            args: Prisma.ScanContractFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.ScanWalletFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
           }
           create: {
-            args: Prisma.ScanContractCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           createMany: {
-            args: Prisma.ScanContractCreateManyArgs<ExtArgs>
+            args: Prisma.ScanWalletCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ScanContractCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.ScanWalletCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
           }
           delete: {
-            args: Prisma.ScanContractDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           update: {
-            args: Prisma.ScanContractUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           deleteMany: {
-            args: Prisma.ScanContractDeleteManyArgs<ExtArgs>
+            args: Prisma.ScanWalletDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ScanContractUpdateManyArgs<ExtArgs>
+            args: Prisma.ScanWalletUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.ScanContractUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>[]
+            args: Prisma.ScanWalletUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
           }
           upsert: {
-            args: Prisma.ScanContractUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanContractPayload>
+            args: Prisma.ScanWalletUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
           }
           aggregate: {
-            args: Prisma.ScanContractAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScanContract>
+            args: Prisma.ScanWalletAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateScanWallet>
           }
           groupBy: {
-            args: Prisma.ScanContractGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScanContractGroupByOutputType>[]
+            args: Prisma.ScanWalletGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ScanWalletGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ScanContractCountArgs<ExtArgs>
-            result: $Utils.Optional<ScanContractCountAggregateOutputType> | number
-          }
-        }
-      }
-      ScanBalance: {
-        payload: Prisma.$ScanBalancePayload<ExtArgs>
-        fields: Prisma.ScanBalanceFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.ScanBalanceFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.ScanBalanceFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          findFirst: {
-            args: Prisma.ScanBalanceFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.ScanBalanceFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          findMany: {
-            args: Prisma.ScanBalanceFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
-          }
-          create: {
-            args: Prisma.ScanBalanceCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          createMany: {
-            args: Prisma.ScanBalanceCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.ScanBalanceCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
-          }
-          delete: {
-            args: Prisma.ScanBalanceDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          update: {
-            args: Prisma.ScanBalanceUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          deleteMany: {
-            args: Prisma.ScanBalanceDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.ScanBalanceUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.ScanBalanceUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>[]
-          }
-          upsert: {
-            args: Prisma.ScanBalanceUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanBalancePayload>
-          }
-          aggregate: {
-            args: Prisma.ScanBalanceAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScanBalance>
-          }
-          groupBy: {
-            args: Prisma.ScanBalanceGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScanBalanceGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.ScanBalanceCountArgs<ExtArgs>
-            result: $Utils.Optional<ScanBalanceCountAggregateOutputType> | number
+            args: Prisma.ScanWalletCountArgs<ExtArgs>
+            result: $Utils.Optional<ScanWalletCountAggregateOutputType> | number
           }
         }
       }
@@ -865,8 +775,7 @@ export namespace Prisma {
     omit?: Prisma.GlobalOmitConfig
   }
   export type GlobalOmitConfig = {
-    scanContract?: ScanContractOmit
-    scanBalance?: ScanBalanceOmit
+    scanWallet?: ScanWalletOmit
   }
 
   /* Types for Logging */
@@ -948,394 +857,324 @@ export namespace Prisma {
    */
 
   /**
-   * Model ScanContract
+   * Model ScanWallet
    */
 
-  export type AggregateScanContract = {
-    _count: ScanContractCountAggregateOutputType | null
-    _avg: ScanContractAvgAggregateOutputType | null
-    _sum: ScanContractSumAggregateOutputType | null
-    _min: ScanContractMinAggregateOutputType | null
-    _max: ScanContractMaxAggregateOutputType | null
+  export type AggregateScanWallet = {
+    _count: ScanWalletCountAggregateOutputType | null
+    _min: ScanWalletMinAggregateOutputType | null
+    _max: ScanWalletMaxAggregateOutputType | null
   }
 
-  export type ScanContractAvgAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanContractSumAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanContractMinAggregateOutputType = {
+  export type ScanWalletMinAggregateOutputType = {
     id: string | null
     wallet: string | null
-    contract: string | null
-    balance: number | null
     token: string | null
-    isAirdrop: boolean | null
     createdAt: Date | null
   }
 
-  export type ScanContractMaxAggregateOutputType = {
+  export type ScanWalletMaxAggregateOutputType = {
     id: string | null
     wallet: string | null
-    contract: string | null
-    balance: number | null
     token: string | null
-    isAirdrop: boolean | null
     createdAt: Date | null
   }
 
-  export type ScanContractCountAggregateOutputType = {
+  export type ScanWalletCountAggregateOutputType = {
     id: number
     wallet: number
-    contract: number
-    balance: number
     token: number
-    isAirdrop: number
     createdAt: number
     _all: number
   }
 
 
-  export type ScanContractAvgAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanContractSumAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanContractMinAggregateInputType = {
+  export type ScanWalletMinAggregateInputType = {
     id?: true
     wallet?: true
-    contract?: true
-    balance?: true
     token?: true
-    isAirdrop?: true
     createdAt?: true
   }
 
-  export type ScanContractMaxAggregateInputType = {
+  export type ScanWalletMaxAggregateInputType = {
     id?: true
     wallet?: true
-    contract?: true
-    balance?: true
     token?: true
-    isAirdrop?: true
     createdAt?: true
   }
 
-  export type ScanContractCountAggregateInputType = {
+  export type ScanWalletCountAggregateInputType = {
     id?: true
     wallet?: true
-    contract?: true
-    balance?: true
     token?: true
-    isAirdrop?: true
     createdAt?: true
     _all?: true
   }
 
-  export type ScanContractAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanContract to aggregate.
+     * Filter which ScanWallet to aggregate.
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of ScanWallets to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: ScanWalletWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` ScanWallets from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` ScanWallets.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ScanContracts
+     * Count returned ScanWallets
     **/
-    _count?: true | ScanContractCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: ScanContractAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: ScanContractSumAggregateInputType
+    _count?: true | ScanWalletCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ScanContractMinAggregateInputType
+    _min?: ScanWalletMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ScanContractMaxAggregateInputType
+    _max?: ScanWalletMaxAggregateInputType
   }
 
-  export type GetScanContractAggregateType<T extends ScanContractAggregateArgs> = {
-        [P in keyof T & keyof AggregateScanContract]: P extends '_count' | 'count'
+  export type GetScanWalletAggregateType<T extends ScanWalletAggregateArgs> = {
+        [P in keyof T & keyof AggregateScanWallet]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateScanContract[P]>
-      : GetScalarType<T[P], AggregateScanContract[P]>
+        : GetScalarType<T[P], AggregateScanWallet[P]>
+      : GetScalarType<T[P], AggregateScanWallet[P]>
   }
 
 
 
 
-  export type ScanContractGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScanContractWhereInput
-    orderBy?: ScanContractOrderByWithAggregationInput | ScanContractOrderByWithAggregationInput[]
-    by: ScanContractScalarFieldEnum[] | ScanContractScalarFieldEnum
-    having?: ScanContractScalarWhereWithAggregatesInput
+  export type ScanWalletGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScanWalletWhereInput
+    orderBy?: ScanWalletOrderByWithAggregationInput | ScanWalletOrderByWithAggregationInput[]
+    by: ScanWalletScalarFieldEnum[] | ScanWalletScalarFieldEnum
+    having?: ScanWalletScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ScanContractCountAggregateInputType | true
-    _avg?: ScanContractAvgAggregateInputType
-    _sum?: ScanContractSumAggregateInputType
-    _min?: ScanContractMinAggregateInputType
-    _max?: ScanContractMaxAggregateInputType
+    _count?: ScanWalletCountAggregateInputType | true
+    _min?: ScanWalletMinAggregateInputType
+    _max?: ScanWalletMaxAggregateInputType
   }
 
-  export type ScanContractGroupByOutputType = {
+  export type ScanWalletGroupByOutputType = {
     id: string
     wallet: string
-    contract: string
-    balance: number
     token: string | null
-    isAirdrop: boolean
     createdAt: Date
-    _count: ScanContractCountAggregateOutputType | null
-    _avg: ScanContractAvgAggregateOutputType | null
-    _sum: ScanContractSumAggregateOutputType | null
-    _min: ScanContractMinAggregateOutputType | null
-    _max: ScanContractMaxAggregateOutputType | null
+    _count: ScanWalletCountAggregateOutputType | null
+    _min: ScanWalletMinAggregateOutputType | null
+    _max: ScanWalletMaxAggregateOutputType | null
   }
 
-  type GetScanContractGroupByPayload<T extends ScanContractGroupByArgs> = Prisma.PrismaPromise<
+  type GetScanWalletGroupByPayload<T extends ScanWalletGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ScanContractGroupByOutputType, T['by']> &
+      PickEnumerable<ScanWalletGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ScanContractGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof ScanWalletGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ScanContractGroupByOutputType[P]>
-            : GetScalarType<T[P], ScanContractGroupByOutputType[P]>
+              : GetScalarType<T[P], ScanWalletGroupByOutputType[P]>
+            : GetScalarType<T[P], ScanWalletGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ScanContractSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ScanWalletSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    contract?: boolean
-    balance?: boolean
     token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+  }, ExtArgs["result"]["scanWallet"]>
 
-  export type ScanContractSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ScanWalletSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    contract?: boolean
-    balance?: boolean
     token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+  }, ExtArgs["result"]["scanWallet"]>
 
-  export type ScanContractSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ScanWalletSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     wallet?: boolean
-    contract?: boolean
-    balance?: boolean
     token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
-  }, ExtArgs["result"]["scanContract"]>
+  }, ExtArgs["result"]["scanWallet"]>
 
-  export type ScanContractSelectScalar = {
+  export type ScanWalletSelectScalar = {
     id?: boolean
     wallet?: boolean
-    contract?: boolean
-    balance?: boolean
     token?: boolean
-    isAirdrop?: boolean
     createdAt?: boolean
   }
 
-  export type ScanContractOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "contract" | "balance" | "token" | "isAirdrop" | "createdAt", ExtArgs["result"]["scanContract"]>
+  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "token" | "createdAt", ExtArgs["result"]["scanWallet"]>
 
-  export type $ScanContractPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScanContract"
+  export type $ScanWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ScanWallet"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
       wallet: string
-      contract: string
-      balance: number
       token: string | null
-      isAirdrop: boolean
       createdAt: Date
-    }, ExtArgs["result"]["scanContract"]>
+    }, ExtArgs["result"]["scanWallet"]>
     composites: {}
   }
 
-  type ScanContractGetPayload<S extends boolean | null | undefined | ScanContractDefaultArgs> = $Result.GetResult<Prisma.$ScanContractPayload, S>
+  type ScanWalletGetPayload<S extends boolean | null | undefined | ScanWalletDefaultArgs> = $Result.GetResult<Prisma.$ScanWalletPayload, S>
 
-  type ScanContractCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ScanContractFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ScanContractCountAggregateInputType | true
+  type ScanWalletCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ScanWalletFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ScanWalletCountAggregateInputType | true
     }
 
-  export interface ScanContractDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanContract'], meta: { name: 'ScanContract' } }
+  export interface ScanWalletDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanWallet'], meta: { name: 'ScanWallet' } }
     /**
-     * Find zero or one ScanContract that matches the filter.
-     * @param {ScanContractFindUniqueArgs} args - Arguments to find a ScanContract
+     * Find zero or one ScanWallet that matches the filter.
+     * @param {ScanWalletFindUniqueArgs} args - Arguments to find a ScanWallet
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findUnique({
+     * // Get one ScanWallet
+     * const scanWallet = await prisma.scanWallet.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ScanContractFindUniqueArgs>(args: SelectSubset<T, ScanContractFindUniqueArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends ScanWalletFindUniqueArgs>(args: SelectSubset<T, ScanWalletFindUniqueArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one ScanContract that matches the filter or throw an error with `error.code='P2025'`
+     * Find one ScanWallet that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {ScanContractFindUniqueOrThrowArgs} args - Arguments to find a ScanContract
+     * @param {ScanWalletFindUniqueOrThrowArgs} args - Arguments to find a ScanWallet
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findUniqueOrThrow({
+     * // Get one ScanWallet
+     * const scanWallet = await prisma.scanWallet.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ScanContractFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanContractFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends ScanWalletFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanWalletFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanContract that matches the filter.
+     * Find the first ScanWallet that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindFirstArgs} args - Arguments to find a ScanContract
+     * @param {ScanWalletFindFirstArgs} args - Arguments to find a ScanWallet
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findFirst({
+     * // Get one ScanWallet
+     * const scanWallet = await prisma.scanWallet.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ScanContractFindFirstArgs>(args?: SelectSubset<T, ScanContractFindFirstArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends ScanWalletFindFirstArgs>(args?: SelectSubset<T, ScanWalletFindFirstArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanContract that matches the filter or
+     * Find the first ScanWallet that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindFirstOrThrowArgs} args - Arguments to find a ScanContract
+     * @param {ScanWalletFindFirstOrThrowArgs} args - Arguments to find a ScanWallet
      * @example
-     * // Get one ScanContract
-     * const scanContract = await prisma.scanContract.findFirstOrThrow({
+     * // Get one ScanWallet
+     * const scanWallet = await prisma.scanWallet.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ScanContractFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanContractFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends ScanWalletFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanWalletFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more ScanContracts that matches the filter.
+     * Find zero or more ScanWallets that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {ScanWalletFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ScanContracts
-     * const scanContracts = await prisma.scanContract.findMany()
+     * // Get all ScanWallets
+     * const scanWallets = await prisma.scanWallet.findMany()
      * 
-     * // Get first 10 ScanContracts
-     * const scanContracts = await prisma.scanContract.findMany({ take: 10 })
+     * // Get first 10 ScanWallets
+     * const scanWallets = await prisma.scanWallet.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.findMany({ select: { id: true } })
+     * const scanWalletWithIdOnly = await prisma.scanWallet.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ScanContractFindManyArgs>(args?: SelectSubset<T, ScanContractFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends ScanWalletFindManyArgs>(args?: SelectSubset<T, ScanWalletFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a ScanContract.
-     * @param {ScanContractCreateArgs} args - Arguments to create a ScanContract.
+     * Create a ScanWallet.
+     * @param {ScanWalletCreateArgs} args - Arguments to create a ScanWallet.
      * @example
-     * // Create one ScanContract
-     * const ScanContract = await prisma.scanContract.create({
+     * // Create one ScanWallet
+     * const ScanWallet = await prisma.scanWallet.create({
      *   data: {
-     *     // ... data to create a ScanContract
+     *     // ... data to create a ScanWallet
      *   }
      * })
      * 
      */
-    create<T extends ScanContractCreateArgs>(args: SelectSubset<T, ScanContractCreateArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends ScanWalletCreateArgs>(args: SelectSubset<T, ScanWalletCreateArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many ScanContracts.
-     * @param {ScanContractCreateManyArgs} args - Arguments to create many ScanContracts.
+     * Create many ScanWallets.
+     * @param {ScanWalletCreateManyArgs} args - Arguments to create many ScanWallets.
      * @example
-     * // Create many ScanContracts
-     * const scanContract = await prisma.scanContract.createMany({
+     * // Create many ScanWallets
+     * const scanWallet = await prisma.scanWallet.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ScanContractCreateManyArgs>(args?: SelectSubset<T, ScanContractCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends ScanWalletCreateManyArgs>(args?: SelectSubset<T, ScanWalletCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ScanContracts and returns the data saved in the database.
-     * @param {ScanContractCreateManyAndReturnArgs} args - Arguments to create many ScanContracts.
+     * Create many ScanWallets and returns the data saved in the database.
+     * @param {ScanWalletCreateManyAndReturnArgs} args - Arguments to create many ScanWallets.
      * @example
-     * // Create many ScanContracts
-     * const scanContract = await prisma.scanContract.createManyAndReturn({
+     * // Create many ScanWallets
+     * const scanWallet = await prisma.scanWallet.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ScanContracts and only return the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.createManyAndReturn({
+     * // Create many ScanWallets and only return the `id`
+     * const scanWalletWithIdOnly = await prisma.scanWallet.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -1345,28 +1184,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ScanContractCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanContractCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends ScanWalletCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanWalletCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a ScanContract.
-     * @param {ScanContractDeleteArgs} args - Arguments to delete one ScanContract.
+     * Delete a ScanWallet.
+     * @param {ScanWalletDeleteArgs} args - Arguments to delete one ScanWallet.
      * @example
-     * // Delete one ScanContract
-     * const ScanContract = await prisma.scanContract.delete({
+     * // Delete one ScanWallet
+     * const ScanWallet = await prisma.scanWallet.delete({
      *   where: {
-     *     // ... filter to delete one ScanContract
+     *     // ... filter to delete one ScanWallet
      *   }
      * })
      * 
      */
-    delete<T extends ScanContractDeleteArgs>(args: SelectSubset<T, ScanContractDeleteArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends ScanWalletDeleteArgs>(args: SelectSubset<T, ScanWalletDeleteArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one ScanContract.
-     * @param {ScanContractUpdateArgs} args - Arguments to update one ScanContract.
+     * Update one ScanWallet.
+     * @param {ScanWalletUpdateArgs} args - Arguments to update one ScanWallet.
      * @example
-     * // Update one ScanContract
-     * const scanContract = await prisma.scanContract.update({
+     * // Update one ScanWallet
+     * const scanWallet = await prisma.scanWallet.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1376,30 +1215,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ScanContractUpdateArgs>(args: SelectSubset<T, ScanContractUpdateArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends ScanWalletUpdateArgs>(args: SelectSubset<T, ScanWalletUpdateArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more ScanContracts.
-     * @param {ScanContractDeleteManyArgs} args - Arguments to filter ScanContracts to delete.
+     * Delete zero or more ScanWallets.
+     * @param {ScanWalletDeleteManyArgs} args - Arguments to filter ScanWallets to delete.
      * @example
-     * // Delete a few ScanContracts
-     * const { count } = await prisma.scanContract.deleteMany({
+     * // Delete a few ScanWallets
+     * const { count } = await prisma.scanWallet.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ScanContractDeleteManyArgs>(args?: SelectSubset<T, ScanContractDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends ScanWalletDeleteManyArgs>(args?: SelectSubset<T, ScanWalletDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanContracts.
+     * Update zero or more ScanWallets.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {ScanWalletUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ScanContracts
-     * const scanContract = await prisma.scanContract.updateMany({
+     * // Update many ScanWallets
+     * const scanWallet = await prisma.scanWallet.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1409,14 +1248,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ScanContractUpdateManyArgs>(args: SelectSubset<T, ScanContractUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends ScanWalletUpdateManyArgs>(args: SelectSubset<T, ScanWalletUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanContracts and returns the data updated in the database.
-     * @param {ScanContractUpdateManyAndReturnArgs} args - Arguments to update many ScanContracts.
+     * Update zero or more ScanWallets and returns the data updated in the database.
+     * @param {ScanWalletUpdateManyAndReturnArgs} args - Arguments to update many ScanWallets.
      * @example
-     * // Update many ScanContracts
-     * const scanContract = await prisma.scanContract.updateManyAndReturn({
+     * // Update many ScanWallets
+     * const scanWallet = await prisma.scanWallet.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1425,8 +1264,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more ScanContracts and only return the `id`
-     * const scanContractWithIdOnly = await prisma.scanContract.updateManyAndReturn({
+     * // Update zero or more ScanWallets and only return the `id`
+     * const scanWalletWithIdOnly = await prisma.scanWallet.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -1439,56 +1278,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ScanContractUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanContractUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends ScanWalletUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanWalletUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one ScanContract.
-     * @param {ScanContractUpsertArgs} args - Arguments to update or create a ScanContract.
+     * Create or update one ScanWallet.
+     * @param {ScanWalletUpsertArgs} args - Arguments to update or create a ScanWallet.
      * @example
-     * // Update or create a ScanContract
-     * const scanContract = await prisma.scanContract.upsert({
+     * // Update or create a ScanWallet
+     * const scanWallet = await prisma.scanWallet.upsert({
      *   create: {
-     *     // ... data to create a ScanContract
+     *     // ... data to create a ScanWallet
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ScanContract we want to update
+     *     // ... the filter for the ScanWallet we want to update
      *   }
      * })
      */
-    upsert<T extends ScanContractUpsertArgs>(args: SelectSubset<T, ScanContractUpsertArgs<ExtArgs>>): Prisma__ScanContractClient<$Result.GetResult<Prisma.$ScanContractPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends ScanWalletUpsertArgs>(args: SelectSubset<T, ScanWalletUpsertArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of ScanContracts.
+     * Count the number of ScanWallets.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractCountArgs} args - Arguments to filter ScanContracts to count.
+     * @param {ScanWalletCountArgs} args - Arguments to filter ScanWallets to count.
      * @example
-     * // Count the number of ScanContracts
-     * const count = await prisma.scanContract.count({
+     * // Count the number of ScanWallets
+     * const count = await prisma.scanWallet.count({
      *   where: {
-     *     // ... the filter for the ScanContracts we want to count
+     *     // ... the filter for the ScanWallets we want to count
      *   }
      * })
     **/
-    count<T extends ScanContractCountArgs>(
-      args?: Subset<T, ScanContractCountArgs>,
+    count<T extends ScanWalletCountArgs>(
+      args?: Subset<T, ScanWalletCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ScanContractCountAggregateOutputType>
+          : GetScalarType<T['select'], ScanWalletCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ScanContract.
+     * Allows you to perform aggregations operations on a ScanWallet.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {ScanWalletAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -1508,13 +1347,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ScanContractAggregateArgs>(args: Subset<T, ScanContractAggregateArgs>): Prisma.PrismaPromise<GetScanContractAggregateType<T>>
+    aggregate<T extends ScanWalletAggregateArgs>(args: Subset<T, ScanWalletAggregateArgs>): Prisma.PrismaPromise<GetScanWalletAggregateType<T>>
 
     /**
-     * Group by ScanContract.
+     * Group by ScanWallet.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanContractGroupByArgs} args - Group by arguments.
+     * @param {ScanWalletGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -1529,14 +1368,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ScanContractGroupByArgs,
+      T extends ScanWalletGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScanContractGroupByArgs['orderBy'] }
-        : { orderBy?: ScanContractGroupByArgs['orderBy'] },
+        ? { orderBy: ScanWalletGroupByArgs['orderBy'] }
+        : { orderBy?: ScanWalletGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -1585,20 +1424,20 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ScanContractGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanContractGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, ScanWalletGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanWalletGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ScanContract model
+   * Fields of the ScanWallet model
    */
-  readonly fields: ScanContractFieldRefs;
+  readonly fields: ScanWalletFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ScanContract.
+   * The delegate class that acts as a "Promise-like" for ScanWallet.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ScanContractClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__ScanWalletClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1626,1404 +1465,374 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ScanContract model
+   * Fields of the ScanWallet model
    */
-  interface ScanContractFieldRefs {
-    readonly id: FieldRef<"ScanContract", 'String'>
-    readonly wallet: FieldRef<"ScanContract", 'String'>
-    readonly contract: FieldRef<"ScanContract", 'String'>
-    readonly balance: FieldRef<"ScanContract", 'Float'>
-    readonly token: FieldRef<"ScanContract", 'String'>
-    readonly isAirdrop: FieldRef<"ScanContract", 'Boolean'>
-    readonly createdAt: FieldRef<"ScanContract", 'DateTime'>
+  interface ScanWalletFieldRefs {
+    readonly id: FieldRef<"ScanWallet", 'String'>
+    readonly wallet: FieldRef<"ScanWallet", 'String'>
+    readonly token: FieldRef<"ScanWallet", 'String'>
+    readonly createdAt: FieldRef<"ScanWallet", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * ScanContract findUnique
+   * ScanWallet findUnique
    */
-  export type ScanContractFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Filter, which ScanWallet to fetch.
      */
-    where: ScanContractWhereUniqueInput
+    where: ScanWalletWhereUniqueInput
   }
 
   /**
-   * ScanContract findUniqueOrThrow
+   * ScanWallet findUniqueOrThrow
    */
-  export type ScanContractFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Filter, which ScanWallet to fetch.
      */
-    where: ScanContractWhereUniqueInput
+    where: ScanWalletWhereUniqueInput
   }
 
   /**
-   * ScanContract findFirst
+   * ScanWallet findFirst
    */
-  export type ScanContractFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Filter, which ScanWallet to fetch.
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of ScanWallets to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanContracts.
+     * Sets the position for searching for ScanWallets.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: ScanWalletWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` ScanWallets from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` ScanWallets.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanContracts.
+     * Filter by unique combinations of ScanWallets.
      */
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
   }
 
   /**
-   * ScanContract findFirstOrThrow
+   * ScanWallet findFirstOrThrow
    */
-  export type ScanContractFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContract to fetch.
+     * Filter, which ScanWallet to fetch.
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of ScanWallets to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanContracts.
+     * Sets the position for searching for ScanWallets.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: ScanWalletWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` ScanWallets from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` ScanWallets.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanContracts.
+     * Filter by unique combinations of ScanWallets.
      */
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
   }
 
   /**
-   * ScanContract findMany
+   * ScanWallet findMany
    */
-  export type ScanContractFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter, which ScanContracts to fetch.
+     * Filter, which ScanWallets to fetch.
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanContracts to fetch.
+     * Determine the order of ScanWallets to fetch.
      */
-    orderBy?: ScanContractOrderByWithRelationInput | ScanContractOrderByWithRelationInput[]
+    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ScanContracts.
+     * Sets the position for listing ScanWallets.
      */
-    cursor?: ScanContractWhereUniqueInput
+    cursor?: ScanWalletWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanContracts from the position of the cursor.
+     * Take `±n` ScanWallets from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanContracts.
+     * Skip the first `n` ScanWallets.
      */
     skip?: number
-    distinct?: ScanContractScalarFieldEnum | ScanContractScalarFieldEnum[]
+    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
   }
 
   /**
-   * ScanContract create
+   * ScanWallet create
    */
-  export type ScanContractCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * The data needed to create a ScanContract.
+     * The data needed to create a ScanWallet.
      */
-    data: XOR<ScanContractCreateInput, ScanContractUncheckedCreateInput>
+    data: XOR<ScanWalletCreateInput, ScanWalletUncheckedCreateInput>
   }
 
   /**
-   * ScanContract createMany
+   * ScanWallet createMany
    */
-  export type ScanContractCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ScanContracts.
+     * The data used to create many ScanWallets.
      */
-    data: ScanContractCreateManyInput | ScanContractCreateManyInput[]
+    data: ScanWalletCreateManyInput | ScanWalletCreateManyInput[]
   }
 
   /**
-   * ScanContract createManyAndReturn
+   * ScanWallet createManyAndReturn
    */
-  export type ScanContractCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelectCreateManyAndReturn<ExtArgs> | null
+    select?: ScanWalletSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * The data used to create many ScanContracts.
+     * The data used to create many ScanWallets.
      */
-    data: ScanContractCreateManyInput | ScanContractCreateManyInput[]
+    data: ScanWalletCreateManyInput | ScanWalletCreateManyInput[]
   }
 
   /**
-   * ScanContract update
+   * ScanWallet update
    */
-  export type ScanContractUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * The data needed to update a ScanContract.
+     * The data needed to update a ScanWallet.
      */
-    data: XOR<ScanContractUpdateInput, ScanContractUncheckedUpdateInput>
+    data: XOR<ScanWalletUpdateInput, ScanWalletUncheckedUpdateInput>
     /**
-     * Choose, which ScanContract to update.
+     * Choose, which ScanWallet to update.
      */
-    where: ScanContractWhereUniqueInput
+    where: ScanWalletWhereUniqueInput
   }
 
   /**
-   * ScanContract updateMany
+   * ScanWallet updateMany
    */
-  export type ScanContractUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ScanContracts.
+     * The data used to update ScanWallets.
      */
-    data: XOR<ScanContractUpdateManyMutationInput, ScanContractUncheckedUpdateManyInput>
+    data: XOR<ScanWalletUpdateManyMutationInput, ScanWalletUncheckedUpdateManyInput>
     /**
-     * Filter which ScanContracts to update
+     * Filter which ScanWallets to update
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
-     * Limit how many ScanContracts to update.
+     * Limit how many ScanWallets to update.
      */
     limit?: number
   }
 
   /**
-   * ScanContract updateManyAndReturn
+   * ScanWallet updateManyAndReturn
    */
-  export type ScanContractUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: ScanWalletSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * The data used to update ScanContracts.
+     * The data used to update ScanWallets.
      */
-    data: XOR<ScanContractUpdateManyMutationInput, ScanContractUncheckedUpdateManyInput>
+    data: XOR<ScanWalletUpdateManyMutationInput, ScanWalletUncheckedUpdateManyInput>
     /**
-     * Filter which ScanContracts to update
+     * Filter which ScanWallets to update
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
-     * Limit how many ScanContracts to update.
+     * Limit how many ScanWallets to update.
      */
     limit?: number
   }
 
   /**
-   * ScanContract upsert
+   * ScanWallet upsert
    */
-  export type ScanContractUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * The filter to search for the ScanContract to update in case it exists.
+     * The filter to search for the ScanWallet to update in case it exists.
      */
-    where: ScanContractWhereUniqueInput
+    where: ScanWalletWhereUniqueInput
     /**
-     * In case the ScanContract found by the `where` argument doesn't exist, create a new ScanContract with this data.
+     * In case the ScanWallet found by the `where` argument doesn't exist, create a new ScanWallet with this data.
      */
-    create: XOR<ScanContractCreateInput, ScanContractUncheckedCreateInput>
+    create: XOR<ScanWalletCreateInput, ScanWalletUncheckedCreateInput>
     /**
-     * In case the ScanContract was found with the provided `where` argument, update it with this data.
+     * In case the ScanWallet was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<ScanContractUpdateInput, ScanContractUncheckedUpdateInput>
+    update: XOR<ScanWalletUpdateInput, ScanWalletUncheckedUpdateInput>
   }
 
   /**
-   * ScanContract delete
+   * ScanWallet delete
    */
-  export type ScanContractDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
     /**
-     * Filter which ScanContract to delete.
+     * Filter which ScanWallet to delete.
      */
-    where: ScanContractWhereUniqueInput
+    where: ScanWalletWhereUniqueInput
   }
 
   /**
-   * ScanContract deleteMany
+   * ScanWallet deleteMany
    */
-  export type ScanContractDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanContracts to delete
+     * Filter which ScanWallets to delete
      */
-    where?: ScanContractWhereInput
+    where?: ScanWalletWhereInput
     /**
-     * Limit how many ScanContracts to delete.
+     * Limit how many ScanWallets to delete.
      */
     limit?: number
   }
 
   /**
-   * ScanContract without action
+   * ScanWallet without action
    */
-  export type ScanContractDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ScanWalletDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanContract
+     * Select specific fields to fetch from the ScanWallet
      */
-    select?: ScanContractSelect<ExtArgs> | null
+    select?: ScanWalletSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanContract
+     * Omit specific fields from the ScanWallet
      */
-    omit?: ScanContractOmit<ExtArgs> | null
-  }
-
-
-  /**
-   * Model ScanBalance
-   */
-
-  export type AggregateScanBalance = {
-    _count: ScanBalanceCountAggregateOutputType | null
-    _avg: ScanBalanceAvgAggregateOutputType | null
-    _sum: ScanBalanceSumAggregateOutputType | null
-    _min: ScanBalanceMinAggregateOutputType | null
-    _max: ScanBalanceMaxAggregateOutputType | null
-  }
-
-  export type ScanBalanceAvgAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanBalanceSumAggregateOutputType = {
-    balance: number | null
-  }
-
-  export type ScanBalanceMinAggregateOutputType = {
-    id: string | null
-    wallet: string | null
-    balance: number | null
-    token: string | null
-    createdAt: Date | null
-  }
-
-  export type ScanBalanceMaxAggregateOutputType = {
-    id: string | null
-    wallet: string | null
-    balance: number | null
-    token: string | null
-    createdAt: Date | null
-  }
-
-  export type ScanBalanceCountAggregateOutputType = {
-    id: number
-    wallet: number
-    balance: number
-    token: number
-    createdAt: number
-    _all: number
-  }
-
-
-  export type ScanBalanceAvgAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanBalanceSumAggregateInputType = {
-    balance?: true
-  }
-
-  export type ScanBalanceMinAggregateInputType = {
-    id?: true
-    wallet?: true
-    balance?: true
-    token?: true
-    createdAt?: true
-  }
-
-  export type ScanBalanceMaxAggregateInputType = {
-    id?: true
-    wallet?: true
-    balance?: true
-    token?: true
-    createdAt?: true
-  }
-
-  export type ScanBalanceCountAggregateInputType = {
-    id?: true
-    wallet?: true
-    balance?: true
-    token?: true
-    createdAt?: true
-    _all?: true
-  }
-
-  export type ScanBalanceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which ScanBalance to aggregate.
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ScanBalances to fetch.
-     */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: ScanBalanceWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ScanBalances from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ScanBalances.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned ScanBalances
-    **/
-    _count?: true | ScanBalanceCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: ScanBalanceAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: ScanBalanceSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: ScanBalanceMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: ScanBalanceMaxAggregateInputType
-  }
-
-  export type GetScanBalanceAggregateType<T extends ScanBalanceAggregateArgs> = {
-        [P in keyof T & keyof AggregateScanBalance]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateScanBalance[P]>
-      : GetScalarType<T[P], AggregateScanBalance[P]>
-  }
-
-
-
-
-  export type ScanBalanceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScanBalanceWhereInput
-    orderBy?: ScanBalanceOrderByWithAggregationInput | ScanBalanceOrderByWithAggregationInput[]
-    by: ScanBalanceScalarFieldEnum[] | ScanBalanceScalarFieldEnum
-    having?: ScanBalanceScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: ScanBalanceCountAggregateInputType | true
-    _avg?: ScanBalanceAvgAggregateInputType
-    _sum?: ScanBalanceSumAggregateInputType
-    _min?: ScanBalanceMinAggregateInputType
-    _max?: ScanBalanceMaxAggregateInputType
-  }
-
-  export type ScanBalanceGroupByOutputType = {
-    id: string
-    wallet: string
-    balance: number
-    token: string | null
-    createdAt: Date
-    _count: ScanBalanceCountAggregateOutputType | null
-    _avg: ScanBalanceAvgAggregateOutputType | null
-    _sum: ScanBalanceSumAggregateOutputType | null
-    _min: ScanBalanceMinAggregateOutputType | null
-    _max: ScanBalanceMaxAggregateOutputType | null
-  }
-
-  type GetScanBalanceGroupByPayload<T extends ScanBalanceGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<ScanBalanceGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof ScanBalanceGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], ScanBalanceGroupByOutputType[P]>
-            : GetScalarType<T[P], ScanBalanceGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type ScanBalanceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
-
-  export type ScanBalanceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
-
-  export type ScanBalanceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanBalance"]>
-
-  export type ScanBalanceSelectScalar = {
-    id?: boolean
-    wallet?: boolean
-    balance?: boolean
-    token?: boolean
-    createdAt?: boolean
-  }
-
-  export type ScanBalanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "balance" | "token" | "createdAt", ExtArgs["result"]["scanBalance"]>
-
-  export type $ScanBalancePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScanBalance"
-    objects: {}
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      wallet: string
-      balance: number
-      token: string | null
-      createdAt: Date
-    }, ExtArgs["result"]["scanBalance"]>
-    composites: {}
-  }
-
-  type ScanBalanceGetPayload<S extends boolean | null | undefined | ScanBalanceDefaultArgs> = $Result.GetResult<Prisma.$ScanBalancePayload, S>
-
-  type ScanBalanceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ScanBalanceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ScanBalanceCountAggregateInputType | true
-    }
-
-  export interface ScanBalanceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanBalance'], meta: { name: 'ScanBalance' } }
-    /**
-     * Find zero or one ScanBalance that matches the filter.
-     * @param {ScanBalanceFindUniqueArgs} args - Arguments to find a ScanBalance
-     * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends ScanBalanceFindUniqueArgs>(args: SelectSubset<T, ScanBalanceFindUniqueArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one ScanBalance that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {ScanBalanceFindUniqueOrThrowArgs} args - Arguments to find a ScanBalance
-     * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends ScanBalanceFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanBalanceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first ScanBalance that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindFirstArgs} args - Arguments to find a ScanBalance
-     * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends ScanBalanceFindFirstArgs>(args?: SelectSubset<T, ScanBalanceFindFirstArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first ScanBalance that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindFirstOrThrowArgs} args - Arguments to find a ScanBalance
-     * @example
-     * // Get one ScanBalance
-     * const scanBalance = await prisma.scanBalance.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends ScanBalanceFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanBalanceFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more ScanBalances that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all ScanBalances
-     * const scanBalances = await prisma.scanBalance.findMany()
-     * 
-     * // Get first 10 ScanBalances
-     * const scanBalances = await prisma.scanBalance.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends ScanBalanceFindManyArgs>(args?: SelectSubset<T, ScanBalanceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a ScanBalance.
-     * @param {ScanBalanceCreateArgs} args - Arguments to create a ScanBalance.
-     * @example
-     * // Create one ScanBalance
-     * const ScanBalance = await prisma.scanBalance.create({
-     *   data: {
-     *     // ... data to create a ScanBalance
-     *   }
-     * })
-     * 
-     */
-    create<T extends ScanBalanceCreateArgs>(args: SelectSubset<T, ScanBalanceCreateArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many ScanBalances.
-     * @param {ScanBalanceCreateManyArgs} args - Arguments to create many ScanBalances.
-     * @example
-     * // Create many ScanBalances
-     * const scanBalance = await prisma.scanBalance.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends ScanBalanceCreateManyArgs>(args?: SelectSubset<T, ScanBalanceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many ScanBalances and returns the data saved in the database.
-     * @param {ScanBalanceCreateManyAndReturnArgs} args - Arguments to create many ScanBalances.
-     * @example
-     * // Create many ScanBalances
-     * const scanBalance = await prisma.scanBalance.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many ScanBalances and only return the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends ScanBalanceCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanBalanceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a ScanBalance.
-     * @param {ScanBalanceDeleteArgs} args - Arguments to delete one ScanBalance.
-     * @example
-     * // Delete one ScanBalance
-     * const ScanBalance = await prisma.scanBalance.delete({
-     *   where: {
-     *     // ... filter to delete one ScanBalance
-     *   }
-     * })
-     * 
-     */
-    delete<T extends ScanBalanceDeleteArgs>(args: SelectSubset<T, ScanBalanceDeleteArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one ScanBalance.
-     * @param {ScanBalanceUpdateArgs} args - Arguments to update one ScanBalance.
-     * @example
-     * // Update one ScanBalance
-     * const scanBalance = await prisma.scanBalance.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends ScanBalanceUpdateArgs>(args: SelectSubset<T, ScanBalanceUpdateArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more ScanBalances.
-     * @param {ScanBalanceDeleteManyArgs} args - Arguments to filter ScanBalances to delete.
-     * @example
-     * // Delete a few ScanBalances
-     * const { count } = await prisma.scanBalance.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends ScanBalanceDeleteManyArgs>(args?: SelectSubset<T, ScanBalanceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more ScanBalances.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many ScanBalances
-     * const scanBalance = await prisma.scanBalance.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends ScanBalanceUpdateManyArgs>(args: SelectSubset<T, ScanBalanceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more ScanBalances and returns the data updated in the database.
-     * @param {ScanBalanceUpdateManyAndReturnArgs} args - Arguments to update many ScanBalances.
-     * @example
-     * // Update many ScanBalances
-     * const scanBalance = await prisma.scanBalance.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more ScanBalances and only return the `id`
-     * const scanBalanceWithIdOnly = await prisma.scanBalance.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends ScanBalanceUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanBalanceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one ScanBalance.
-     * @param {ScanBalanceUpsertArgs} args - Arguments to update or create a ScanBalance.
-     * @example
-     * // Update or create a ScanBalance
-     * const scanBalance = await prisma.scanBalance.upsert({
-     *   create: {
-     *     // ... data to create a ScanBalance
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the ScanBalance we want to update
-     *   }
-     * })
-     */
-    upsert<T extends ScanBalanceUpsertArgs>(args: SelectSubset<T, ScanBalanceUpsertArgs<ExtArgs>>): Prisma__ScanBalanceClient<$Result.GetResult<Prisma.$ScanBalancePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of ScanBalances.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceCountArgs} args - Arguments to filter ScanBalances to count.
-     * @example
-     * // Count the number of ScanBalances
-     * const count = await prisma.scanBalance.count({
-     *   where: {
-     *     // ... the filter for the ScanBalances we want to count
-     *   }
-     * })
-    **/
-    count<T extends ScanBalanceCountArgs>(
-      args?: Subset<T, ScanBalanceCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], ScanBalanceCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a ScanBalance.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends ScanBalanceAggregateArgs>(args: Subset<T, ScanBalanceAggregateArgs>): Prisma.PrismaPromise<GetScanBalanceAggregateType<T>>
-
-    /**
-     * Group by ScanBalance.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanBalanceGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends ScanBalanceGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScanBalanceGroupByArgs['orderBy'] }
-        : { orderBy?: ScanBalanceGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, ScanBalanceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanBalanceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the ScanBalance model
-   */
-  readonly fields: ScanBalanceFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for ScanBalance.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__ScanBalanceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the ScanBalance model
-   */
-  interface ScanBalanceFieldRefs {
-    readonly id: FieldRef<"ScanBalance", 'String'>
-    readonly wallet: FieldRef<"ScanBalance", 'String'>
-    readonly balance: FieldRef<"ScanBalance", 'Float'>
-    readonly token: FieldRef<"ScanBalance", 'String'>
-    readonly createdAt: FieldRef<"ScanBalance", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * ScanBalance findUnique
-   */
-  export type ScanBalanceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter, which ScanBalance to fetch.
-     */
-    where: ScanBalanceWhereUniqueInput
-  }
-
-  /**
-   * ScanBalance findUniqueOrThrow
-   */
-  export type ScanBalanceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter, which ScanBalance to fetch.
-     */
-    where: ScanBalanceWhereUniqueInput
-  }
-
-  /**
-   * ScanBalance findFirst
-   */
-  export type ScanBalanceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter, which ScanBalance to fetch.
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ScanBalances to fetch.
-     */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for ScanBalances.
-     */
-    cursor?: ScanBalanceWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ScanBalances from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ScanBalances.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of ScanBalances.
-     */
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
-  }
-
-  /**
-   * ScanBalance findFirstOrThrow
-   */
-  export type ScanBalanceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter, which ScanBalance to fetch.
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ScanBalances to fetch.
-     */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for ScanBalances.
-     */
-    cursor?: ScanBalanceWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ScanBalances from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ScanBalances.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of ScanBalances.
-     */
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
-  }
-
-  /**
-   * ScanBalance findMany
-   */
-  export type ScanBalanceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter, which ScanBalances to fetch.
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ScanBalances to fetch.
-     */
-    orderBy?: ScanBalanceOrderByWithRelationInput | ScanBalanceOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing ScanBalances.
-     */
-    cursor?: ScanBalanceWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ScanBalances from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ScanBalances.
-     */
-    skip?: number
-    distinct?: ScanBalanceScalarFieldEnum | ScanBalanceScalarFieldEnum[]
-  }
-
-  /**
-   * ScanBalance create
-   */
-  export type ScanBalanceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * The data needed to create a ScanBalance.
-     */
-    data: XOR<ScanBalanceCreateInput, ScanBalanceUncheckedCreateInput>
-  }
-
-  /**
-   * ScanBalance createMany
-   */
-  export type ScanBalanceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many ScanBalances.
-     */
-    data: ScanBalanceCreateManyInput | ScanBalanceCreateManyInput[]
-  }
-
-  /**
-   * ScanBalance createManyAndReturn
-   */
-  export type ScanBalanceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * The data used to create many ScanBalances.
-     */
-    data: ScanBalanceCreateManyInput | ScanBalanceCreateManyInput[]
-  }
-
-  /**
-   * ScanBalance update
-   */
-  export type ScanBalanceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * The data needed to update a ScanBalance.
-     */
-    data: XOR<ScanBalanceUpdateInput, ScanBalanceUncheckedUpdateInput>
-    /**
-     * Choose, which ScanBalance to update.
-     */
-    where: ScanBalanceWhereUniqueInput
-  }
-
-  /**
-   * ScanBalance updateMany
-   */
-  export type ScanBalanceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update ScanBalances.
-     */
-    data: XOR<ScanBalanceUpdateManyMutationInput, ScanBalanceUncheckedUpdateManyInput>
-    /**
-     * Filter which ScanBalances to update
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * Limit how many ScanBalances to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * ScanBalance updateManyAndReturn
-   */
-  export type ScanBalanceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * The data used to update ScanBalances.
-     */
-    data: XOR<ScanBalanceUpdateManyMutationInput, ScanBalanceUncheckedUpdateManyInput>
-    /**
-     * Filter which ScanBalances to update
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * Limit how many ScanBalances to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * ScanBalance upsert
-   */
-  export type ScanBalanceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * The filter to search for the ScanBalance to update in case it exists.
-     */
-    where: ScanBalanceWhereUniqueInput
-    /**
-     * In case the ScanBalance found by the `where` argument doesn't exist, create a new ScanBalance with this data.
-     */
-    create: XOR<ScanBalanceCreateInput, ScanBalanceUncheckedCreateInput>
-    /**
-     * In case the ScanBalance was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<ScanBalanceUpdateInput, ScanBalanceUncheckedUpdateInput>
-  }
-
-  /**
-   * ScanBalance delete
-   */
-  export type ScanBalanceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
-    /**
-     * Filter which ScanBalance to delete.
-     */
-    where: ScanBalanceWhereUniqueInput
-  }
-
-  /**
-   * ScanBalance deleteMany
-   */
-  export type ScanBalanceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which ScanBalances to delete
-     */
-    where?: ScanBalanceWhereInput
-    /**
-     * Limit how many ScanBalances to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * ScanBalance without action
-   */
-  export type ScanBalanceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ScanBalance
-     */
-    select?: ScanBalanceSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ScanBalance
-     */
-    omit?: ScanBalanceOmit<ExtArgs> | null
+    omit?: ScanWalletOmit<ExtArgs> | null
   }
 
 
@@ -3038,28 +1847,14 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-  export const ScanContractScalarFieldEnum: {
+  export const ScanWalletScalarFieldEnum: {
     id: 'id',
     wallet: 'wallet',
-    contract: 'contract',
-    balance: 'balance',
-    token: 'token',
-    isAirdrop: 'isAirdrop',
-    createdAt: 'createdAt'
-  };
-
-  export type ScanContractScalarFieldEnum = (typeof ScanContractScalarFieldEnum)[keyof typeof ScanContractScalarFieldEnum]
-
-
-  export const ScanBalanceScalarFieldEnum: {
-    id: 'id',
-    wallet: 'wallet',
-    balance: 'balance',
     token: 'token',
     createdAt: 'createdAt'
   };
 
-  export type ScanBalanceScalarFieldEnum = (typeof ScanBalanceScalarFieldEnum)[keyof typeof ScanBalanceScalarFieldEnum]
+  export type ScanWalletScalarFieldEnum = (typeof ScanWalletScalarFieldEnum)[keyof typeof ScanWalletScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -3091,20 +1886,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -3121,246 +1902,98 @@ export namespace Prisma {
    */
 
 
-  export type ScanContractWhereInput = {
-    AND?: ScanContractWhereInput | ScanContractWhereInput[]
-    OR?: ScanContractWhereInput[]
-    NOT?: ScanContractWhereInput | ScanContractWhereInput[]
-    id?: StringFilter<"ScanContract"> | string
-    wallet?: StringFilter<"ScanContract"> | string
-    contract?: StringFilter<"ScanContract"> | string
-    balance?: FloatFilter<"ScanContract"> | number
-    token?: StringNullableFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeFilter<"ScanContract"> | Date | string
+  export type ScanWalletWhereInput = {
+    AND?: ScanWalletWhereInput | ScanWalletWhereInput[]
+    OR?: ScanWalletWhereInput[]
+    NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
+    id?: StringFilter<"ScanWallet"> | string
+    wallet?: StringFilter<"ScanWallet"> | string
+    token?: StringNullableFilter<"ScanWallet"> | string | null
+    createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
   }
 
-  export type ScanContractOrderByWithRelationInput = {
+  export type ScanWalletOrderByWithRelationInput = {
     id?: SortOrder
     wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
     token?: SortOrderInput | SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type ScanContractWhereUniqueInput = Prisma.AtLeast<{
+  export type ScanWalletWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: ScanContractWhereInput | ScanContractWhereInput[]
-    OR?: ScanContractWhereInput[]
-    NOT?: ScanContractWhereInput | ScanContractWhereInput[]
-    wallet?: StringFilter<"ScanContract"> | string
-    contract?: StringFilter<"ScanContract"> | string
-    balance?: FloatFilter<"ScanContract"> | number
-    token?: StringNullableFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeFilter<"ScanContract"> | Date | string
+    AND?: ScanWalletWhereInput | ScanWalletWhereInput[]
+    OR?: ScanWalletWhereInput[]
+    NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
+    wallet?: StringFilter<"ScanWallet"> | string
+    token?: StringNullableFilter<"ScanWallet"> | string | null
+    createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
   }, "id">
 
-  export type ScanContractOrderByWithAggregationInput = {
+  export type ScanWalletOrderByWithAggregationInput = {
     id?: SortOrder
     wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
-    isAirdrop?: SortOrder
-    createdAt?: SortOrder
-    _count?: ScanContractCountOrderByAggregateInput
-    _avg?: ScanContractAvgOrderByAggregateInput
-    _max?: ScanContractMaxOrderByAggregateInput
-    _min?: ScanContractMinOrderByAggregateInput
-    _sum?: ScanContractSumOrderByAggregateInput
-  }
-
-  export type ScanContractScalarWhereWithAggregatesInput = {
-    AND?: ScanContractScalarWhereWithAggregatesInput | ScanContractScalarWhereWithAggregatesInput[]
-    OR?: ScanContractScalarWhereWithAggregatesInput[]
-    NOT?: ScanContractScalarWhereWithAggregatesInput | ScanContractScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanContract"> | string
-    wallet?: StringWithAggregatesFilter<"ScanContract"> | string
-    contract?: StringWithAggregatesFilter<"ScanContract"> | string
-    balance?: FloatWithAggregatesFilter<"ScanContract"> | number
-    token?: StringNullableWithAggregatesFilter<"ScanContract"> | string | null
-    isAirdrop?: BoolWithAggregatesFilter<"ScanContract"> | boolean
-    createdAt?: DateTimeWithAggregatesFilter<"ScanContract"> | Date | string
-  }
-
-  export type ScanBalanceWhereInput = {
-    AND?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    OR?: ScanBalanceWhereInput[]
-    NOT?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    id?: StringFilter<"ScanBalance"> | string
-    wallet?: StringFilter<"ScanBalance"> | string
-    balance?: FloatFilter<"ScanBalance"> | number
-    token?: StringNullableFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeFilter<"ScanBalance"> | Date | string
-  }
-
-  export type ScanBalanceOrderByWithRelationInput = {
-    id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
     token?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    _count?: ScanWalletCountOrderByAggregateInput
+    _max?: ScanWalletMaxOrderByAggregateInput
+    _min?: ScanWalletMinOrderByAggregateInput
   }
 
-  export type ScanBalanceWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    AND?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    OR?: ScanBalanceWhereInput[]
-    NOT?: ScanBalanceWhereInput | ScanBalanceWhereInput[]
-    wallet?: StringFilter<"ScanBalance"> | string
-    balance?: FloatFilter<"ScanBalance"> | number
-    token?: StringNullableFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeFilter<"ScanBalance"> | Date | string
-  }, "id">
-
-  export type ScanBalanceOrderByWithAggregationInput = {
-    id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrderInput | SortOrder
-    createdAt?: SortOrder
-    _count?: ScanBalanceCountOrderByAggregateInput
-    _avg?: ScanBalanceAvgOrderByAggregateInput
-    _max?: ScanBalanceMaxOrderByAggregateInput
-    _min?: ScanBalanceMinOrderByAggregateInput
-    _sum?: ScanBalanceSumOrderByAggregateInput
+  export type ScanWalletScalarWhereWithAggregatesInput = {
+    AND?: ScanWalletScalarWhereWithAggregatesInput | ScanWalletScalarWhereWithAggregatesInput[]
+    OR?: ScanWalletScalarWhereWithAggregatesInput[]
+    NOT?: ScanWalletScalarWhereWithAggregatesInput | ScanWalletScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ScanWallet"> | string
+    wallet?: StringWithAggregatesFilter<"ScanWallet"> | string
+    token?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ScanWallet"> | Date | string
   }
 
-  export type ScanBalanceScalarWhereWithAggregatesInput = {
-    AND?: ScanBalanceScalarWhereWithAggregatesInput | ScanBalanceScalarWhereWithAggregatesInput[]
-    OR?: ScanBalanceScalarWhereWithAggregatesInput[]
-    NOT?: ScanBalanceScalarWhereWithAggregatesInput | ScanBalanceScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanBalance"> | string
-    wallet?: StringWithAggregatesFilter<"ScanBalance"> | string
-    balance?: FloatWithAggregatesFilter<"ScanBalance"> | number
-    token?: StringNullableWithAggregatesFilter<"ScanBalance"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"ScanBalance"> | Date | string
-  }
-
-  export type ScanContractCreateInput = {
+  export type ScanWalletCreateInput = {
     id?: string
     wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
-    createdAt?: Date | string
-  }
-
-  export type ScanContractUncheckedCreateInput = {
-    id?: string
-    wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
-    createdAt?: Date | string
-  }
-
-  export type ScanContractUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanContractUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanContractCreateManyInput = {
-    id?: string
-    wallet: string
-    contract: string
-    balance?: number
-    token?: string | null
-    isAirdrop?: boolean
-    createdAt?: Date | string
-  }
-
-  export type ScanContractUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanContractUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    contract?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    isAirdrop?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScanBalanceCreateInput = {
-    id?: string
-    wallet: string
-    balance?: number
     token?: string | null
     createdAt?: Date | string
   }
 
-  export type ScanBalanceUncheckedCreateInput = {
+  export type ScanWalletUncheckedCreateInput = {
     id?: string
     wallet: string
-    balance?: number
     token?: string | null
     createdAt?: Date | string
   }
 
-  export type ScanBalanceUpdateInput = {
+  export type ScanWalletUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
     token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ScanBalanceUncheckedUpdateInput = {
+  export type ScanWalletUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
     token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ScanBalanceCreateManyInput = {
+  export type ScanWalletCreateManyInput = {
     id?: string
     wallet: string
-    balance?: number
     token?: string | null
     createdAt?: Date | string
   }
 
-  export type ScanBalanceUpdateManyMutationInput = {
+  export type ScanWalletUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
     token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ScanBalanceUncheckedUpdateManyInput = {
+  export type ScanWalletUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     wallet?: StringFieldUpdateOperationsInput | string
-    balance?: FloatFieldUpdateOperationsInput | number
     token?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3379,17 +2012,6 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type FloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
@@ -3402,11 +2024,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -3425,42 +2042,25 @@ export namespace Prisma {
     nulls?: NullsOrder
   }
 
-  export type ScanContractCountOrderByAggregateInput = {
+  export type ScanWalletCountOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
     token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type ScanContractAvgOrderByAggregateInput = {
-    balance?: SortOrder
-  }
-
-  export type ScanContractMaxOrderByAggregateInput = {
+  export type ScanWalletMaxOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
     token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
   }
 
-  export type ScanContractMinOrderByAggregateInput = {
+  export type ScanWalletMinOrderByAggregateInput = {
     id?: SortOrder
     wallet?: SortOrder
-    contract?: SortOrder
-    balance?: SortOrder
     token?: SortOrder
-    isAirdrop?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type ScanContractSumOrderByAggregateInput = {
-    balance?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -3480,22 +2080,6 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
-  }
-
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
@@ -3513,14 +2097,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -3535,56 +2111,12 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type ScanBalanceCountOrderByAggregateInput = {
-    id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type ScanBalanceAvgOrderByAggregateInput = {
-    balance?: SortOrder
-  }
-
-  export type ScanBalanceMaxOrderByAggregateInput = {
-    id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type ScanBalanceMinOrderByAggregateInput = {
-    id?: SortOrder
-    wallet?: SortOrder
-    balance?: SortOrder
-    token?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type ScanBalanceSumOrderByAggregateInput = {
-    balance?: SortOrder
-  }
-
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
-  export type FloatFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -3605,17 +2137,6 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
@@ -3628,11 +2149,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -3674,22 +2190,6 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
@@ -3716,14 +2216,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {

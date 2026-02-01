@@ -117,20 +117,9 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.ScanContractScalarFieldEnum = {
+exports.Prisma.ScanWalletScalarFieldEnum = {
   id: 'id',
   wallet: 'wallet',
-  contract: 'contract',
-  balance: 'balance',
-  token: 'token',
-  isAirdrop: 'isAirdrop',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.ScanBalanceScalarFieldEnum = {
-  id: 'id',
-  wallet: 'wallet',
-  balance: 'balance',
   token: 'token',
   createdAt: 'createdAt'
 };
@@ -147,8 +136,7 @@ exports.Prisma.NullsOrder = {
 
 
 exports.Prisma.ModelName = {
-  ScanContract: 'ScanContract',
-  ScanBalance: 'ScanBalance'
+  ScanWallet: 'ScanWallet'
 };
 
 /**

@@ -38,33 +38,10 @@ const ENVIRONMENT_TYPE = {
 
 const ENVIRONMENT: string = ENVIRONMENT_TYPE.Mainnet
 const DEFAULT_PAGINATE_SIZE = 10
-const electronAPI: {
-    openExternal: (url: string) => void
-    onMessage: (callback: (message: string) => void) => void
-    readSheet: (tokenAddress: string, contractAddress: string) => Promise<string[]>
-    writeSheet: (tokenAddress: string, contractAddress: string, ...wallets: string[]) => Promise<void>
-    checkSheet: (wallet: string, contractAddress: string, tokenAddress: string) => Promise<boolean>
-    writeBalance: (
-        wallet: string,
-        token: string,
-        balance: string
-    ) => Promise<void>
-    getMemoryInfo: () => Promise<Electron.ProcessMemoryInfo & {
-        appPath: string
-    }>
-    saveFile: (tokenAddress: string, contractAddress: string) => Promise<string | null>
-    readFile: () => Promise<void>
-    countSheet: (tokenAddress: string, contractAddress: string) => Promise<{
-        countAll: number
-        countAirdrop: number
-    }>
-    deleteAll: (tokenAddress: string, contractAddress: string) => Promise<void>
-    deleteAirdrop: (tokenAddress: string, contractAddress: string) => Promise<void>
-} = (window as any).electronAPI
+
 export {
     PANCAKE_ADDRESS,
     ENVIRONMENT as ENVIROMENT,
-    electronAPI,
     ZERO_ADDRESS,
     ENVIRONMENT_TYPE,
     DEFAULT_PAGINATE_SIZE,

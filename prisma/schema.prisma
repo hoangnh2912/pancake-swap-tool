@@ -15,20 +15,9 @@ datasource db {
   url      = "file:./scan-wallet.sqlite"
 }
 
-model ScanContract {
+model ScanWallet {
   id        String   @id @default(cuid())
   wallet    String
-  contract  String
-  balance   Float    @default(0)
-  token     String?
-  isAirdrop Boolean  @default(false)
-  createdAt DateTime @default(now())
-}
-
-model ScanBalance {
-  id        String   @id @default(cuid())
-  wallet    String
-  balance   Float    @default(0)
   token     String?
   createdAt DateTime @default(now())
 }
