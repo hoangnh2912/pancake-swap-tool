@@ -33,6 +33,10 @@ const metadata: ModelMeta = {
                     name: "amount",
                     type: "String",
                     isOptional: true,
+                }, isTransferred: {
+                    name: "isTransferred",
+                    type: "Boolean",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value", "value": false }] }],
                 }, createdAt: {
                     name: "createdAt",
                     type: "DateTime",
@@ -42,9 +46,6 @@ const metadata: ModelMeta = {
                 id: {
                     name: "id",
                     fields: ["id"]
-                }, tx: {
-                    name: "tx",
-                    fields: ["tx"]
                 },
             },
         },

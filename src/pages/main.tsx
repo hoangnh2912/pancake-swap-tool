@@ -85,28 +85,26 @@ const Main = () => {
         })
     }
     return (
-        <>
-            <Tabs
-                defaultActiveKey="1a2b3c4d"
-                type="editable-card"
-                onEdit={(targetKey: string, action: 'add' | 'remove') => {
-                    if (action === 'add') {
-                        createNewTab()
-                    } else {
-                        closeTab(targetKey)
-                    }
-                }}
-                items={allStore.map((store) => ({
-                    key: store.id,
-                    label: store.title,
-                    children: (
-                        <StoreProvider key={store.id} store={store.data}>
-                            <MainPage />
-                        </StoreProvider>
-                    ),
-                }))}
-            />
-        </>
+        <Tabs
+            defaultActiveKey="1a2b3c4d"
+            type="editable-card"
+            onEdit={(targetKey: string, action: 'add' | 'remove') => {
+                if (action === 'add') {
+                    createNewTab()
+                } else {
+                    closeTab(targetKey)
+                }
+            }}
+            items={allStore.map((store) => ({
+                key: store.id,
+                label: store.title,
+                children: (
+                    <StoreProvider key={store.id} store={store.data}>
+                        <MainPage />
+                    </StoreProvider>
+                ),
+            }))}
+        />
     )
 }
 

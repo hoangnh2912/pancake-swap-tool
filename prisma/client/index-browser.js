@@ -125,6 +125,7 @@ exports.Prisma.ScanWalletScalarFieldEnum = {
   token: 'token',
   destination: 'destination',
   amount: 'amount',
+  isTransferred: 'isTransferred',
   createdAt: 'createdAt'
 };
 

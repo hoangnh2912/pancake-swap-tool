@@ -7,7 +7,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const root = createRoot(document.body)
 const fetchInstance = window.fetch.bind(window)
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
+
+const endpoint = 'http://localhost:8080/api/model'
 
 const App = () => {
     return (
@@ -27,3 +29,5 @@ const App = () => {
     )
 }
 root.render(App())
+
+export { endpoint, fetchInstance }

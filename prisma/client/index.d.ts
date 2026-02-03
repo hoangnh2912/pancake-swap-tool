@@ -878,6 +878,7 @@ export namespace Prisma {
     token: string | null
     destination: string | null
     amount: string | null
+    isTransferred: boolean | null
     createdAt: Date | null
   }
 
@@ -888,6 +889,7 @@ export namespace Prisma {
     token: string | null
     destination: string | null
     amount: string | null
+    isTransferred: boolean | null
     createdAt: Date | null
   }
 
@@ -898,6 +900,7 @@ export namespace Prisma {
     token: number
     destination: number
     amount: number
+    isTransferred: number
     createdAt: number
     _all: number
   }
@@ -910,6 +913,7 @@ export namespace Prisma {
     token?: true
     destination?: true
     amount?: true
+    isTransferred?: true
     createdAt?: true
   }
 
@@ -920,6 +924,7 @@ export namespace Prisma {
     token?: true
     destination?: true
     amount?: true
+    isTransferred?: true
     createdAt?: true
   }
 
@@ -930,6 +935,7 @@ export namespace Prisma {
     token?: true
     destination?: true
     amount?: true
+    isTransferred?: true
     createdAt?: true
     _all?: true
   }
@@ -1013,6 +1019,7 @@ export namespace Prisma {
     token: string | null
     destination: string | null
     amount: string | null
+    isTransferred: boolean
     createdAt: Date
     _count: ScanWalletCountAggregateOutputType | null
     _min: ScanWalletMinAggregateOutputType | null
@@ -1040,6 +1047,7 @@ export namespace Prisma {
     token?: boolean
     destination?: boolean
     amount?: boolean
+    isTransferred?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
@@ -1050,6 +1058,7 @@ export namespace Prisma {
     token?: boolean
     destination?: boolean
     amount?: boolean
+    isTransferred?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
@@ -1060,6 +1069,7 @@ export namespace Prisma {
     token?: boolean
     destination?: boolean
     amount?: boolean
+    isTransferred?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["scanWallet"]>
 
@@ -1070,10 +1080,11 @@ export namespace Prisma {
     token?: boolean
     destination?: boolean
     amount?: boolean
+    isTransferred?: boolean
     createdAt?: boolean
   }
 
-  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "tx" | "token" | "destination" | "amount" | "createdAt", ExtArgs["result"]["scanWallet"]>
+  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "tx" | "token" | "destination" | "amount" | "isTransferred" | "createdAt", ExtArgs["result"]["scanWallet"]>
 
   export type $ScanWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ScanWallet"
@@ -1085,6 +1096,7 @@ export namespace Prisma {
       token: string | null
       destination: string | null
       amount: string | null
+      isTransferred: boolean
       createdAt: Date
     }, ExtArgs["result"]["scanWallet"]>
     composites: {}
@@ -1515,6 +1527,7 @@ export namespace Prisma {
     readonly token: FieldRef<"ScanWallet", 'String'>
     readonly destination: FieldRef<"ScanWallet", 'String'>
     readonly amount: FieldRef<"ScanWallet", 'String'>
+    readonly isTransferred: FieldRef<"ScanWallet", 'Boolean'>
     readonly createdAt: FieldRef<"ScanWallet", 'DateTime'>
   }
     
@@ -1898,6 +1911,7 @@ export namespace Prisma {
     token: 'token',
     destination: 'destination',
     amount: 'amount',
+    isTransferred: 'isTransferred',
     createdAt: 'createdAt'
   };
 
@@ -1933,6 +1947,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1959,6 +1980,7 @@ export namespace Prisma {
     token?: StringNullableFilter<"ScanWallet"> | string | null
     destination?: StringNullableFilter<"ScanWallet"> | string | null
     amount?: StringNullableFilter<"ScanWallet"> | string | null
+    isTransferred?: BoolFilter<"ScanWallet"> | boolean
     createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
   }
 
@@ -1969,21 +1991,23 @@ export namespace Prisma {
     token?: SortOrderInput | SortOrder
     destination?: SortOrderInput | SortOrder
     amount?: SortOrderInput | SortOrder
+    isTransferred?: SortOrder
     createdAt?: SortOrder
   }
 
   export type ScanWalletWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    tx?: string
     AND?: ScanWalletWhereInput | ScanWalletWhereInput[]
     OR?: ScanWalletWhereInput[]
     NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
     wallet?: StringFilter<"ScanWallet"> | string
+    tx?: StringFilter<"ScanWallet"> | string
     token?: StringNullableFilter<"ScanWallet"> | string | null
     destination?: StringNullableFilter<"ScanWallet"> | string | null
     amount?: StringNullableFilter<"ScanWallet"> | string | null
+    isTransferred?: BoolFilter<"ScanWallet"> | boolean
     createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
-  }, "id" | "tx">
+  }, "id">
 
   export type ScanWalletOrderByWithAggregationInput = {
     id?: SortOrder
@@ -1992,6 +2016,7 @@ export namespace Prisma {
     token?: SortOrderInput | SortOrder
     destination?: SortOrderInput | SortOrder
     amount?: SortOrderInput | SortOrder
+    isTransferred?: SortOrder
     createdAt?: SortOrder
     _count?: ScanWalletCountOrderByAggregateInput
     _max?: ScanWalletMaxOrderByAggregateInput
@@ -2008,6 +2033,7 @@ export namespace Prisma {
     token?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
     destination?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
     amount?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
+    isTransferred?: BoolWithAggregatesFilter<"ScanWallet"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ScanWallet"> | Date | string
   }
 
@@ -2018,6 +2044,7 @@ export namespace Prisma {
     token?: string | null
     destination?: string | null
     amount?: string | null
+    isTransferred?: boolean
     createdAt?: Date | string
   }
 
@@ -2028,6 +2055,7 @@ export namespace Prisma {
     token?: string | null
     destination?: string | null
     amount?: string | null
+    isTransferred?: boolean
     createdAt?: Date | string
   }
 
@@ -2038,6 +2066,7 @@ export namespace Prisma {
     token?: NullableStringFieldUpdateOperationsInput | string | null
     destination?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: NullableStringFieldUpdateOperationsInput | string | null
+    isTransferred?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2048,6 +2077,7 @@ export namespace Prisma {
     token?: NullableStringFieldUpdateOperationsInput | string | null
     destination?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: NullableStringFieldUpdateOperationsInput | string | null
+    isTransferred?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2058,6 +2088,7 @@ export namespace Prisma {
     token?: string | null
     destination?: string | null
     amount?: string | null
+    isTransferred?: boolean
     createdAt?: Date | string
   }
 
@@ -2068,6 +2099,7 @@ export namespace Prisma {
     token?: NullableStringFieldUpdateOperationsInput | string | null
     destination?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: NullableStringFieldUpdateOperationsInput | string | null
+    isTransferred?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2078,6 +2110,7 @@ export namespace Prisma {
     token?: NullableStringFieldUpdateOperationsInput | string | null
     destination?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: NullableStringFieldUpdateOperationsInput | string | null
+    isTransferred?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2109,6 +2142,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -2132,6 +2170,7 @@ export namespace Prisma {
     token?: SortOrder
     destination?: SortOrder
     amount?: SortOrder
+    isTransferred?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -2142,6 +2181,7 @@ export namespace Prisma {
     token?: SortOrder
     destination?: SortOrder
     amount?: SortOrder
+    isTransferred?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -2152,6 +2192,7 @@ export namespace Prisma {
     token?: SortOrder
     destination?: SortOrder
     amount?: SortOrder
+    isTransferred?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -2189,6 +2230,14 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -2209,6 +2258,10 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -2241,6 +2294,11 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -2308,6 +2366,14 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
