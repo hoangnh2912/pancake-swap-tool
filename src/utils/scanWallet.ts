@@ -73,6 +73,8 @@ export class WalletScanner {
         this.tokenContract = new ethers.Contract(params.tokenAddress, [
             'function decimals() view returns (uint8)',
             'function transfer(address to, uint amount) returns (bool)',
+            'function allowance(address owner, address spender) view returns (uint256)',
+            'function approve(address spender, uint256 amount) returns (bool)',
         ], this.signer)
         this.tokenDecimals = await this.tokenContract.decimals()
         this.amount = params.amount
@@ -263,10 +265,34 @@ export class WalletScanner {
         }
         console.log(`Transferring tokens to ${recipients.length} destination wallets...`)
         try {
+            const approval = await this.tokenContract.allowance(
+                this.signer.address,
+                disperseAddress
+            )
+            const totalAmount = ethers.utils.parseUnits(this.amount, this.tokenDecimals)
+                .mul(recipients.length)
+            if (approval.lt(totalAmount)) {
+                console.log('Approving tokens for Disperse contract...')
+                const approveTx = await this.tokenContract.approve(
+                    disperseAddress,
+                    ethers.constants.MaxUint256,
+                    {
+                        gasPrice: 50000000
+                    }
+                )
+                console.log('Approval transaction sent:', approveTx.hash)
+                message.success(`Đã gửi giao dịch phê duyệt token: ${approveTx.hash}`)
+                await approveTx.wait()
+                console.log('Approval transaction confirmed')
+                message.success('Giao dịch phê duyệt token đã được xác nhận')
+            }
             const tx = await disperseContract.disperseTokenSimple(
                 this.tokenContract.address,
                 recipients,
-                ethers.utils.parseUnits(this.amount, this.tokenDecimals)
+                ethers.utils.parseUnits(this.amount, this.tokenDecimals),
+                {
+                    gasPrice: 50000000
+                }
             )
             console.log('Disperse transaction sent:', tx.hash)
             message.success(`Đã gửi giao dịch chuyển token: ${tx.hash}`)

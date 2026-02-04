@@ -137,13 +137,13 @@ const MainPage = () => {
                                         if (changedValue.privateKey) {
                                             const privateKey =
                                                 formScanWallet.getFieldValue('privateKey')
-                                            if (ethers.utils.isHexString(privateKey, 32)) {
+                                            try {
                                                 const wallet = new ethers.Wallet(privateKey)
                                                 formScanWallet.setFieldValue(
                                                     'fromAddress',
                                                     wallet.address
                                                 )
-                                            } else {
+                                            } catch {
                                                 formScanWallet.setFieldValue('fromAddress', '')
                                             }
                                         }
@@ -153,46 +153,47 @@ const MainPage = () => {
                                             contractScanner.current.stop()
                                             setIsScanning(false)
                                         }
-                                        contractScanner.current = await WalletScanner.getInstance().save({
-                                            wallet: values.scanAddress,
-                                            fromBlock: values.fromBlock,
-                                            rpcUrl: rpc,
-                                            options: {
-                                                blockChunk: values.blockChunk,
-                                                concurrency: values.concurrency,
-                                            },
-                                            storeId: tabId,
-                                            amount: values.amount,
-                                            tokenAddress: values.tokenAddress,
-                                            privateKey: values.privateKey,
-                                            transferDelayMs: values.transferDelayMs * 60000,
-                                            onScan(fromBlock, toBlock) {
-                                                formScanWallet.setFieldValue(
-                                                    'scanningFromBlock',
-                                                    fromBlock
-                                                )
-                                                formScanWallet.setFieldValue(
-                                                    'scanningToBlock',
-                                                    toBlock
-                                                )
-                                            },
-                                            onSave: async (transfers) => {
-                                                if (transfers.length === 0) {
-                                                    return
-                                                }
-                                                await createManyScanWallet({
-                                                    data: transfers.map((transfer) => ({
-                                                        tx: transfer.transactionHash,
-                                                        wallet: transfer.from,
-                                                        token: transfer.tokenAddress,
-                                                        destination: transfer.to,
-                                                        amount: transfer.amount,
-                                                    })),
-                                                })
-                                                refetch()
-                                                refetchCount()
-                                            },
-                                        })
+                                        contractScanner.current =
+                                            await WalletScanner.getInstance().save({
+                                                wallet: values.scanAddress,
+                                                fromBlock: values.fromBlock,
+                                                rpcUrl: rpc,
+                                                options: {
+                                                    blockChunk: values.blockChunk,
+                                                    concurrency: values.concurrency,
+                                                },
+                                                storeId: tabId,
+                                                amount: values.amount,
+                                                tokenAddress: values.tokenAddress,
+                                                privateKey: values.privateKey,
+                                                transferDelayMs: values.transferDelayMs * 60000,
+                                                onScan(fromBlock, toBlock) {
+                                                    formScanWallet.setFieldValue(
+                                                        'scanningFromBlock',
+                                                        fromBlock
+                                                    )
+                                                    formScanWallet.setFieldValue(
+                                                        'scanningToBlock',
+                                                        toBlock
+                                                    )
+                                                },
+                                                onSave: async (transfers) => {
+                                                    if (transfers.length === 0) {
+                                                        return
+                                                    }
+                                                    await createManyScanWallet({
+                                                        data: transfers.map((transfer) => ({
+                                                            tx: transfer.transactionHash,
+                                                            wallet: transfer.from,
+                                                            token: transfer.tokenAddress,
+                                                            destination: transfer.to,
+                                                            amount: transfer.amount,
+                                                        })),
+                                                    })
+                                                    refetch()
+                                                    refetchCount()
+                                                },
+                                            })
                                         onSaveLocalCache()
                                     }}
                                 >
@@ -218,9 +219,15 @@ const MainPage = () => {
                                         <Input placeholder="Nhập địa chỉ quét" />
                                     </Form.Item>
                                     <p>Số ví đã quét: {walletCount} </p>
-                                    <Form.Item label="Thời gian chờ giữa các lần chuyển token (phút)" name="transferDelayMs">
-                                        <InputNumber min={1} placeholder="Thời gian chờ giữa các lần chuyển token (phút)" />
-                                    </Form.Item>     
+                                    <Form.Item
+                                        label="Thời gian chờ giữa các lần chuyển token (phút)"
+                                        name="transferDelayMs"
+                                    >
+                                        <InputNumber
+                                            min={1}
+                                            placeholder="Thời gian chờ giữa các lần chuyển token (phút)"
+                                        />
+                                    </Form.Item>
                                     <Form.Item label="Kích thước quét block" name="blockChunk">
                                         <InputNumber min={1} placeholder="Kích thước quét block" />
                                     </Form.Item>
@@ -255,17 +262,12 @@ const MainPage = () => {
                                         name="privateKey"
                                         rules={[
                                             {
-                                                required: true,
-                                                message: 'Vui lòng nhập private key',
-                                            },
-                                            {
                                                 validator: async (_, value) => {
-                                                    if (
-                                                        value &&
-                                                        !ethers.utils.isHexString(value, 32)
-                                                    ) {
+                                                    try {
+                                                        new ethers.Wallet(value)
+                                                    } catch {
                                                         return Promise.reject(
-                                                            new Error('Private key không hợp lệ')
+                                                            new Error('Vui lòng nhập private key hợp lệ')
                                                         )
                                                     }
                                                 },
