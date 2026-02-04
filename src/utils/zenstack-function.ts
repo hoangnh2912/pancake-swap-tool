@@ -1,7 +1,7 @@
 import type { Prisma } from "../../prisma/client"
 import { endpoint, fetchInstance } from "../app"
 
-const zenStackFunction = async <T>(model: Prisma.ModelName, ops: Prisma.PrismaAction, q: T) => {
+const zenStackFunction = async <T, K = unknown>(model: Prisma.ModelName, ops: Prisma.PrismaAction, q: T): Promise<K> => {
     const method = (() => {
         if (ops.startsWith('find') || ops === 'aggregate' || ops === 'count' || ops === 'groupBy') {
             return 'GET'
@@ -10,7 +10,7 @@ const zenStackFunction = async <T>(model: Prisma.ModelName, ops: Prisma.PrismaAc
             return 'POST'
         }
         if (ops.startsWith('update')) {
-            return 'PUT'
+            return 'PATCH'
         }
         if (ops.startsWith('delete')) {
             return 'DELETE'

@@ -34,22 +34,21 @@ type ScanWalletForm = {
     blockChunk: number
     scanningFromBlock: number
     scanningToBlock: number
-}
 
-type TransferForm = {
+    //transfer token fields
     privateKey: string
     tokenAddress: string
     fromAddress: string
+    transferDelayMs: number
     amount: string
     metadata?: any
 }
 
 const MainPage = () => {
     const [formScanWallet] = Form.useForm<ScanWalletForm>()
-    const [formTransfer] = Form.useForm<TransferForm>()
     const contractScanner = useRef<WalletScanner | null>(null)
 
-    const metadata = Form.useWatch('metadata', formTransfer)
+    const metadata = Form.useWatch('metadata', formScanWallet)
 
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formScanWallet)
     const scanningToBlock = Form.useWatch('scanningToBlock', formScanWallet)
@@ -129,13 +128,32 @@ const MainPage = () => {
                                         blockChunk: 1000,
                                         concurrency: 1,
                                         walletIndex: 1,
+                                        fromAddress: '',
+                                        amount: '0',
+                                        tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
+                                        transferDelayMs: 1, // 1 minute
+                                    }}
+                                    onValuesChange={(changedValue) => {
+                                        if (changedValue.privateKey) {
+                                            const privateKey =
+                                                formScanWallet.getFieldValue('privateKey')
+                                            if (ethers.utils.isHexString(privateKey, 32)) {
+                                                const wallet = new ethers.Wallet(privateKey)
+                                                formScanWallet.setFieldValue(
+                                                    'fromAddress',
+                                                    wallet.address
+                                                )
+                                            } else {
+                                                formScanWallet.setFieldValue('fromAddress', '')
+                                            }
+                                        }
                                     }}
                                     onFinish={async (values) => {
                                         if (contractScanner.current) {
                                             contractScanner.current.stop()
                                             setIsScanning(false)
                                         }
-                                        contractScanner.current = WalletScanner.getInstance().save({
+                                        contractScanner.current = await WalletScanner.getInstance().save({
                                             wallet: values.scanAddress,
                                             fromBlock: values.fromBlock,
                                             rpcUrl: rpc,
@@ -144,6 +162,10 @@ const MainPage = () => {
                                                 concurrency: values.concurrency,
                                             },
                                             storeId: tabId,
+                                            amount: values.amount,
+                                            tokenAddress: values.tokenAddress,
+                                            privateKey: values.privateKey,
+                                            transferDelayMs: values.transferDelayMs * 60000,
                                             onScan(fromBlock, toBlock) {
                                                 formScanWallet.setFieldValue(
                                                     'scanningFromBlock',
@@ -196,12 +218,75 @@ const MainPage = () => {
                                         <Input placeholder="Nhập địa chỉ quét" />
                                     </Form.Item>
                                     <p>Số ví đã quét: {walletCount} </p>
+                                    <Form.Item label="Thời gian chờ giữa các lần chuyển token (phút)" name="transferDelayMs">
+                                        <InputNumber min={1} placeholder="Thời gian chờ giữa các lần chuyển token (phút)" />
+                                    </Form.Item>     
                                     <Form.Item label="Kích thước quét block" name="blockChunk">
                                         <InputNumber min={1} placeholder="Kích thước quét block" />
                                     </Form.Item>
                                     <Form.Item label="Số lượt quét đồng thời" name="concurrency">
                                         <InputNumber min={1} placeholder="Số lượt quét đồng thời" />
                                     </Form.Item>
+                                    <Typography.Title level={4}>Transfer token</Typography.Title>
+                                    <Form.Item name={'metadata'} hidden />
+                                    <Form.Item
+                                        label="Địa chỉ token"
+                                        name="tokenAddress"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng nhập địa chỉ token',
+                                            },
+                                            {
+                                                validator: async (_, value) => {
+                                                    if (!ethers.utils.isAddress(value)) {
+                                                        return Promise.reject(
+                                                            new Error('Địa chỉ token không hợp lệ')
+                                                        )
+                                                    }
+                                                },
+                                            },
+                                        ]}
+                                    >
+                                        <Input placeholder="Nhập địa chỉ token" />
+                                    </Form.Item>
+                                    <Form.Item
+                                        label="Private Key ví gửi"
+                                        name="privateKey"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng nhập private key',
+                                            },
+                                            {
+                                                validator: async (_, value) => {
+                                                    if (
+                                                        value &&
+                                                        !ethers.utils.isHexString(value, 32)
+                                                    ) {
+                                                        return Promise.reject(
+                                                            new Error('Private key không hợp lệ')
+                                                        )
+                                                    }
+                                                },
+                                            },
+                                        ]}
+                                    >
+                                        <Input placeholder="Nhập private key" />
+                                    </Form.Item>
+                                    <Form.Item label="Số lượng" name="amount">
+                                        <InputNumber min={0} defaultValue={0} />
+                                    </Form.Item>
+                                    <Form.Item label="Địa chỉ ví gửi" name="fromAddress">
+                                        <Input readOnly />
+                                    </Form.Item>
+                                    {metadata?.isTransferring && (
+                                        <div>
+                                            Đang chuyển token đến ví {metadata?.destination} -
+                                            TxHash: {metadata?.txHash} - Tổng số ví:{' '}
+                                            {metadata?.total} - Decimals: {metadata?.decimals}
+                                        </div>
+                                    )}
                                     <Form.Item hidden name="wallets" />
                                     <Form.Item hidden name="scanningFromBlock" />
                                     <Form.Item hidden name="scanningToBlock" />
@@ -230,31 +315,24 @@ const MainPage = () => {
                                             backgroundColor: 'yellow',
                                         }}
                                         onClick={async () => {
-                                            const data =
-                                                await zenStackFunction<Prisma.ScanWalletFindManyArgs>(
-                                                    'ScanWallet',
-                                                    'findMany',
-                                                    {
-                                                        where: {
-                                                            wallet: scanAddress,
-                                                        },
-                                                        skip: (currentPage - 1) * pageSize,
-                                                        take: pageSize,
-                                                        orderBy: {
-                                                            createdAt: 'desc',
-                                                        },
-                                                    }
-                                                )
+                                            const data = await zenStackFunction<
+                                                Prisma.ScanWalletFindManyArgs,
+                                                Prisma.ScanWalletGetPayload<{}>[]
+                                            >('ScanWallet', 'findMany', {
+                                                where: {
+                                                    wallet: scanAddress,
+                                                },
+                                                skip: (currentPage - 1) * pageSize,
+                                                take: pageSize,
+                                                orderBy: {
+                                                    createdAt: 'desc',
+                                                },
+                                            })
                                             // Generate CSV content
                                             let csvContent = 'stt,tx,scan,token,to,amount\n'
-                                            data?.forEach(
-                                                (
-                                                    item: Prisma.ScanWalletGetPayload<{}>,
-                                                    index: number
-                                                ) => {
-                                                    csvContent += `${index + 1},${item.tx},${item.wallet},${item.token},${item.destination},${item.amount}\n`
-                                                }
-                                            )
+                                            data?.forEach((item, index) => {
+                                                csvContent += `${index + 1},${item.tx},${item.wallet},${item.token},${item.destination},${item.amount}\n`
+                                            })
                                             // Create a blob and trigger download
                                             const blob = new Blob([csvContent], {
                                                 type: 'text/csv;charset=utf-8;',
@@ -335,11 +413,13 @@ const MainPage = () => {
                                             render: (_text, _record, index) =>
                                                 (currentPage - 1) * pageSize + index + 1,
                                         },
-                                         {
+                                        {
                                             title: 'Thời gian quét',
                                             width: 120,
                                             render: (_text, record) =>
-                                                dayjs(record.createdAt).format('HH:mm:ss DD/MM/YYYY'),
+                                                dayjs(record.createdAt).format(
+                                                    'HH:mm:ss DD/MM/YYYY'
+                                                ),
                                         },
                                         {
                                             title: 'Mã giao dịch',
@@ -415,193 +495,6 @@ const MainPage = () => {
                                         },
                                     ]}
                                 />
-                                <Typography.Title level={4}>Transfer token</Typography.Title>
-                                <Form
-                                    form={formTransfer}
-                                    onValuesChange={(changedValue) => {
-                                        if (changedValue.privateKey) {
-                                            const privateKey =
-                                                formTransfer.getFieldValue('privateKey')
-                                            if (ethers.utils.isHexString(privateKey, 32)) {
-                                                const wallet = new ethers.Wallet(privateKey)
-                                                formTransfer.setFieldValue(
-                                                    'fromAddress',
-                                                    wallet.address
-                                                )
-                                            } else {
-                                                formTransfer.setFieldValue('fromAddress', '')
-                                            }
-                                        }
-                                    }}
-                                    initialValues={{
-                                        fromAddress: '',
-                                        amount: '0',
-                                        tokenAddress: '0x55d398326f99059ff775485246999027b3197955', // USDT token address
-                                    }}
-                                    onFinish={async (value) => {
-                                        try {
-                                            formTransfer.setFieldValue('metadata', {
-                                                isTransferring: true,
-                                            })
-                                            const provider = new ethers.providers.JsonRpcProvider(
-                                                rpc
-                                            )
-                                            const wallet = new ethers.Wallet(
-                                                value.privateKey,
-                                                provider
-                                            )
-                                            const contract = new ethers.Contract(
-                                                value.tokenAddress,
-                                                [
-                                                    'function transfer(address to, uint amount) returns (bool)',
-                                                    'function decimals() view returns (uint8)',
-                                                ],
-                                                wallet
-                                            )
-
-                                            const decimals: number = await contract.decimals()
-
-                                            formTransfer.setFieldValue('metadata', {
-                                                ...formTransfer.getFieldValue('metadata'),
-                                                decimals,
-                                            })
-                                            const amount = ethers.utils.parseUnits(
-                                                value.amount,
-                                                decimals
-                                            )
-
-                                            const data =
-                                                await zenStackFunction<Prisma.ScanWalletFindManyArgs>(
-                                                    'ScanWallet',
-                                                    'findMany',
-                                                    {
-                                                        where: {
-                                                            wallet: scanAddress,
-                                                        },
-                                                        orderBy: {
-                                                            createdAt: 'desc',
-                                                        },
-                                                    }
-                                                )
-                                            formTransfer.setFieldValue('metadata', {
-                                                ...formTransfer.getFieldValue('metadata'),
-                                                total: data.length,
-                                            })
-                                            for (const item of data) {
-                                                const isTransferred =
-                                                    await zenStackFunction<Prisma.ScanWalletFindFirstArgs>(
-                                                        'ScanWallet',
-                                                        'findFirst',
-                                                        {
-                                                            where: {
-                                                                wallet: scanAddress,
-                                                                isTransferred: true,
-                                                            },
-                                                        }
-                                                    )
-                                                if (isTransferred) {
-                                                    continue
-                                                }
-
-                                                const tx = await contract.transfer(
-                                                    item.destination,
-                                                    amount
-                                                )
-                                                formTransfer.setFieldValue('metadata', {
-                                                    ...formTransfer.getFieldValue('metadata'),
-                                                    destination: item.destination,
-                                                    txHash: tx.hash,
-                                                })
-                                                await tx.wait()
-                                                await updateScanWallet({
-                                                    where: {
-                                                        tx: item.tx,
-                                                        destination: item.destination,
-                                                    },
-                                                    data: {
-                                                        isTransferred: true,
-                                                    },
-                                                })
-                                                message.success(
-                                                    `Gửi token thành công, txHash: ${tx.hash}`
-                                                )
-                                            }
-
-                                            formTransfer.setFieldValue('metadata', {
-                                                isTransferring: false,
-                                            })
-                                        } catch (error) {
-                                            message.error(`Gửi token thất bại: ${error}`)
-                                        }
-                                    }}
-                                >
-                                    <Form.Item name={'metadata'} hidden />
-                                    <Form.Item
-                                        label="Địa chỉ token"
-                                        name="tokenAddress"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng nhập địa chỉ token',
-                                            },
-                                            {
-                                                validator: async (_, value) => {
-                                                    if (!ethers.utils.isAddress(value)) {
-                                                        return Promise.reject(
-                                                            new Error('Địa chỉ token không hợp lệ')
-                                                        )
-                                                    }
-                                                },
-                                            },
-                                        ]}
-                                    >
-                                        <Input placeholder="Nhập địa chỉ token" />
-                                    </Form.Item>
-                                    <Form.Item
-                                        label="Private Key ví gửi"
-                                        name="privateKey"
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng nhập private key',
-                                            },
-                                            {
-                                                validator: async (_, value) => {
-                                                    if (
-                                                        value &&
-                                                        !ethers.utils.isHexString(value, 32)
-                                                    ) {
-                                                        return Promise.reject(
-                                                            new Error('Private key không hợp lệ')
-                                                        )
-                                                    }
-                                                },
-                                            },
-                                        ]}
-                                    >
-                                        <Input placeholder="Nhập private key" />
-                                    </Form.Item>
-                                    <Form.Item label="Số lượng" name="amount">
-                                        <InputNumber min={0} defaultValue={0} />
-                                    </Form.Item>
-                                    <Form.Item label="Địa chỉ ví gửi" name="fromAddress">
-                                        <Input readOnly />
-                                    </Form.Item>
-                                    <Button
-                                        htmlType="submit"
-                                        disabled={metadata?.isTransferring}
-                                        type="primary"
-                                    >
-                                        Chuyển token
-                                    </Button>
-                                    {metadata?.isTransferring && (
-                                        <div>
-                                            Đang chuyển token đến ví {metadata?.destination} -
-                                            TxHash: {metadata?.txHash} - Tổng số ví:{' '}
-                                            {metadata?.total} - Decimals: {metadata?.decimals}
-                                        </div>
-                                    )}
-                                </Form>
                             </Col>
                         ),
                     },

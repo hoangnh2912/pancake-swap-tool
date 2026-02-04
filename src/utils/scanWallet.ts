@@ -1,5 +1,7 @@
 import { notification } from 'antd/es'
 import { ethers } from 'ethers'
+import zenStackFunction from './zenstack-function'
+import type { Prisma } from "../../prisma/client"
 
 type ScanParams = {
     rpcUrl: string
@@ -9,6 +11,10 @@ type ScanParams = {
     storeId: string
     onScan?: (fromBlock: number, toBlock: number) => void
     onSave?: (transfers: TokenTransfer[]) => Promise<void>
+    privateKey: string
+    tokenAddress: string
+    amount: string
+    transferDelayMs: number
 }
 
 type TokenTransfer = {
@@ -19,12 +25,6 @@ type TokenTransfer = {
     to: string
     amount: string
     decimals?: number
-}
-
-type WalletScanResult = {
-    destinationWallets: Set<string>
-    tokenTransfers: TokenTransfer[]
-    uniqueTokens: Set<string>
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -47,11 +47,16 @@ export class WalletScanner {
     public isScanning = false
     private currentBlock = 0
     private wallet: string
+    private signer: ethers.Wallet
+    private tokenContract: ethers.Contract
+    private tokenDecimals: number
+    private amount: string
+    private transferDelayMs = 1 * 1000 * 60 // 1 phút
 
     // Local variables to store scan results
-    private destinationWallets: Set<string> = new Set()
     private tokenTransfers: TokenTransfer[] = []
-    private uniqueTokens: Set<string> = new Set()
+
+    private lastTransferUpdate = 0
 
     private static singleton: WalletScanner // ①
     public static getInstance(): WalletScanner {
@@ -62,8 +67,15 @@ export class WalletScanner {
         return WalletScanner.singleton
     }
 
-    public save(params: ScanParams) {
+    public async save(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
+        this.signer = new ethers.Wallet(params.privateKey, this.provider)
+        this.tokenContract = new ethers.Contract(params.tokenAddress, [
+            'function decimals() view returns (uint8)',
+            'function transfer(address to, uint amount) returns (bool)',
+        ], this.signer)
+        this.tokenDecimals = await this.tokenContract.decimals()
+        this.amount = params.amount
         this.options = {
             blockChunk: params.options?.blockChunk ?? 5000,
             concurrency: params.options?.concurrency ?? 8,
@@ -71,6 +83,7 @@ export class WalletScanner {
         }
         this.wallet = params.wallet
         this.onScan = params.onScan
+        this.transferDelayMs = params.transferDelayMs
         this.currentBlock = params.fromBlock ?? 0
         this.onSave = params.onSave
         message.success('Cấu hình scanner đã được lưu')
@@ -84,44 +97,10 @@ export class WalletScanner {
     }
 
     /**
-     * Get all destination wallets that received tokens from the scanned wallet
-     */
-    getDestinationWallets(): string[] {
-        return Array.from(this.destinationWallets)
-    }
-
-    /**
-     * Get all token transfer events
-     */
-    getTokenTransfers(): TokenTransfer[] {
-        return [...this.tokenTransfers]
-    }
-
-    /**
-     * Get all unique token addresses involved in transfers
-     */
-    getUniqueTokens(): string[] {
-        return Array.from(this.uniqueTokens)
-    }
-
-    /**
-     * Get scan results as an object
-     */
-    getScanResults(): WalletScanResult {
-        return {
-            destinationWallets: new Set(this.destinationWallets),
-            tokenTransfers: [...this.tokenTransfers],
-            uniqueTokens: new Set(this.uniqueTokens),
-        }
-    }
-
-    /**
      * Clear all stored scan results
      */
     clearResults() {
-        this.destinationWallets.clear()
         this.tokenTransfers = []
-        this.uniqueTokens.clear()
         this.currentBlock = 0
     }
 
@@ -132,9 +111,7 @@ export class WalletScanner {
         this.isScanning = true
 
         // Clear previous scan results
-        this.destinationWallets.clear()
         this.tokenTransfers = []
-        this.uniqueTokens.clear()
 
         const blockChunk = this.options?.blockChunk || 5000
         const concurrency = this.options?.concurrency || 8
@@ -157,11 +134,12 @@ export class WalletScanner {
                     await this.scanERC20Transfers(this.currentBlock, end)
                     await this.onSave?.(this.tokenTransfers)
                     console.log(
-                        `Scanned [${this.currentBlock}-${end}] found ${this.destinationWallets.size} destination addresses`
+                        `Scanned [${this.currentBlock}-${end}] found ${this.tokenTransfers.length} destination addresses`
                     )
                     message.info(
-                        `Quét từ block ${this.currentBlock} đến ${end}, tìm thấy ${this.destinationWallets.size} ví nhận token, ${this.uniqueTokens.size} token khác nhau`
+                        `Quét từ block ${this.currentBlock} đến ${end}, tìm thấy ${this.tokenTransfers.length} ví nhận token`
                     )
+                    await this.transferToken()
                     this.clearResults()
                     this.currentBlock = end + 1
                 }
@@ -216,10 +194,6 @@ export class WalletScanner {
                     const tokenAddress = log.address
 
                     // Add destination wallet to set
-                    this.destinationWallets.add(to)
-                    this.uniqueTokens.add(tokenAddress)
-
-                    // Store the transfer details
                     const transfer: TokenTransfer = {
                         blockNumber: log.blockNumber,
                         transactionHash: log.transactionHash,
@@ -241,6 +215,81 @@ export class WalletScanner {
         } catch (err) {
             console.error(`Error scanning ERC20 transfers [${fromBlock}-${toBlock}]:`, err)
             throw err
+        }
+    }
+
+
+    /**
+     * Transfer ERC20 token to all destination wallets that not yet received tokens
+     * Ensures a delay between transfers to avoid spamming the network
+     * Using Disperse contract for batch transfers, with disperseTokenSimple method
+     */
+    private async transferToken() {
+        const now = Date.now()
+        if (now - this.lastTransferUpdate < this.transferDelayMs) {
+            console.log('Waiting before next transfer batch...')
+            return
+        }
+        this.lastTransferUpdate = now
+
+        const disperseAbi = [
+            'function disperseTokenSimple(address token, address[] recipients, uint256 amount) public payable',
+        ]
+        const disperseAddress = '0xD152f549545093347A162Dce210e7293f1452150' // Disperse.app contract
+        const disperseContract = new ethers.Contract(disperseAddress, disperseAbi, this.signer)
+
+        const data = await zenStackFunction<
+            Prisma.ScanWalletFindManyArgs,
+            Prisma.ScanWalletGetPayload<{}>[]
+        >('ScanWallet', 'findMany', {
+            where: {
+                wallet: this.wallet,
+                isTransferred: false,
+            },
+            select: {
+                destination: true
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        })
+
+        const recipients = [...new Set(
+            data.map(item => item.destination)
+        )]
+        if (recipients.length === 0) {
+            console.log('No destination wallets to transfer tokens to.')
+            return
+        }
+        console.log(`Transferring tokens to ${recipients.length} destination wallets...`)
+        try {
+            const tx = await disperseContract.disperseTokenSimple(
+                this.tokenContract.address,
+                recipients,
+                ethers.utils.parseUnits(this.amount, this.tokenDecimals)
+            )
+            console.log('Disperse transaction sent:', tx.hash)
+            message.success(`Đã gửi giao dịch chuyển token: ${tx.hash}`)
+            await tx.wait()
+            await zenStackFunction<
+                Prisma.ScanWalletUpdateManyArgs
+            >('ScanWallet', 'updateMany', {
+                where: {
+                    destination: {
+                        in: recipients
+                    }
+                },
+                data: {
+                    isTransferred: true
+                }
+            })
+            console.log('Disperse transaction confirmed')
+            message.success('Giao dịch chuyển token đã được xác nhận')
+        } catch (err) {
+            console.error('Error during token disperse:', err)
+            message.error(
+                `Lỗi trong quá trình chuyển token: ${err instanceof Error ? err.message : 'Unknown error'}`
+            )
         }
     }
 }
