@@ -77,7 +77,7 @@ export class WalletScanner {
             'function approve(address spender, uint256 amount) returns (bool)',
         ], this.signer)
         this.tokenDecimals = await this.tokenContract.decimals()
-        this.amount = params.amount
+        this.amount = String(params.amount)
         this.options = {
             blockChunk: params.options?.blockChunk ?? 5000,
             concurrency: params.options?.concurrency ?? 8,
