@@ -721,4 +721,39 @@ const FACTORY_PANCAKE_V2_ABI = [
     },
 ]
 
-export { MULTICALL_ABI, ROUTER_PANCAKE_V2_ABI, ERC20_ABI, FACTORY_PANCAKE_V2_ABI }
+const DISPERSE_ABI = [
+    {
+        type: 'function',
+        name: 'disperseEther',
+        inputs: [
+            { name: 'recipients', type: 'address[]', internalType: 'address[]' },
+            { name: 'values', type: 'uint256[]', internalType: 'uint256[]' },
+        ],
+        outputs: [],
+        stateMutability: 'payable',
+    },
+    {
+        type: 'function',
+        name: 'disperseToken',
+        inputs: [
+            { name: 'token', type: 'address', internalType: 'address' },
+            { name: 'recipients', type: 'address[]', internalType: 'address[]' },
+            { name: 'values', type: 'uint256[]', internalType: 'uint256[]' },
+        ],
+        outputs: [],
+        stateMutability: 'nonpayable',
+    },
+    {
+        type: 'function',
+        name: 'disperseTokenSimple',
+        inputs: [
+            { name: 'token', type: 'address', internalType: 'address' },
+            { name: 'recipients', type: 'address[]', internalType: 'address[]' },
+            { name: 'values', type: 'uint256[]', internalType: 'uint256[]' },
+        ],
+        outputs: [],
+        stateMutability: 'nonpayable',
+    },
+] as any[]
+
+export { MULTICALL_ABI, ROUTER_PANCAKE_V2_ABI, ERC20_ABI, FACTORY_PANCAKE_V2_ABI, DISPERSE_ABI }
