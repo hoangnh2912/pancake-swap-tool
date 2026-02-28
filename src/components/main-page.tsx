@@ -66,7 +66,7 @@ const MainPage = () => {
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formScanWallet)
     const scanningToBlock = Form.useWatch('scanningToBlock', formScanWallet)
     const scanAddress = Form.useWatch('scanAddress', formScanWallet)
-    
+
     const recipientList = Form.useWatch('recipientList', formMultiTransfer)
 
     const [currentPage, setCurrentPage] = useState<number>(1)
@@ -284,7 +284,9 @@ const MainPage = () => {
                                                         new ethers.Wallet(value)
                                                     } catch {
                                                         return Promise.reject(
-                                                            new Error('Vui lòng nhập private key hợp lệ')
+                                                            new Error(
+                                                                'Vui lòng nhập private key hợp lệ'
+                                                            )
                                                         )
                                                     }
                                                 },
@@ -633,22 +635,22 @@ const MainPage = () => {
                                                         'recipientList',
                                                         recipientList
                                                     )
-                                                    
+
                                                     if (recipientList.length > 0) {
                                                         message.success(
                                                             `Đã tải ${recipientList.length} địa chỉ hợp lệ${invalidLines > 0 ? ` (${invalidLines} dòng không hợp lệ)` : ''}`
                                                         )
                                                     } else {
-                                                        message.error('Không tìm thấy địa chỉ hợp lệ trong file')
+                                                        message.error(
+                                                            'Không tìm thấy địa chỉ hợp lệ trong file'
+                                                        )
                                                     }
                                                 }
                                                 reader.readAsText(file)
                                                 return false
                                             }}
                                         >
-                                            <Button icon={<UploadOutlined />}>
-                                                Chọn file TXT
-                                            </Button>
+                                            <Button icon={<UploadOutlined />}>Chọn file TXT</Button>
                                         </Upload>
                                         <Text fontSize="sm" color="gray.500" mt={2}>
                                             Format: Mỗi dòng chứa địa chỉ và số lượng, cách nhau
@@ -663,14 +665,15 @@ const MainPage = () => {
                                     {recipientList && recipientList.length > 0 && (
                                         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
                                             <Typography.Title level={5}>
-                                                Danh sách địa chỉ nhận: {recipientList.length} địa chỉ
+                                                Danh sách địa chỉ nhận: {recipientList.length} địa
+                                                chỉ
                                             </Typography.Title>
                                             <Table
                                                 size="small"
                                                 dataSource={recipientList}
-                                                pagination={{ 
+                                                pagination={{
                                                     pageSize: 10,
-                                                    showTotal: (total) => `Tổng ${total} địa chỉ`
+                                                    showTotal: (total) => `Tổng ${total} địa chỉ`,
                                                 }}
                                                 scroll={{ y: 400 }}
                                                 columns={[
@@ -710,15 +713,26 @@ const MainPage = () => {
                                                 ]}
                                                 summary={(data) => {
                                                     const total = data.reduce((sum, item) => {
-                                                        return sum + Number.parseFloat(item.amount || '0')
+                                                        return (
+                                                            sum +
+                                                            Number.parseFloat(item.amount || '0')
+                                                        )
                                                     }, 0)
                                                     return (
                                                         <Table.Summary.Row>
-                                                            <Table.Summary.Cell index={0} colSpan={2}>
+                                                            <Table.Summary.Cell
+                                                                index={0}
+                                                                colSpan={2}
+                                                            >
                                                                 <strong>Tổng cộng</strong>
                                                             </Table.Summary.Cell>
-                                                            <Table.Summary.Cell index={1} align="right">
-                                                                <strong style={{ color: '#1890ff' }}>
+                                                            <Table.Summary.Cell
+                                                                index={1}
+                                                                align="right"
+                                                            >
+                                                                <strong
+                                                                    style={{ color: '#1890ff' }}
+                                                                >
                                                                     {total.toLocaleString()}
                                                                 </strong>
                                                             </Table.Summary.Cell>
@@ -741,8 +755,7 @@ const MainPage = () => {
                                         onClick={async () => {
                                             try {
                                                 await formMultiTransfer.validateFields()
-                                                const values =
-                                                    formMultiTransfer.getFieldsValue()
+                                                const values = formMultiTransfer.getFieldsValue()
 
                                                 if (
                                                     !values.recipientList ||
@@ -757,9 +770,8 @@ const MainPage = () => {
                                                 setIsTransferring(true)
                                                 setTransferProgress('Đang kết nối...')
 
-                                                const provider = new ethers.providers.JsonRpcProvider(
-                                                    rpc
-                                                )
+                                                const provider =
+                                                    new ethers.providers.JsonRpcProvider(rpc)
                                                 const wallet = new ethers.Wallet(
                                                     values.privateKey,
                                                     provider
@@ -771,7 +783,8 @@ const MainPage = () => {
                                                 )
 
                                                 // Disperse contract address
-                                                const disperseAddress = '0xD152f549545093347A162Dce210e7293f1452150'
+                                                const disperseAddress =
+                                                    '0xD152f549545093347A162Dce210e7293f1452150'
                                                 const disperseContract = new ethers.Contract(
                                                     disperseAddress,
                                                     DISPERSE_ABI,
@@ -798,10 +811,11 @@ const MainPage = () => {
 
                                                 // Check current allowance
                                                 setTransferProgress('Đang kiểm tra allowance...')
-                                                const currentAllowance = await tokenContract.allowance(
-                                                    wallet.address,
-                                                    disperseAddress
-                                                )
+                                                const currentAllowance =
+                                                    await tokenContract.allowance(
+                                                        wallet.address,
+                                                        disperseAddress
+                                                    )
 
                                                 // Approve if needed
                                                 if (currentAllowance.lt(totalAmount)) {
@@ -810,7 +824,10 @@ const MainPage = () => {
                                                     )
                                                     const approveTx = await tokenContract.approve(
                                                         disperseAddress,
-                                                        ethers.constants.MaxUint256
+                                                        ethers.constants.MaxUint256,
+                                                        {
+                                                            gasPrice: 50000000,
+                                                        }
                                                     )
                                                     await approveTx.wait()
                                                     message.success('Approve thành công')
@@ -820,11 +837,15 @@ const MainPage = () => {
                                                 setTransferProgress(
                                                     `Đang chuyển token cho ${recipients.length} địa chỉ...`
                                                 )
-                                                const disperseTx = await disperseContract.disperseTokenSimple(
-                                                    values.tokenAddress,
-                                                    recipients,
-                                                    amounts
-                                                )
+                                                const disperseTx =
+                                                    await disperseContract.disperseTokenSimple(
+                                                        values.tokenAddress,
+                                                        recipients,
+                                                        amounts,
+                                                        {
+                                                            gasPrice: 50000000,
+                                                        }
+                                                    )
 
                                                 setTransferProgress(
                                                     'Đang chờ xác nhận transaction...'
