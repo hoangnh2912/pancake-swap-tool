@@ -1,7 +1,7 @@
 {
   "name": "bot-swap",
   "productName": "bot-swap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": ".webpack/main",
   "scripts": {

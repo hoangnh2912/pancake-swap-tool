@@ -53,10 +53,16 @@ const Shell: {
   openExternal: (url: string) => void;
   setProcessBar: (value: number) => void;
 } = (window as any).Shell;
+
+const AppInfo: {
+  name: string;
+  version: string;
+} = (window as any).AppInfo ?? { name: "bot-swap", version: "1.0.0" };
 export {
   PANCAKE_ADDRESS,
   ENVIRONMENT as ENVIROMENT,
   Shell,
+  AppInfo,
   ZERO_ADDRESS,
   ENVIRONMENT_TYPE,
   DEFAULT_PAGINATE_SIZE,

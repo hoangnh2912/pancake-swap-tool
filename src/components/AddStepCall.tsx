@@ -150,7 +150,7 @@ const AddStepCall = () => {
       });
       setDelay(cache.delay);
       setTokenAddress(cache.tokenAddress);
-      cache.steps.forEach((step: any) => {
+      cache?.steps?.forEach((step: any) => {
         addStep(step);
       });
     }
