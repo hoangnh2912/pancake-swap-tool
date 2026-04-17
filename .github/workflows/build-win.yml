@@ -1,0 +1,62 @@
+name: Build Windows App
+
+on:
+  push:
+    branches:
+      - scan-transfer
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate Prisma & ZenStack
+        run: yarn generate
+
+      - name: Make Windows app
+        run: yarn make
+        env:
+          NODE_ENV: production
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-transfer-win-${{ github.ref_name }}
+          path: out/make/**/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scan-transfer-win-${{ github.ref_name }}
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true
