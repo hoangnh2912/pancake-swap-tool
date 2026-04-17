@@ -1,0 +1,55 @@
+name: Build & Release
+
+on:
+  push:
+    branches:
+      - swan-wallet
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Bump version
+        id: version
+        shell: pwsh
+        run: |
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          $parts = $pkg.version -split '\.'
+          $newVersion = "$($parts[0]).$($parts[1]).${{ github.run_number }}"
+          $pkg.version = $newVersion
+          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          echo "Bumped version to $newVersion"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build & Make (Windows)
+        run: yarn make
+        env:
+          NODE_ENV: production
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: out/make/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

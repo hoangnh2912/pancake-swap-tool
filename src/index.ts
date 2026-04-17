@@ -71,7 +71,7 @@ const createWindow = (): void => {
             const contracts = await prisma.scanContract.findMany({
                 where: {
                     token: tokenAddress,
-                    contract: contractAddress,
+                    ...(contractAddress ? { contract: contractAddress } : {}),
                     isAirdrop: false,
                 },
                 select: {
@@ -89,28 +89,18 @@ const createWindow = (): void => {
 
     ipcMain.handle('sheets:count', async (event, tokenAddress: string, contractAddress: string) => {
         try {
-            const countAll = tokenAddress ? await prisma.scanContract.count({
+            const contractFilter = contractAddress ? { contract: contractAddress } : {}
+            const countAll = await prisma.scanContract.count({
                 where: {
-                    token: tokenAddress,
-                    contract: contractAddress,
-                },
-            }) : await prisma.scanContract.count({
-                where: {
-                    contract: contractAddress,
-                    token: null,
+                    ...(tokenAddress ? { token: tokenAddress } : { token: null }),
+                    ...contractFilter,
                 },
             })
 
-            const countAirdrop = tokenAddress ? await prisma.scanContract.count({
+            const countAirdrop = await prisma.scanContract.count({
                 where: {
-                    token: tokenAddress,
-                    contract: contractAddress,
-                    isAirdrop: true,
-                },
-            }) : await prisma.scanContract.count({
-                where: {
-                    contract: contractAddress,
-                    token: null,
+                    ...(tokenAddress ? { token: tokenAddress } : { token: null }),
+                    ...contractFilter,
                     isAirdrop: true,
                 },
             })
@@ -127,7 +117,7 @@ const createWindow = (): void => {
             await prisma.scanContract.deleteMany({
                 where: {
                     token: tokenAddress,
-                    contract: contractAddress,
+                    ...(contractAddress ? { contract: contractAddress } : {}),
                 },
             })
             return true
@@ -143,7 +133,7 @@ const createWindow = (): void => {
             await prisma.scanContract.deleteMany({
                 where: {
                     token: tokenAddress,
-                    contract: contractAddress,
+                    ...(contractAddress ? { contract: contractAddress } : {}),
                     isAirdrop: true,
                 },
             })
@@ -197,7 +187,7 @@ const createWindow = (): void => {
             const contracts = await prisma.scanContract.findMany({
                 where: {
                     token: tokenAddress,
-                    contract: contractAddress,
+                    ...(contractAddress ? { contract: contractAddress } : {}),
                 },
                 orderBy: {
                     createdAt: 'asc',
@@ -232,36 +222,48 @@ const createWindow = (): void => {
             for (const walletCombined of wallets) {
                 if (!walletCombined) continue
                 const [wallet, balance, tokens, airdropped] = walletCombined.split(',')
+                const isAirdropped = airdropped?.toLowerCase() === 'true'
 
-                // Check if record exists
-                const existingContract = await prisma.scanContract.findFirst({
-                    where: {
-                        wallet: wallet.toLowerCase(),
-                        token: tokenAddress,
-                        contract: contractAddress
-                    },
-                })
-
-                if (existingContract) {
-                    // Update existing record
-                    await prisma.scanContract.update({
-                        where: { id: existingContract.id },
-                        data: {
-                            balance: Number.parseFloat(balance) || 0,
-                            isAirdrop: airdropped?.toLowerCase() === 'true',
+                if (isAirdropped && !contractAddress) {
+                    // Aggregate mode: mark all records matching wallet+token as airdropped regardless of contract
+                    await prisma.scanContract.updateMany({
+                        where: {
+                            wallet: wallet.toLowerCase(),
+                            token: tokenAddress,
                         },
+                        data: { isAirdrop: true },
                     })
                 } else {
-                    // Create new record
-                    await prisma.scanContract.create({
-                        data: {
+                    // Check if record exists
+                    const existingContract = await prisma.scanContract.findFirst({
+                        where: {
                             wallet: wallet.toLowerCase(),
-                            contract: contractAddress,
-                            balance: Number.parseFloat(balance) || 0,
                             token: tokenAddress,
-                            isAirdrop: airdropped?.toLowerCase() === 'true',
+                            contract: contractAddress
                         },
                     })
+
+                    if (existingContract) {
+                        // Update existing record
+                        await prisma.scanContract.update({
+                            where: { id: existingContract.id },
+                            data: {
+                                balance: Number.parseFloat(balance) || 0,
+                                isAirdrop: isAirdropped,
+                            },
+                        })
+                    } else {
+                        // Create new record
+                        await prisma.scanContract.create({
+                            data: {
+                                wallet: wallet.toLowerCase(),
+                                contract: contractAddress,
+                                balance: Number.parseFloat(balance) || 0,
+                                token: tokenAddress,
+                                isAirdrop: isAirdropped,
+                            },
+                        })
+                    }
                 }
             }
             return true

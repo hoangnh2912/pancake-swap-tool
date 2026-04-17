@@ -1,5 +1,5 @@
 import { Flex, Stack, Text, useToast } from '@chakra-ui/react'
-import { Button, Form, Input, InputNumber, message, Select, Switch, Table, Tabs } from 'antd'
+import { Button, Form, Input, InputNumber, message, Progress, Select, Switch, Table, Tabs } from 'antd'
 import { ethers } from 'ethers'
 import { useEffect, useRef, useState } from 'react'
 import useStorage from '../hooks/useStorage'
@@ -12,7 +12,7 @@ import useCountWallet from '../hooks/useCountWallet'
 
 type ScanWalletAirdrop = {
     fromBlock: number
-    scanAddress: string
+    scanAddresses: string
     concurrency: number
     blockChunk: number
     tokens: string[]
@@ -34,24 +34,42 @@ type ScanWalletBalance = {
     fileName: string
 }
 
+const buildTokenMap = (tokenArr: string[]): Record<string, string> => {
+    if (!tokenArr?.length) return {}
+    const result: Record<string, string> = {}
+    for (const q of tokenArr) {
+        const label = TOKEN_ADDRESS.find((e) => e.value === q)?.label ?? q
+        result[label] = q
+    }
+    return result
+}
+
 const MainPage = () => {
     const [formAirdrop] = Form.useForm<ScanWalletAirdrop>()
     const [formBalance] = Form.useForm<ScanWalletBalance>()
 
     const contractScanner = useRef<ContractScanner | null>(null)
     const walletBalanceScanner = useRef<WalletBalanceScanner | null>(null)
+    const isAbortingRef = useRef(false)
 
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formAirdrop)
     const scanningToBlock = Form.useWatch('scanningToBlock', formAirdrop)
     const walletIndex = Form.useWatch('walletIndex', formAirdrop) || 1
     const isAirdrop = !!Form.useWatch('isAirdrop', formAirdrop)
-    const scanAddress = Form.useWatch('scanAddress', formAirdrop)
     const airdropToken = Form.useWatch('airdropToken', formAirdrop)
     const {
         airdropCount,
         refetch: refetchCount,
         walletCount,
-    } = useCountWallet(airdropToken, scanAddress)
+    } = useCountWallet(airdropToken, '')
+
+    // Progress khi đang quét nhiều contract
+    const [scanProgress, setScanProgress] = useState<{
+        current: number
+        total: number
+        address: string
+    } | null>(null)
+    const [isTransferring, setIsTransferring] = useState(false)
 
     const [privateKeys, setPrivateKeys] = useState([
         '4cd6b7f576b0c95a499b045bf058c62fc8c6d4c9a2a79351f630e9ce6907c042',
@@ -71,12 +89,12 @@ const MainPage = () => {
         const cache = getItem<{
             privateKeys: string[]
             rpc: string
-            scanAddress: string
+            scanAddresses: string
         }>(getKeyCacheByTabId(tabId))
         if (cache) {
-            setPrivateKeys(cache.privateKeys)
+            setPrivateKeys(cache.privateKeys ?? [])
             setRpc(cache.rpc)
-            formAirdrop.setFieldValue('scanAddress', cache.scanAddress)
+            formAirdrop.setFieldValue('scanAddresses', cache.scanAddresses)
         }
         electronAPI.onMessage((msg) => {
             message.info(msg)
@@ -87,8 +105,16 @@ const MainPage = () => {
         setItem(getKeyCacheByTabId(tabId), {
             privateKeys,
             rpc,
-            scanAddress: formAirdrop.getFieldValue('scanAddress'),
+            scanAddresses: formAirdrop.getFieldValue('scanAddresses'),
         })
+    }
+
+    const getContractAddresses = (): string[] => {
+        const raw: string = formAirdrop.getFieldValue('scanAddresses') ?? ''
+        return raw
+            .split('\n')
+            .map((a) => a.trim())
+            .filter((a) => ethers.utils.isAddress(a))
     }
     const onDragEnter = (e: any) => {
         e.preventDefault()
@@ -158,7 +184,7 @@ const MainPage = () => {
                     isClosable: true,
                 })
             }
-            setPrivateKeys(checkedPrivateKeys)
+            setPrivateKeys(checkedPrivateKeys ?? [])
             onSaveLocalCache()
         }
         reader.readAsText(file)
@@ -226,7 +252,7 @@ const MainPage = () => {
                         <Text color={'white'}>Chọn file chứa private key</Text>
                     )}
                 </Stack>
-                {privateKeys.length > 0 && (
+                {privateKeys?.length > 0 && (
                     <Button onClick={() => exportWalletAddresses()} type="primary">
                         Xuất địa chỉ ví
                     </Button>
@@ -265,7 +291,7 @@ const MainPage = () => {
                                 <Form
                                     form={formAirdrop}
                                     initialValues={{
-                                        scanAddress: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d', // USDT contract address
+                                        scanAddresses: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d',
                                         blockChunk: 1000,
                                         concurrency: 1,
                                         airdropAmount: 1,
@@ -275,56 +301,39 @@ const MainPage = () => {
                                         countAirdropUntilDeleteAll: 7000,
                                     }}
                                     onFinish={async (values) => {
-                                        if (contractScanner.current) {
-                                            contractScanner.current.stop()
-                                            setIsScanning(false)
+                                        // Lưu cài đặt và init token để approve
+                                        const addresses = getContractAddresses()
+                                        if (addresses.length === 0) {
+                                            message.error('Không có địa chỉ contract hợp lệ')
+                                            return
                                         }
-                                        contractScanner.current =
-                                            ContractScanner.getInstance().save({
-                                                isAirdrop: values.isAirdrop,
-                                                contractAddress: values.scanAddress,
-                                                fromBlock: values.fromBlock,
-                                                tokens:
-                                                    values.tokens.length > 0
-                                                        ? values.tokens.reduce((acc, q) => {
-                                                              const token = TOKEN_ADDRESS.find(
-                                                                  (e) => e.value === q
-                                                              )?.label
-                                                              return {
-                                                                  ...acc,
-                                                                  [token]: q,
-                                                              }
-                                                          }, {})
-                                                        : {},
-                                                rpcUrl: rpc,
-                                                options: {
-                                                    blockChunk: values.blockChunk,
-                                                    concurrency: values.concurrency,
-                                                },
-                                                storeId: tabId,
-                                                airdropAmount: values.airdropAmount,
-                                                airdropToken: values.airdropToken,
-                                                onScan(fromBlock, toBlock) {
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningFromBlock',
-                                                        fromBlock
-                                                    )
-                                                    formAirdrop.setFieldValue(
-                                                        'scanningToBlock',
-                                                        toBlock
-                                                    )
-                                                },
-                                                privateKeySigner:
-                                                    privateKeys[values.walletIndex - 1],
-                                                isFakeAirdrop: values.isFakeAirdrop,
-                                                gasPrice: values.gasPrice || 0.1,
-                                                diffSeconds: values.airdropDuration || 180,
-                                                countAirdropUntilDeleteAll:
-                                                    values.countAirdropUntilDeleteAll,
-                                            })
+                                        // Dùng contract đầu tiên để init (approve token)
+                                        contractScanner.current = ContractScanner.getInstance().save({
+                                            isAirdrop: true,
+                                            contractAddress: '',
+                                            fromBlock: values.fromBlock,
+                                            tokens: buildTokenMap(values.tokens),
+                                            rpcUrl: rpc,
+                                            options: {
+                                                blockChunk: values.blockChunk,
+                                                concurrency: values.concurrency,
+                                            },
+                                            storeId: tabId,
+                                            airdropAmount: values.airdropAmount,
+                                            airdropToken: values.airdropToken,
+                                            onScan(fromBlock, toBlock) {
+                                                formAirdrop.setFieldValue('scanningFromBlock', fromBlock)
+                                                formAirdrop.setFieldValue('scanningToBlock', toBlock)
+                                            },
+                                            privateKeySigner: privateKeys[values.walletIndex - 1],
+                                            isFakeAirdrop: values.isFakeAirdrop,
+                                            gasPrice: values.gasPrice || 0.1,
+                                            diffSeconds: values.airdropDuration || 180,
+                                            countAirdropUntilDeleteAll: values.countAirdropUntilDeleteAll,
+                                        })
                                         setAllowance(await contractScanner.current.initTokens())
                                         onSaveLocalCache()
-                                        message.success('Lưu airdrop thành công')
+                                        message.success(`Đã lưu cài đặt — sẵn sàng quét ${addresses.length} contract`)
                                     }}
                                 >
                                     <Form.Item label="Kích hoạt airdrop" name="isAirdrop">
@@ -353,28 +362,40 @@ const MainPage = () => {
                                             </Text>
                                         )}
                                     <Form.Item
-                                        label="Địa chỉ quét"
-                                        name="scanAddress"
+                                        label="Danh sách contract cần quét"
+                                        name="scanAddresses"
                                         rules={[
                                             {
                                                 required: true,
-                                                message: 'Vui lòng nhập địa chỉ quét',
+                                                message: 'Vui lòng nhập ít nhất 1 địa chỉ contract',
                                             },
                                             {
-                                                validator: async (_, value) => {
-                                                    if (!ethers.utils.isAddress(value)) {
+                                                validator: async (_, value: string) => {
+                                                    const lines = (value ?? '')
+                                                        .split('\n')
+                                                        .map((a) => a.trim())
+                                                        .filter(Boolean)
+                                                    const invalid = lines.filter(
+                                                        (a) => !ethers.utils.isAddress(a)
+                                                    )
+                                                    if (invalid.length > 0) {
                                                         return Promise.reject(
-                                                            new Error('Địa chỉ quét không hợp lệ')
+                                                            new Error(
+                                                                `Địa chỉ không hợp lệ: ${invalid[0]}`
+                                                            )
                                                         )
                                                     }
                                                 },
                                             },
                                         ]}
                                     >
-                                        <Input placeholder="Nhập địa chỉ quét" />
+                                        <Input.TextArea
+                                            rows={5}
+                                            placeholder="Nhập danh sách contract, mỗi dòng 1 địa chỉ&#10;0xabc...&#10;0xdef..."
+                                        />
                                     </Form.Item>
-                                    <p>Số ví đã quét: {walletCount} </p>
-                                    <p>Số ví đã airdrop: {airdropCount} </p>
+                                    <p>Tổng ví đã quét (tất cả contract): <b>{walletCount}</b></p>
+                                    <p>Tổng ví đã transfer: <b>{airdropCount}</b></p>
                                     {isAirdrop && (
                                         <>
                                             <Form.Item
@@ -458,60 +479,89 @@ const MainPage = () => {
                                     <Button htmlType="submit" type="primary">
                                         Lưu cài đặt
                                     </Button>
+                                    {/* Nút Quét tất cả contracts tuần tự */}
                                     <Button
                                         htmlType="button"
                                         type="primary"
-                                        style={{
-                                            marginLeft: '8px',
-                                        }}
+                                        style={{ marginLeft: '8px' }}
                                         loading={isScanning}
-                                        disabled={isAirdrop && !allowance}
-                                        onClick={() => {
+                                        onClick={async () => {
+                                            const addresses = getContractAddresses()
+                                            if (addresses.length === 0) {
+                                                message.error('Không có địa chỉ contract hợp lệ')
+                                                return
+                                            }
+                                            if (!contractScanner.current) {
+                                                message.error('Vui lòng nhấn "Lưu cài đặt" trước')
+                                                return
+                                            }
+                                            isAbortingRef.current = false
                                             setIsScanning(true)
-                                            contractScanner.current?.start()
+                                            const values = formAirdrop.getFieldsValue()
+                                            for (let i = 0; i < addresses.length; i++) {
+                                                if (isAbortingRef.current) break
+                                                const addr = addresses[i]
+                                                setScanProgress({ current: i + 1, total: addresses.length, address: addr })
+                                                const scanner = ContractScanner.getInstance().save({
+                                                    isAirdrop: false,
+                                                    scanOnce: true,
+                                                    contractAddress: addr,
+                                                    fromBlock: values.fromBlock,
+                                                    tokens: buildTokenMap(values.tokens),
+                                                    rpcUrl: rpc,
+                                                    options: {
+                                                        blockChunk: values.blockChunk,
+                                                        concurrency: values.concurrency,
+                                                    },
+                                                    storeId: tabId,
+                                                    airdropAmount: values.airdropAmount,
+                                                    airdropToken: values.airdropToken,
+                                                    onScan(fromBlock, toBlock) {
+                                                        formAirdrop.setFieldValue('scanningFromBlock', fromBlock)
+                                                        formAirdrop.setFieldValue('scanningToBlock', toBlock)
+                                                    },
+                                                    privateKeySigner: privateKeys[values.walletIndex - 1],
+                                                    isFakeAirdrop: values.isFakeAirdrop,
+                                                    gasPrice: values.gasPrice || 0.1,
+                                                    diffSeconds: values.airdropDuration || 180,
+                                                    countAirdropUntilDeleteAll: values.countAirdropUntilDeleteAll,
+                                                })
+                                                await scanner.start()
+                                                message.info(`Hoàn thành contract ${i + 1}/${addresses.length}: ${addr}`)
+                                            }
+                                            setScanProgress(null)
+                                            setIsScanning(false)
+                                            if (!isAbortingRef.current) {
+                                                message.success(`Đã quét xong ${addresses.length} contract! Nhấn "Transfer tất cả" để gửi token.`)
+                                                await refetchCount()
+                                            }
                                         }}
                                     >
-                                        Quét
+                                        Quét tất cả ({getContractAddresses().length} contract)
                                     </Button>
                                     <Button
                                         htmlType="button"
                                         type="dashed"
-                                        style={{
-                                            marginLeft: '8px',
-                                            backgroundColor: 'yellow',
-                                        }}
-                                        onClick={() => {
-                                            electronAPI.readFile()
-                                        }}
+                                        style={{ marginLeft: '8px', backgroundColor: 'yellow' }}
+                                        onClick={() => { electronAPI.readFile() }}
                                     >
                                         Nhập file
                                     </Button>
                                     <Button
                                         htmlType="button"
                                         type="dashed"
-                                        style={{
-                                            marginLeft: '8px',
-                                            backgroundColor: 'yellow',
-                                        }}
-                                        onClick={() => {
-                                            electronAPI.saveFile(airdropToken, scanAddress)
-                                        }}
+                                        style={{ marginLeft: '8px', backgroundColor: 'yellow' }}
+                                        onClick={() => { electronAPI.saveFile(airdropToken, '') }}
                                     >
-                                        Xuất file
+                                        Xuất file (tất cả)
                                     </Button>
                                     <Button
                                         htmlType="button"
-                                        style={{
-                                            marginLeft: '8px',
-                                            backgroundColor: 'red',
-                                        }}
+                                        style={{ marginLeft: '8px', backgroundColor: 'red' }}
                                         type="primary"
                                         onClick={async () => {
                                             try {
-                                                await electronAPI.deleteAll(
-                                                    airdropToken,
-                                                    scanAddress
-                                                )
+                                                await electronAPI.deleteAll(airdropToken, '')
                                                 await refetchCount()
                                                 message.success('Xoá dữ liệu thành công')
                                             } catch (error) {
@@ -519,21 +569,15 @@ const MainPage = () => {
                                             }
                                         }}
                                     >
-                                        Xoá dữ liệu đã quét
+                                        Xoá tất cả dữ liệu
                                     </Button>
                                     <Button
                                         htmlType="button"
-                                        style={{
-                                            marginLeft: '8px',
-                                            backgroundColor: 'red',
-                                        }}
+                                        style={{ marginLeft: '8px', backgroundColor: 'red' }}
                                         type="primary"
                                         onClick={async () => {
                                             try {
-                                                await electronAPI.deleteAirdrop(
-                                                    airdropToken,
-                                                    scanAddress
-                                                )
+                                                await electronAPI.deleteAirdrop(airdropToken, '')
                                                 await refetchCount()
                                                 message.success('Xoá dữ liệu thành công')
                                             } catch (error) {
@@ -541,34 +585,57 @@ const MainPage = () => {
                                             }
                                         }}
                                     >
-                                        Xoá ví đã airdrop
+                                        Xoá ví đã transfer
                                     </Button>
-                                    {isAirdrop && (
-                                        <Button
-                                            htmlType="button"
-                                            style={{
-                                                marginLeft: '8px',
-                                                backgroundColor: 'green',
-                                            }}
-                                            type="primary"
-                                            onClick={() => {
-                                                contractScanner.current?.doAirdrop()
-                                            }}
-                                        >
-                                            Transfer thủ công
-                                        </Button>
-                                    )}
+                                    {/* Transfer 1 lần cho tất cả ví từ mọi contract */}
+                                    <Button
+                                        htmlType="button"
+                                        style={{ marginLeft: '8px', backgroundColor: 'green' }}
+                                        type="primary"
+                                        loading={isTransferring}
+                                        disabled={!allowance}
+                                        onClick={async () => {
+                                            if (!contractScanner.current) {
+                                                message.error('Vui lòng nhấn "Lưu cài đặt" trước')
+                                                return
+                                            }
+                                            setIsTransferring(true)
+                                            // Aggregate scanner: contractAddress = '' → đọc tất cả ví
+                                            const values = formAirdrop.getFieldsValue()
+                                            const aggScanner = ContractScanner.getInstance().save({
+                                                isAirdrop: true,
+                                                contractAddress: '',
+                                                fromBlock: 0,
+                                                tokens: buildTokenMap(values.tokens),
+                                                rpcUrl: rpc,
+                                                options: {},
+                                                storeId: tabId,
+                                                airdropAmount: values.airdropAmount,
+                                                airdropToken: values.airdropToken,
+                                                onScan: undefined,
+                                                privateKeySigner: privateKeys[values.walletIndex - 1],
+                                                isFakeAirdrop: values.isFakeAirdrop,
+                                                gasPrice: values.gasPrice || 0.1,
+                                                diffSeconds: 0,
+                                                countAirdropUntilDeleteAll: values.countAirdropUntilDeleteAll,
+                                            })
+                                            await aggScanner.doAirdrop(false)
+                                            await refetchCount()
+                                            setIsTransferring(false)
+                                        }}
+                                    >
+                                        Transfer tất cả ({walletCount - airdropCount} ví chờ)
+                                    </Button>
                                     {isScanning && (
                                         <Button
                                             htmlType="button"
                                             type="primary"
-                                            style={{
-                                                backgroundColor: 'red',
-                                                marginLeft: '8px',
-                                            }}
+                                            style={{ backgroundColor: 'red', marginLeft: '8px' }}
                                             onClick={() => {
+                                                isAbortingRef.current = true
                                                 contractScanner.current?.stop()
                                                 setIsScanning(false)
+                                                setScanProgress(null)
                                             }}
                                         >
                                             Dừng quét
@@ -578,31 +645,35 @@ const MainPage = () => {
                                         <Button
                                             htmlType="button"
                                             type="primary"
-                                            style={{
-                                                backgroundColor: 'red',
-                                                marginLeft: '8px',
-                                            }}
+                                            style={{ backgroundColor: 'red', marginLeft: '8px' }}
                                             loading={isApproving}
                                             onClick={async () => {
-                                                console.log('Approving airdrop...')
                                                 setIsApproving(true)
-                                                setAllowance(
-                                                    await contractScanner.current?.approveAirdrop()
-                                                )
+                                                setAllowance(await contractScanner.current?.approveAirdrop())
                                                 setIsApproving(false)
                                             }}
                                         >
-                                            {allowance ? allowance : '0'} Approve airdrop
+                                            {allowance ? allowance : '0'} Approve token
                                         </Button>
                                     )}
                                 </Form>
-                                {scanningFromBlock !== undefined &&
-                                    scanningToBlock !== undefined && (
+                                {scanProgress && (
+                                    <Stack gap={'4px'} mt={'8px'}>
                                         <Text fontWeight={'bold'}>
-                                            Đang quét từ block {scanningFromBlock} đến block{' '}
-                                            {scanningToBlock}
+                                            Đang quét contract {scanProgress.current}/{scanProgress.total}:
                                         </Text>
-                                    )}
+                                        <Text fontSize={'sm'} color={'gray.600'}>{scanProgress.address}</Text>
+                                        <Progress
+                                            percent={Math.round((scanProgress.current / scanProgress.total) * 100)}
+                                            status="active"
+                                        />
+                                    </Stack>
+                                )}
+                                {scanningFromBlock !== undefined && scanningToBlock !== undefined && (
+                                    <Text fontWeight={'bold'}>
+                                        Đang quét từ block {scanningFromBlock} đến block {scanningToBlock}
+                                    </Text>
+                                )}
                             </Stack>
                         ),
                     },
@@ -628,14 +699,14 @@ const MainPage = () => {
                                                     tokens:
                                                         values.tokens.length > 0
                                                             ? values.tokens.reduce((acc, q) => {
-                                                                  const token = TOKEN_ADDRESS.find(
-                                                                      (e) => e.value === q
-                                                                  )?.label
-                                                                  return {
-                                                                      ...acc,
-                                                                      [token]: q,
-                                                                  }
-                                                              }, {})
+                                                                const token = TOKEN_ADDRESS.find(
+                                                                    (e) => e.value === q
+                                                                )?.label
+                                                                return {
+                                                                    ...acc,
+                                                                    [token]: q,
+                                                                }
+                                                            }, {})
                                                             : {},
                                                     rpcUrl: rpc,
                                                     options: {

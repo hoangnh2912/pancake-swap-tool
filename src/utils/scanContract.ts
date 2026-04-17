@@ -721,12 +721,14 @@ type ScanParams = {
     options?: { blockChunk?: number; concurrency?: number; interval?: number }
     storeId: string
     onScan?: (fromBlock: number, toBlock: number) => void
+    onComplete?: () => void
     privateKeySigner: string
     isAirdrop: boolean
     isFakeAirdrop: boolean
     gasPrice: number
     diffSeconds: number
     countAirdropUntilDeleteAll: number
+    scanOnce?: boolean
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -931,6 +933,7 @@ export class ContractScanner {
         console.log('start scan')
         this.stopped = false
         this.isScanning = true
+        const scanOnce = this.payloadParams?.scanOnce ?? false
         let scannedWallet: Array<{
             address: string
             native: string
@@ -941,7 +944,7 @@ export class ContractScanner {
         const blockChunk = this.options.blockChunk
         const concurrency = this.options.concurrency
 
-        while (!this.stopped) {
+        do {
             try {
                 const latest = await this.provider.getBlockNumber()
 
@@ -1048,13 +1051,16 @@ export class ContractScanner {
             )
             scannedWallet = []
             // nghỉ một chút rồi scan tiếp
-            if (!this.stopped) {
+            if (!this.stopped && !scanOnce) {
                 await this.doAirdrop()
                 await sleep(this.options.interval)
             }
-        }
+        } while (!this.stopped && !scanOnce)
 
         console.log('Scanner stopped')
         this.isScanning = false
+        if (scanOnce) {
+            this.payloadParams?.onComplete?.()
+        }
     }
 }
