@@ -5,7 +5,7 @@ import type { Prisma } from "../../prisma/client"
 
 type ScanParams = {
     rpcUrl: string
-    wallet: string
+    wallets: string[]
     fromBlock: number
     options?: { blockChunk?: number; concurrency?: number; interval?: number }
     storeId: string
@@ -46,7 +46,7 @@ export class WalletScanner {
     private stopped = false
     public isScanning = false
     private currentBlock = 0
-    private wallet: string
+    private wallets: string[] = []
     private signer: ethers.Wallet
     private tokenContract: ethers.Contract
     private tokenDecimals: number
@@ -83,7 +83,7 @@ export class WalletScanner {
             concurrency: params.options?.concurrency ?? 8,
             interval: params.options?.interval ?? 2000, // ms giữa mỗi vòng quét
         }
-        this.wallet = params.wallet
+        this.wallets = params.wallets
         this.onScan = params.onScan
         this.transferDelayMs = params.transferDelayMs
         this.currentBlock = params.fromBlock ?? 0
@@ -168,34 +168,34 @@ export class WalletScanner {
      * Populates: destinationWallets, tokenTransfers, uniqueTokens
      */
     private async scanERC20Transfers(fromBlock: number, toBlock: number) {
+        await Promise.all(
+            this.wallets.map(wallet => this._scanSingleWallet(wallet, fromBlock, toBlock))
+        )
+    }
+
+    private async _scanSingleWallet(wallet: string, fromBlock: number, toBlock: number) {
         try {
-            // Query all logs matching the Transfer event signature
-            // where the wallet is the 'from' address (indexed topic at position 1)
             const logs = await this.provider.getLogs({
                 fromBlock: fromBlock,
                 toBlock: toBlock,
                 topics: [
                     ERC20_TRANSFER_TOPIC,
-                    ethers.utils.hexZeroPad(this.wallet, 32), // from address (indexed, position 1)
+                    ethers.utils.hexZeroPad(wallet, 32), // from address (indexed, position 1)
                     null, // to address (indexed, position 2) - any value
                 ],
             })
 
-            console.log(`Found ${logs.length} transfer events from wallet ${this.wallet}`)
+            console.log(`Found ${logs.length} transfer events from wallet ${wallet}`)
 
-            // Process each transfer event
             for (const log of logs) {
                 try {
-                    // Decode the Transfer event
-                    // Transfer(address indexed from, address indexed to, uint256 value)
                     const topics = log.topics
-                    const from = ethers.utils.getAddress('0x' + topics[1].slice(26)) // Remove '0x' and take last 40 chars
+                    const from = ethers.utils.getAddress('0x' + topics[1].slice(26))
                     const to = ethers.utils.getAddress('0x' + topics[2].slice(26))
                     const amount = ethers.BigNumber.from(log.data).toString()
 
                     const tokenAddress = log.address
 
-                    // Add destination wallet to set
                     const transfer: TokenTransfer = {
                         blockNumber: log.blockNumber,
                         transactionHash: log.transactionHash,
@@ -215,7 +215,7 @@ export class WalletScanner {
                 }
             }
         } catch (err) {
-            console.error(`Error scanning ERC20 transfers [${fromBlock}-${toBlock}]:`, err)
+            console.error(`Error scanning wallet ${wallet} [${fromBlock}-${toBlock}]:`, err)
             throw err
         }
     }
@@ -245,7 +245,7 @@ export class WalletScanner {
             Prisma.ScanWalletGetPayload<{}>[]
         >('ScanWallet', 'findMany', {
             where: {
-                wallet: this.wallet,
+                wallet: { in: this.wallets },
                 isTransferred: false,
             },
             select: {

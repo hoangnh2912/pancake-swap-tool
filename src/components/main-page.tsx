@@ -33,7 +33,7 @@ import { ERC20_ABI, DISPERSE_ABI } from '../utils/abi'
 
 type ScanWalletForm = {
     fromBlock: number
-    scanAddress: string
+    scanAddresses: string
     concurrency: number
     blockChunk: number
     scanningFromBlock: number
@@ -65,7 +65,11 @@ const MainPage = () => {
 
     const scanningFromBlock = Form.useWatch('scanningFromBlock', formScanWallet)
     const scanningToBlock = Form.useWatch('scanningToBlock', formScanWallet)
-    const scanAddress = Form.useWatch('scanAddress', formScanWallet)
+    const scanAddresses = Form.useWatch('scanAddresses', formScanWallet)
+    const addressList = (scanAddresses || '')
+        .split('\n')
+        .map((s: string) => s.trim())
+        .filter((s: string) => ethers.utils.isAddress(s))
 
     const recipientList = Form.useWatch('recipientList', formMultiTransfer)
 
@@ -75,7 +79,7 @@ const MainPage = () => {
     const walletCount = 0
     const { data: scanWallets = [], refetch } = useFindManyScanWallet({
         where: {
-            wallet: scanAddress,
+            wallet: { in: addressList },
         },
         skip: (currentPage - 1) * pageSize,
         take: pageSize,
@@ -85,7 +89,7 @@ const MainPage = () => {
     })
     const { data: countWalletCount = 0, refetch: refetchCount } = useCountScanWallet({
         where: {
-            wallet: scanAddress,
+            wallet: { in: addressList },
         },
     })
 
@@ -101,11 +105,11 @@ const MainPage = () => {
     useEffect(() => {
         const cache = getItem<{
             rpc: string
-            scanAddress: string
+            scanAddresses: string
         }>(getKeyCacheByTabId(tabId))
         if (cache) {
             setRpc(cache.rpc)
-            formScanWallet.setFieldValue('scanAddress', cache.scanAddress)
+            formScanWallet.setFieldValue('scanAddresses', cache.scanAddresses)
         }
         message.info('Đã tải cài đặt từ bộ nhớ local')
     }, [])
@@ -113,7 +117,7 @@ const MainPage = () => {
     const onSaveLocalCache = () => {
         setItem(getKeyCacheByTabId(tabId), {
             rpc,
-            scanAddress: formScanWallet.getFieldValue('scanAddress'),
+            scanAddresses: formScanWallet.getFieldValue('scanAddresses'),
         })
     }
 
@@ -141,7 +145,7 @@ const MainPage = () => {
                                 <Form
                                     form={formScanWallet}
                                     initialValues={{
-                                        scanAddress: '0xb300000b72DEAEb607a12d5f54773D1C19c7028d', // USDT contract address
+                                        scanAddresses: '',
                                         blockChunk: 1000,
                                         concurrency: 1,
                                         walletIndex: 1,
@@ -172,7 +176,12 @@ const MainPage = () => {
                                         }
                                         contractScanner.current =
                                             await WalletScanner.getInstance().save({
-                                                wallet: values.scanAddress,
+                                                wallets: (values.scanAddresses || '')
+                                                    .split('\n')
+                                                    .map((s: string) => s.trim())
+                                                    .filter((s: string) =>
+                                                        ethers.utils.isAddress(s)
+                                                    ),
                                                 fromBlock: values.fromBlock,
                                                 rpcUrl: rpc,
                                                 options: {
@@ -215,27 +224,42 @@ const MainPage = () => {
                                     }}
                                 >
                                     <Form.Item
-                                        label="Địa chỉ quét"
-                                        name="scanAddress"
+                                        label="Danh sách địa chỉ contract cần quét (mỗi dòng một địa chỉ)"
+                                        name="scanAddresses"
                                         rules={[
                                             {
                                                 required: true,
-                                                message: 'Vui lòng nhập địa chỉ quét',
+                                                message: 'Vui lòng nhập ít nhất 1 địa chỉ',
                                             },
                                             {
                                                 validator: async (_, value) => {
-                                                    if (!ethers.utils.isAddress(value)) {
+                                                    const lines = (value || '')
+                                                        .split('\n')
+                                                        .map((s: string) => s.trim())
+                                                        .filter(Boolean)
+                                                    if (lines.length === 0) {
                                                         return Promise.reject(
-                                                            new Error('Địa chỉ quét không hợp lệ')
+                                                            new Error('Vui lòng nhập ít nhất 1 địa chỉ')
+                                                        )
+                                                    }
+                                                    const invalid = lines.filter(
+                                                        (l: string) => !ethers.utils.isAddress(l)
+                                                    )
+                                                    if (invalid.length > 0) {
+                                                        return Promise.reject(
+                                                            new Error(`Địa chỉ không hợp lệ: ${invalid[0]}`)
                                                         )
                                                     }
                                                 },
                                             },
                                         ]}
                                     >
-                                        <Input placeholder="Nhập địa chỉ quét" />
+                                        <Input.TextArea
+                                            placeholder="Nhập các địa chỉ contract, mỗi dòng một địa chỉ"
+                                            autoSize={{ minRows: 3, maxRows: 8 }}
+                                        />
                                     </Form.Item>
-                                    <p>Số ví đã quét: {walletCount} </p>
+                                    <p>Số contract đang quét: {addressList.length} | Tổng ví đã quét: {countWalletCount}</p>
                                     <Form.Item
                                         label="Thời gian chờ giữa các lần chuyển token (phút)"
                                         name="transferDelayMs"
@@ -341,7 +365,7 @@ const MainPage = () => {
                                                 Prisma.ScanWalletGetPayload<{}>[]
                                             >('ScanWallet', 'findMany', {
                                                 where: {
-                                                    wallet: scanAddress,
+                                                    wallet: { in: addressList },
                                                 },
                                                 skip: (currentPage - 1) * pageSize,
                                                 take: pageSize,
@@ -361,7 +385,7 @@ const MainPage = () => {
                                             const link = document.createElement('a')
                                             const url = URL.createObjectURL(blob)
                                             link.href = url
-                                            link.download = `scan-${scanAddress || ''}-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.csv`
+                                            link.download = `scan-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.csv`
                                             document.body.appendChild(link)
                                             link.click()
                                             document.body.removeChild(link)
@@ -380,7 +404,7 @@ const MainPage = () => {
                                             try {
                                                 await deleteManyScanWallet({
                                                     where: {
-                                                        wallet: scanAddress,
+                                                        wallet: { in: addressList },
                                                     },
                                                 })
                                                 message.success('Xoá dữ liệu thành công')
