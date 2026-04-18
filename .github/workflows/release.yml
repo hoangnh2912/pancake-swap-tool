@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
+  build-windows-scan-wallet:
     runs-on: windows-latest
 
     steps:
