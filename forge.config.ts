@@ -2,19 +2,28 @@ import { MakerZIP } from '@electron-forge/maker-zip'
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives'
 import { WebpackPlugin } from '@electron-forge/plugin-webpack'
 import type { ForgeConfig } from '@electron-forge/shared-types'
+import fs from 'fs'
+import path from 'path'
 
 import { mainConfig } from './webpack.main.config'
 import { rendererConfig } from './webpack.renderer.config'
-import path from 'path'
+
 const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
         icon: './src/favicon',
-        extraResource: [
-            path.resolve(__dirname, 'prisma'),
-        ]
     },
     rebuildConfig: {},
+    hooks: {
+        postPackage: async (_forgeConfig, options) => {
+            const prismaSource = path.resolve(__dirname, 'prisma')
+            for (const outputPath of options.outputPaths) {
+                const dest = path.join(outputPath, 'prisma')
+                fs.cpSync(prismaSource, dest, { recursive: true })
+                console.log(`Copied prisma -> ${dest}`)
+            }
+        },
+    },
     makers: [new MakerZIP({})],
     plugins: [
         new AutoUnpackNativesPlugin({}),
