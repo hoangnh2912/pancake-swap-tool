@@ -3,7 +3,7 @@ name: Build & Release
 on:
   push:
     branches:
-      - swan-wallet
+      - scan-wallet
 
 permissions:
   contents: write
@@ -20,22 +20,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+
+      - name: Enable corepack & set yarn version
+        run: |
+          corepack enable
+          yarn --version
 
       - name: Bump version
         id: version
         shell: pwsh
         run: |
-          $pkg = Get-Content package.json | ConvertFrom-Json
+          $content = Get-Content package.json -Raw
+          $pkg = $content | ConvertFrom-Json
           $parts = $pkg.version -split '\.'
           $newVersion = "$($parts[0]).$($parts[1]).${{ github.run_number }}"
-          $pkg.version = $newVersion
-          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json
+          # Use regex replace to avoid ConvertTo-Json mangling the file
+          $content = $content -replace '"version"\s*:\s*"[^"]*"', """version"": ""$newVersion"""
+          Set-Content package.json $content
           echo "version=$newVersion" >> $env:GITHUB_OUTPUT
           echo "Bumped version to $newVersion"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Build & Make (Windows)
         run: yarn make
