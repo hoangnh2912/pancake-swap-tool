@@ -3,6 +3,16 @@ import { ethers } from 'ethers'
 import zenStackFunction from './zenstack-function'
 import type { Prisma } from "../../prisma/client"
 
+export type BatchProgress = {
+    batchIndex: number
+    totalBatches: number
+    recipientCount: number
+    status: 'sending' | 'confirmed' | 'error'
+    txHash?: string
+    error?: string
+    timestamp: number
+}
+
 type ScanParams = {
     rpcUrl: string
     wallets: string[]
@@ -11,6 +21,7 @@ type ScanParams = {
     storeId: string
     onScan?: (fromBlock: number, toBlock: number) => void
     onSave?: (transfers: TokenTransfer[]) => Promise<void>
+    onBatchProgress?: (progress: BatchProgress) => void
     privateKey: string
     tokenAddress: string
     amount: string
@@ -57,6 +68,7 @@ export class WalletScanner {
     private tokenTransfers: TokenTransfer[] = []
 
     private lastTransferUpdate = 0
+    private onBatchProgress?: (progress: BatchProgress) => void
 
     private static singleton: WalletScanner // ①
     public static getInstance(): WalletScanner {
@@ -85,6 +97,7 @@ export class WalletScanner {
         }
         this.wallets = params.wallets
         this.onScan = params.onScan
+        this.onBatchProgress = params.onBatchProgress
         this.transferDelayMs = params.transferDelayMs
         this.currentBlock = params.fromBlock ?? 0
         this.onSave = params.onSave
@@ -297,16 +310,37 @@ export class WalletScanner {
             for (let i = 0; i < batches.length; i++) {
                 const recipients = batches[i]
                 console.log(`Sending batch ${i + 1}/${batches.length} with ${recipients.length} recipients...`)
-                const tx = await disperseContract.disperseTokenSimple(
-                    this.tokenContract.address,
-                    recipients,
-                    ethers.utils.parseUnits(this.amount, this.tokenDecimals),
-                    {
-                        gasPrice: 50000000
-                    }
-                )
+                let tx: any
+                try {
+                    tx = await disperseContract.disperseTokenSimple(
+                        this.tokenContract.address,
+                        recipients,
+                        ethers.utils.parseUnits(this.amount, this.tokenDecimals),
+                        {
+                            gasPrice: 50000000
+                        }
+                    )
+                } catch (err) {
+                    this.onBatchProgress?.({
+                        batchIndex: i + 1,
+                        totalBatches: batches.length,
+                        recipientCount: recipients.length,
+                        status: 'error',
+                        error: err instanceof Error ? err.message : 'Unknown error',
+                        timestamp: Date.now(),
+                    })
+                    throw err
+                }
                 console.log(`Batch ${i + 1} transaction sent:`, tx.hash)
                 message.success(`Batch ${i + 1}/${batches.length} — Đã gửi giao dịch chuyển token: ${tx.hash}`)
+                this.onBatchProgress?.({
+                    batchIndex: i + 1,
+                    totalBatches: batches.length,
+                    recipientCount: recipients.length,
+                    status: 'sending',
+                    txHash: tx.hash,
+                    timestamp: Date.now(),
+                })
                 await tx.wait()
                 await zenStackFunction<
                     Prisma.ScanWalletUpdateManyArgs
@@ -322,6 +356,14 @@ export class WalletScanner {
                 })
                 console.log(`Batch ${i + 1} confirmed`)
                 message.success(`Batch ${i + 1}/${batches.length} — Giao dịch chuyển token đã được xác nhận`)
+                this.onBatchProgress?.({
+                    batchIndex: i + 1,
+                    totalBatches: batches.length,
+                    recipientCount: recipients.length,
+                    status: 'confirmed',
+                    txHash: tx.hash,
+                    timestamp: Date.now(),
+                })
             }
         } catch (err) {
             console.error('Error during token disperse:', err)

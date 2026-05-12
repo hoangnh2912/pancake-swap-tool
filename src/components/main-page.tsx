@@ -8,6 +8,7 @@ import {
     InputNumber,
     message,
     Table,
+    Tag,
     Tabs,
     Typography,
     Upload,
@@ -26,6 +27,7 @@ import {
 } from '../hooks/zenstack'
 import { useStoreState } from '../redux/hook'
 import { WalletScanner } from '../utils/scanWallet'
+import type { BatchProgress } from '../utils/scanWallet'
 import type { Prisma } from '../../prisma/client'
 import dayjs from 'dayjs'
 import zenStackFunction from '../utils/zenstack-function'
@@ -97,6 +99,7 @@ const MainPage = () => {
     const [rpc, setRpc] = useState<string>('https://bsc.drpc.org')
     const [isTransferring, setIsTransferring] = useState<boolean>(false)
     const [transferProgress, setTransferProgress] = useState<string>('')
+    const [batchLogs, setBatchLogs] = useState<BatchProgress[]>([])
 
     const tabId = useStoreState((state) => state.tabId)
 
@@ -193,6 +196,19 @@ const MainPage = () => {
                                                 tokenAddress: values.tokenAddress,
                                                 privateKey: values.privateKey,
                                                 transferDelayMs: values.transferDelayMs * 60000,
+                                                onBatchProgress(progress) {
+                                                    setBatchLogs((prev) => {
+                                                        const idx = prev.findIndex(
+                                                            (b) => b.batchIndex === progress.batchIndex
+                                                        )
+                                                        if (idx >= 0) {
+                                                            const next = [...prev]
+                                                            next[idx] = progress
+                                                            return next
+                                                        }
+                                                        return [...prev, progress]
+                                                    })
+                                                },
                                                 onScan(fromBlock, toBlock) {
                                                     formScanWallet.setFieldValue(
                                                         'scanningFromBlock',
@@ -439,6 +455,66 @@ const MainPage = () => {
                                             {scanningToBlock}
                                         </Text>
                                     )}
+                                {batchLogs.length > 0 && (
+                                    <div style={{ marginBottom: 12 }}>
+                                        <Typography.Title level={5} style={{ marginBottom: 6 }}>
+                                            Lịch sử batch transfer ({batchLogs.length} batch)
+                                        </Typography.Title>
+                                        <Table
+                                            size="small"
+                                            dataSource={batchLogs}
+                                            rowKey="batchIndex"
+                                            pagination={false}
+                                            columns={[
+                                                {
+                                                    title: 'Batch',
+                                                    width: 80,
+                                                    render: (_, r) =>
+                                                        `${r.batchIndex}/${r.totalBatches}`,
+                                                },
+                                                {
+                                                    title: 'Số ví',
+                                                    dataIndex: 'recipientCount',
+                                                    width: 80,
+                                                },
+                                                {
+                                                    title: 'Trạng thái',
+                                                    width: 120,
+                                                    render: (_, r) => {
+                                                        if (r.status === 'confirmed')
+                                                            return <Tag color="success">Đã xác nhận</Tag>
+                                                        if (r.status === 'sending')
+                                                            return <Tag color="processing">Đang gửi</Tag>
+                                                        return <Tag color="error">Lỗi</Tag>
+                                                    },
+                                                },
+                                                {
+                                                    title: 'TxHash',
+                                                    render: (_, r) =>
+                                                        r.txHash ? (
+                                                            <Typography.Link
+                                                                href={`https://bscscan.com/tx/${r.txHash}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                ellipsis
+                                                                style={{ maxWidth: 300 }}
+                                                            >
+                                                                {r.txHash}
+                                                            </Typography.Link>
+                                                        ) : (
+                                                            <span style={{ color: 'red' }}>{r.error}</span>
+                                                        ),
+                                                },
+                                                {
+                                                    title: 'Thời gian',
+                                                    width: 140,
+                                                    render: (_, r) =>
+                                                        dayjs(r.timestamp).format('HH:mm:ss DD/MM/YYYY'),
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                )}
                                 <Table
                                     size="small"
                                     dataSource={scanWallets}

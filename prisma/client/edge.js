@@ -126,7 +126,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\CODE\\pancake-swap-tool\\prisma\\client",
+      "value": "/Users/hoangnh/Code/pancake-swap-tool/prisma/client",
       "fromEnvVar": null
     },
     "config": {
@@ -135,7 +135,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       },
       {
@@ -152,7 +152,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\CODE\\pancake-swap-tool\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/hoangnh/Code/pancake-swap-tool/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -165,6 +165,7 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {
