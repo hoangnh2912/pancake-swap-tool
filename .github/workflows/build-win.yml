@@ -1,20 +1,16 @@
-name: Build Windows App
+name: Build & Release
 
 on:
   push:
     branches:
       - scan-transfer
-    tags:
-      - 'v*'
-  workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: '20'
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: windows-2025-vs2026
+  build-windows-scan-transfer:
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -23,44 +19,43 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
+          node-version: '20'
+
+      - name: Enable corepack & set yarn version
+        run: |
+          corepack enable
+          yarn --version
+
+      - name: Bump version
+        id: version
+        shell: pwsh
+        run: |
+          $content = Get-Content package.json -Raw
+          $pkg = $content | ConvertFrom-Json
+          $parts = $pkg.version -split '\.'
+          $newVersion = "$($parts[0]).$($parts[1]).${{ github.run_number }}"
+          # Use regex replace to avoid ConvertTo-Json mangling the file
+          $content = $content -replace '"version"\s*:\s*"[^"]*"', """version"": ""$newVersion"""
+          Set-Content package.json $content
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          echo "Bumped version to $newVersion"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
-      - name: Generate Prisma & ZenStack
-        run: yarn generate
-
-      - name: Make Windows app
+      - name: Build & Make (Windows)
         run: yarn make
         env:
           NODE_ENV: production
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: scan-transfer-win-${{ github.ref_name }}
-          path: out/make/**/*
-          if-no-files-found: error
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: scan-transfer-win-${{ github.ref_name }}
-          path: dist/
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/**/*
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release Scan Wallet v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
           generate_release_notes: true
+          files: out/make/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
