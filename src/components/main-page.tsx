@@ -7,6 +7,7 @@ import {
     Input,
     InputNumber,
     message,
+    Progress,
     Table,
     Tag,
     Tabs,
@@ -46,6 +47,7 @@ type ScanWalletForm = {
     tokenAddress: string
     fromAddress: string
     transferDelayMs: number
+    transferBatchSize: number
     amount: string
     metadata?: any
 }
@@ -54,6 +56,7 @@ type MultiTransferForm = {
     privateKey: string
     tokenAddress: string
     fromAddress: string
+    batchSize: number
     recipientList: Array<{ address: string; amount: string }>
     fileList?: UploadFile[]
 }
@@ -98,8 +101,8 @@ const MainPage = () => {
     const [isScanning, setIsScanning] = useState<boolean>()
     const [rpc, setRpc] = useState<string>('https://bsc.drpc.org')
     const [isTransferring, setIsTransferring] = useState<boolean>(false)
-    const [transferProgress, setTransferProgress] = useState<string>('')
     const [batchLogs, setBatchLogs] = useState<BatchProgress[]>([])
+    const [multiTransferBatchLogs, setMultiTransferBatchLogs] = useState<BatchProgress[]>([])
 
     const tabId = useStoreState((state) => state.tabId)
 
@@ -155,7 +158,8 @@ const MainPage = () => {
                                         fromAddress: '',
                                         amount: '0',
                                         tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
-                                        transferDelayMs: 1, // 1 minute
+                                        transferDelayMs: 1,
+                                        transferBatchSize: 300,
                                     }}
                                     onValuesChange={(changedValue) => {
                                         if (changedValue.privateKey) {
@@ -196,6 +200,7 @@ const MainPage = () => {
                                                 tokenAddress: values.tokenAddress,
                                                 privateKey: values.privateKey,
                                                 transferDelayMs: values.transferDelayMs * 60000,
+                                                transferBatchSize: values.transferBatchSize,
                                                 onBatchProgress(progress) {
                                                     setBatchLogs((prev) => {
                                                         const idx = prev.findIndex(
@@ -284,6 +289,12 @@ const MainPage = () => {
                                             min={1}
                                             placeholder="Thời gian chờ giữa các lần chuyển token (phút)"
                                         />
+                                    </Form.Item>
+                                    <Form.Item
+                                        label="Số ví mỗi batch transfer (do gas limit)"
+                                        name="transferBatchSize"
+                                    >
+                                        <InputNumber min={1} max={500} />
                                     </Form.Item>
                                     <Form.Item label="Kích thước quét block" name="blockChunk">
                                         <InputNumber min={1} placeholder="Kích thước quét block" />
@@ -629,6 +640,7 @@ const MainPage = () => {
                                     layout="vertical"
                                     initialValues={{
                                         recipientList: [],
+                                        batchSize: 300,
                                     }}
                                     onValuesChange={(changedValue) => {
                                         if (changedValue.privateKey) {
@@ -694,6 +706,13 @@ const MainPage = () => {
                                         ]}
                                     >
                                         <Input placeholder="Nhập địa chỉ token ERC20" />
+                                    </Form.Item>
+
+                                    <Form.Item
+                                        label="Số ví mỗi batch (do gas limit)"
+                                        name="batchSize"
+                                    >
+                                        <InputNumber min={1} max={500} />
                                     </Form.Item>
 
                                     <Form.Item label="Tải file danh sách địa chỉ và số lượng">
@@ -843,10 +862,85 @@ const MainPage = () => {
                                         </div>
                                     )}
 
-                                    {transferProgress && (
-                                        <Text color="blue.500" fontWeight="bold" mb={2}>
-                                            {transferProgress}
-                                        </Text>
+                                    {multiTransferBatchLogs.length > 0 && (() => {
+                                        const total = multiTransferBatchLogs[0]?.totalBatches ?? multiTransferBatchLogs.length
+                                        const confirmed = multiTransferBatchLogs.filter(b => b.status === 'confirmed').length
+                                        const sending = multiTransferBatchLogs.find(b => b.status === 'sending')
+                                        const percent = Math.round((confirmed / total) * 100)
+                                        return (
+                                            <div style={{ marginBottom: 8, padding: '8px 12px', background: '#f5f5f5', borderRadius: 6 }}>
+                                                <Text fontWeight="bold" fontSize="sm">
+                                                    Tiến độ: Batch {sending?.batchIndex ?? confirmed}/{total}
+                                                    {sending && ` — Đang gửi ${sending.recipientCount} ví`}
+                                                </Text>
+                                                <Progress
+                                                    percent={percent}
+                                                    status={sending ? 'active' : confirmed === total ? 'success' : 'normal'}
+                                                    format={() => `${confirmed}/${total} batch`}
+                                                />
+                                            </div>
+                                        )
+                                    })()}
+
+                                    {multiTransferBatchLogs.length > 0 && (
+                                        <div style={{ marginBottom: 12 }}>
+                                            <Typography.Title level={5} style={{ marginBottom: 6 }}>
+                                                Lịch sử batch transfer ({multiTransferBatchLogs.length} batch)
+                                            </Typography.Title>
+                                            <Table
+                                                size="small"
+                                                dataSource={multiTransferBatchLogs}
+                                                rowKey="batchIndex"
+                                                pagination={false}
+                                                rowClassName={(r) => r.status === 'sending' ? 'ant-table-row-selected' : ''}
+                                                columns={[
+                                                    {
+                                                        title: 'Batch',
+                                                        width: 80,
+                                                        render: (_, r) => `${r.batchIndex}/${r.totalBatches}`,
+                                                    },
+                                                    {
+                                                        title: 'Số ví',
+                                                        dataIndex: 'recipientCount',
+                                                        width: 80,
+                                                    },
+                                                    {
+                                                        title: 'Trạng thái',
+                                                        width: 120,
+                                                        render: (_, r) => {
+                                                            if (r.status === 'confirmed')
+                                                                return <Tag color="success">Đã xác nhận</Tag>
+                                                            if (r.status === 'sending')
+                                                                return <Tag color="processing">Đang gửi</Tag>
+                                                            return <Tag color="error">Lỗi</Tag>
+                                                        },
+                                                    },
+                                                    {
+                                                        title: 'TxHash',
+                                                        render: (_, r) =>
+                                                            r.txHash ? (
+                                                                <Typography.Link
+                                                                    href={`https://bscscan.com/tx/${r.txHash}`}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    ellipsis
+                                                                    style={{ maxWidth: 300 }}
+                                                                >
+                                                                    {r.txHash}
+                                                                </Typography.Link>
+                                                            ) : (
+                                                                <span style={{ color: 'red' }}>{r.error}</span>
+                                                            ),
+                                                    },
+                                                    {
+                                                        title: 'Thời gian',
+                                                        width: 140,
+                                                        render: (_, r) =>
+                                                            dayjs(r.timestamp).format('HH:mm:ss DD/MM/YYYY'),
+                                                    },
+                                                ]}
+                                            />
+                                        </div>
                                     )}
 
                                     <Button
@@ -868,7 +962,7 @@ const MainPage = () => {
                                                 }
 
                                                 setIsTransferring(true)
-                                                setTransferProgress('Đang kết nối...')
+                                                setMultiTransferBatchLogs([])
 
                                                 const provider =
                                                     new ethers.providers.JsonRpcProvider(rpc)
@@ -891,8 +985,6 @@ const MainPage = () => {
                                                     wallet
                                                 )
 
-                                                // Get token decimals
-                                                setTransferProgress('Đang lấy thông tin token...')
                                                 const decimals = await tokenContract.decimals()
 
                                                 // Prepare recipients and amounts
@@ -909,8 +1001,6 @@ const MainPage = () => {
                                                     ethers.BigNumber.from(0)
                                                 )
 
-                                                // Check current allowance
-                                                setTransferProgress('Đang kiểm tra allowance...')
                                                 const currentAllowance =
                                                     await tokenContract.allowance(
                                                         wallet.address,
@@ -919,9 +1009,6 @@ const MainPage = () => {
 
                                                 // Approve if needed
                                                 if (currentAllowance.lt(totalAmount)) {
-                                                    setTransferProgress(
-                                                        'Đang approve token cho Disperse contract...'
-                                                    )
                                                     const approveTx = await tokenContract.approve(
                                                         disperseAddress,
                                                         ethers.constants.MaxUint256,
@@ -934,29 +1021,72 @@ const MainPage = () => {
                                                 }
 
                                                 // Execute batch transfer
-                                                setTransferProgress(
-                                                    `Đang chuyển token cho ${recipients.length} địa chỉ...`
-                                                )
-                                                const disperseTx =
-                                                    await disperseContract.disperseTokenSimple(
-                                                        values.tokenAddress,
-                                                        recipients,
-                                                        amounts,
-                                                        {
-                                                            gasPrice: 50000000,
+                                                const BATCH_SIZE = values.batchSize ?? 300
+                                                const batches: Array<{ recipients: string[]; amounts: any[] }> = []
+                                                for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+                                                    batches.push({
+                                                        recipients: recipients.slice(i, i + BATCH_SIZE),
+                                                        amounts: amounts.slice(i, i + BATCH_SIZE),
+                                                    })
+                                                }
+
+                                                for (let i = 0; i < batches.length; i++) {
+                                                    const batch = batches[i]
+                                                    let batchTx: any
+                                                    try {
+                                                        batchTx = await disperseContract.disperseTokenSimple(
+                                                            values.tokenAddress,
+                                                            batch.recipients,
+                                                            batch.amounts,
+                                                            { gasPrice: 50000000 }
+                                                        )
+                                                    } catch (err: any) {
+                                                        setMultiTransferBatchLogs((prev) => [...prev, {
+                                                            batchIndex: i + 1,
+                                                            totalBatches: batches.length,
+                                                            recipientCount: batch.recipients.length,
+                                                            status: 'error',
+                                                            error: err?.message || 'Unknown error',
+                                                            timestamp: Date.now(),
+                                                        }])
+                                                        throw err
+                                                    }
+                                                    setMultiTransferBatchLogs((prev) => {
+                                                        const next = [...prev]
+                                                        const idx = next.findIndex((b) => b.batchIndex === i + 1)
+                                                        const entry: BatchProgress = {
+                                                            batchIndex: i + 1,
+                                                            totalBatches: batches.length,
+                                                            recipientCount: batch.recipients.length,
+                                                            status: 'sending',
+                                                            txHash: batchTx.hash,
+                                                            timestamp: Date.now(),
                                                         }
+                                                        if (idx >= 0) { next[idx] = entry; return next }
+                                                        return [...next, entry]
+                                                    })
+                                                    await batchTx.wait()
+                                                    setMultiTransferBatchLogs((prev) => {
+                                                        const next = [...prev]
+                                                        const idx = next.findIndex((b) => b.batchIndex === i + 1)
+                                                        const entry: BatchProgress = {
+                                                            batchIndex: i + 1,
+                                                            totalBatches: batches.length,
+                                                            recipientCount: batch.recipients.length,
+                                                            status: 'confirmed',
+                                                            txHash: batchTx.hash,
+                                                            timestamp: Date.now(),
+                                                        }
+                                                        if (idx >= 0) { next[idx] = entry; return next }
+                                                        return [...next, entry]
+                                                    })
+                                                    message.success(
+                                                        `Batch ${i + 1}/${batches.length} — Đã xác nhận: ${batchTx.hash}`
                                                     )
+                                                }
 
-                                                setTransferProgress(
-                                                    'Đang chờ xác nhận transaction...'
-                                                )
-                                                const receipt = await disperseTx.wait()
-
-                                                setTransferProgress(
-                                                    `Hoàn thành chuyển token cho ${recipients.length} địa chỉ`
-                                                )
                                                 message.success(
-                                                    `Đã chuyển thành công token cho ${recipients.length} địa chỉ! TxHash: ${receipt.transactionHash}`
+                                                    `Đã chuyển thành công token cho ${recipients.length} địa chỉ trong ${batches.length} batch`
                                                 )
                                             } catch (error: any) {
                                                 console.error('Transfer error:', error)

@@ -26,6 +26,7 @@ type ScanParams = {
     tokenAddress: string
     amount: string
     transferDelayMs: number
+    transferBatchSize?: number
 }
 
 type TokenTransfer = {
@@ -62,7 +63,8 @@ export class WalletScanner {
     private tokenContract: ethers.Contract
     private tokenDecimals: number
     private amount: string
-    private transferDelayMs = 1 * 1000 * 60 // 1 phút
+    private transferDelayMs = 1 * 1000 * 60
+    private transferBatchSize = 300
 
     // Local variables to store scan results
     private tokenTransfers: TokenTransfer[] = []
@@ -99,6 +101,7 @@ export class WalletScanner {
         this.onScan = params.onScan
         this.onBatchProgress = params.onBatchProgress
         this.transferDelayMs = params.transferDelayMs
+        this.transferBatchSize = params.transferBatchSize ?? 300
         this.currentBlock = params.fromBlock ?? 0
         this.onSave = params.onSave
         message.success('Cấu hình scanner đã được lưu')
@@ -269,7 +272,7 @@ export class WalletScanner {
             },
         })
 
-        const BATCH_SIZE = 300
+        const BATCH_SIZE = this.transferBatchSize
         const allRecipients = [...new Set(
             data.map(item => item.destination).filter((d): d is string => d !== null)
         )]
