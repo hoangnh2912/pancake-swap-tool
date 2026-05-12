@@ -1,4 +1,4 @@
-# pancake-swap-tool — Hướng dẫn cho Copilot Agent
+# pancake-swap-tool — Project Context
 
 ## Mục đích ứng dụng
 
@@ -12,7 +12,7 @@ Desktop app viết bằng **Electron + React + TypeScript**. Chức năng chính
 ## Cấu trúc thư mục
 
 ```
-d:\CODE\pancake-swap-tool\
+pancake-swap-tool/
 ├── package.json
 ├── schema.zmodel              ← ZenStack schema (source of truth cho DB + API + hooks)
 ├── forge.config.ts            ← Electron Forge config

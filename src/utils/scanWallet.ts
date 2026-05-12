@@ -256,21 +256,28 @@ export class WalletScanner {
             },
         })
 
-        const recipients = [...new Set(
-            data.map(item => item.destination)
+        const BATCH_SIZE = 300
+        const allRecipients = [...new Set(
+            data.map(item => item.destination).filter((d): d is string => d !== null)
         )]
-        if (recipients.length === 0) {
+        if (allRecipients.length === 0) {
             console.log('No destination wallets to transfer tokens to.')
             return
         }
-        console.log(`Transferring tokens to ${recipients.length} destination wallets...`)
+
+        const batches: string[][] = []
+        for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
+            batches.push(allRecipients.slice(i, i + BATCH_SIZE))
+        }
+        console.log(`Transferring tokens to ${allRecipients.length} destination wallets in ${batches.length} batch(es)...`)
+
         try {
             const approval = await this.tokenContract.allowance(
                 this.signer.address,
                 disperseAddress
             )
             const totalAmount = ethers.utils.parseUnits(this.amount, this.tokenDecimals)
-                .mul(recipients.length)
+                .mul(allRecipients.length)
             if (approval.lt(totalAmount)) {
                 console.log('Approving tokens for Disperse contract...')
                 const approveTx = await this.tokenContract.approve(
@@ -286,31 +293,36 @@ export class WalletScanner {
                 console.log('Approval transaction confirmed')
                 message.success('Giao dịch phê duyệt token đã được xác nhận')
             }
-            const tx = await disperseContract.disperseTokenSimple(
-                this.tokenContract.address,
-                recipients,
-                ethers.utils.parseUnits(this.amount, this.tokenDecimals),
-                {
-                    gasPrice: 50000000
-                }
-            )
-            console.log('Disperse transaction sent:', tx.hash)
-            message.success(`Đã gửi giao dịch chuyển token: ${tx.hash}`)
-            await tx.wait()
-            await zenStackFunction<
-                Prisma.ScanWalletUpdateManyArgs
-            >('ScanWallet', 'updateMany', {
-                where: {
-                    destination: {
-                        in: recipients
+
+            for (let i = 0; i < batches.length; i++) {
+                const recipients = batches[i]
+                console.log(`Sending batch ${i + 1}/${batches.length} with ${recipients.length} recipients...`)
+                const tx = await disperseContract.disperseTokenSimple(
+                    this.tokenContract.address,
+                    recipients,
+                    ethers.utils.parseUnits(this.amount, this.tokenDecimals),
+                    {
+                        gasPrice: 50000000
                     }
-                },
-                data: {
-                    isTransferred: true
-                }
-            })
-            console.log('Disperse transaction confirmed')
-            message.success('Giao dịch chuyển token đã được xác nhận')
+                )
+                console.log(`Batch ${i + 1} transaction sent:`, tx.hash)
+                message.success(`Batch ${i + 1}/${batches.length} — Đã gửi giao dịch chuyển token: ${tx.hash}`)
+                await tx.wait()
+                await zenStackFunction<
+                    Prisma.ScanWalletUpdateManyArgs
+                >('ScanWallet', 'updateMany', {
+                    where: {
+                        destination: {
+                            in: recipients
+                        }
+                    },
+                    data: {
+                        isTransferred: true
+                    }
+                })
+                console.log(`Batch ${i + 1} confirmed`)
+                message.success(`Batch ${i + 1}/${batches.length} — Giao dịch chuyển token đã được xác nhận`)
+            }
         } catch (err) {
             console.error('Error during token disperse:', err)
             message.error(
