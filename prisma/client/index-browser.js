@@ -118,15 +118,16 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.ScanWalletScalarFieldEnum = {
+exports.Prisma.ConfigScalarFieldEnum = {
   id: 'id',
-  wallet: 'wallet',
-  tx: 'tx',
-  token: 'token',
-  destination: 'destination',
-  amount: 'amount',
-  isTransferred: 'isTransferred',
-  createdAt: 'createdAt'
+  rpc: 'rpc',
+  chainId: 'chainId',
+  mainKey: 'mainKey',
+  swapKey: 'swapKey',
+  mintKey: 'mintKey',
+  contractCode: 'contractCode',
+  tokensJson: 'tokensJson',
+  solcVersion: 'solcVersion'
 };
 
 exports.Prisma.SortOrder = {
@@ -134,14 +135,9 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
 
 exports.Prisma.ModelName = {
-  ScanWallet: 'ScanWallet'
+  Config: 'Config'
 };
 
 /**

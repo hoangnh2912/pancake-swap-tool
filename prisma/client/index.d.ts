@@ -14,10 +14,10 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
- * Model ScanWallet
+ * Model Config
  * 
  */
-export type ScanWallet = $Result.DefaultSelection<Prisma.$ScanWalletPayload>
+export type Config = $Result.DefaultSelection<Prisma.$ConfigPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -26,8 +26,8 @@ export type ScanWallet = $Result.DefaultSelection<Prisma.$ScanWalletPayload>
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more ScanWallets
- * const scanWallets = await prisma.scanWallet.findMany()
+ * // Fetch zero or more Configs
+ * const configs = await prisma.config.findMany()
  * ```
  *
  *
@@ -47,8 +47,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more ScanWallets
-   * const scanWallets = await prisma.scanWallet.findMany()
+   * // Fetch zero or more Configs
+   * const configs = await prisma.config.findMany()
    * ```
    *
    *
@@ -138,14 +138,14 @@ export class PrismaClient<
   }>>
 
       /**
-   * `prisma.scanWallet`: Exposes CRUD operations for the **ScanWallet** model.
+   * `prisma.config`: Exposes CRUD operations for the **Config** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ScanWallets
-    * const scanWallets = await prisma.scanWallet.findMany()
+    * // Fetch zero or more Configs
+    * const configs = await prisma.config.findMany()
     * ```
     */
-  get scanWallet(): Prisma.ScanWalletDelegate<ExtArgs, ClientOptions>;
+  get config(): Prisma.ConfigDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -587,7 +587,7 @@ export namespace Prisma {
 
 
   export const ModelName: {
-    ScanWallet: 'ScanWallet'
+    Config: 'Config'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -606,81 +606,81 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "scanWallet"
+      modelProps: "config"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
-      ScanWallet: {
-        payload: Prisma.$ScanWalletPayload<ExtArgs>
-        fields: Prisma.ScanWalletFieldRefs
+      Config: {
+        payload: Prisma.$ConfigPayload<ExtArgs>
+        fields: Prisma.ConfigFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ScanWalletFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload> | null
+            args: Prisma.ConfigFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ScanWalletFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           findFirst: {
-            args: Prisma.ScanWalletFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload> | null
+            args: Prisma.ConfigFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ScanWalletFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           findMany: {
-            args: Prisma.ScanWalletFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
+            args: Prisma.ConfigFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>[]
           }
           create: {
-            args: Prisma.ScanWalletCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           createMany: {
-            args: Prisma.ScanWalletCreateManyArgs<ExtArgs>
+            args: Prisma.ConfigCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ScanWalletCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
+            args: Prisma.ConfigCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>[]
           }
           delete: {
-            args: Prisma.ScanWalletDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           update: {
-            args: Prisma.ScanWalletUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           deleteMany: {
-            args: Prisma.ScanWalletDeleteManyArgs<ExtArgs>
+            args: Prisma.ConfigDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ScanWalletUpdateManyArgs<ExtArgs>
+            args: Prisma.ConfigUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.ScanWalletUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>[]
+            args: Prisma.ConfigUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>[]
           }
           upsert: {
-            args: Prisma.ScanWalletUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScanWalletPayload>
+            args: Prisma.ConfigUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConfigPayload>
           }
           aggregate: {
-            args: Prisma.ScanWalletAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScanWallet>
+            args: Prisma.ConfigAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateConfig>
           }
           groupBy: {
-            args: Prisma.ScanWalletGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScanWalletGroupByOutputType>[]
+            args: Prisma.ConfigGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ConfigGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ScanWalletCountArgs<ExtArgs>
-            result: $Utils.Optional<ScanWalletCountAggregateOutputType> | number
+            args: Prisma.ConfigCountArgs<ExtArgs>
+            result: $Utils.Optional<ConfigCountAggregateOutputType> | number
           }
         }
       }
@@ -780,7 +780,7 @@ export namespace Prisma {
     omit?: Prisma.GlobalOmitConfig
   }
   export type GlobalOmitConfig = {
-    scanWallet?: ScanWalletOmit
+    config?: ConfigOmit
   }
 
   /* Types for Logging */
@@ -862,372 +862,384 @@ export namespace Prisma {
    */
 
   /**
-   * Model ScanWallet
+   * Model Config
    */
 
-  export type AggregateScanWallet = {
-    _count: ScanWalletCountAggregateOutputType | null
-    _min: ScanWalletMinAggregateOutputType | null
-    _max: ScanWalletMaxAggregateOutputType | null
+  export type AggregateConfig = {
+    _count: ConfigCountAggregateOutputType | null
+    _min: ConfigMinAggregateOutputType | null
+    _max: ConfigMaxAggregateOutputType | null
   }
 
-  export type ScanWalletMinAggregateOutputType = {
+  export type ConfigMinAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    tx: string | null
-    token: string | null
-    destination: string | null
-    amount: string | null
-    isTransferred: boolean | null
-    createdAt: Date | null
+    rpc: string | null
+    chainId: string | null
+    mainKey: string | null
+    swapKey: string | null
+    mintKey: string | null
+    contractCode: string | null
+    tokensJson: string | null
+    solcVersion: string | null
   }
 
-  export type ScanWalletMaxAggregateOutputType = {
+  export type ConfigMaxAggregateOutputType = {
     id: string | null
-    wallet: string | null
-    tx: string | null
-    token: string | null
-    destination: string | null
-    amount: string | null
-    isTransferred: boolean | null
-    createdAt: Date | null
+    rpc: string | null
+    chainId: string | null
+    mainKey: string | null
+    swapKey: string | null
+    mintKey: string | null
+    contractCode: string | null
+    tokensJson: string | null
+    solcVersion: string | null
   }
 
-  export type ScanWalletCountAggregateOutputType = {
+  export type ConfigCountAggregateOutputType = {
     id: number
-    wallet: number
-    tx: number
-    token: number
-    destination: number
-    amount: number
-    isTransferred: number
-    createdAt: number
+    rpc: number
+    chainId: number
+    mainKey: number
+    swapKey: number
+    mintKey: number
+    contractCode: number
+    tokensJson: number
+    solcVersion: number
     _all: number
   }
 
 
-  export type ScanWalletMinAggregateInputType = {
+  export type ConfigMinAggregateInputType = {
     id?: true
-    wallet?: true
-    tx?: true
-    token?: true
-    destination?: true
-    amount?: true
-    isTransferred?: true
-    createdAt?: true
+    rpc?: true
+    chainId?: true
+    mainKey?: true
+    swapKey?: true
+    mintKey?: true
+    contractCode?: true
+    tokensJson?: true
+    solcVersion?: true
   }
 
-  export type ScanWalletMaxAggregateInputType = {
+  export type ConfigMaxAggregateInputType = {
     id?: true
-    wallet?: true
-    tx?: true
-    token?: true
-    destination?: true
-    amount?: true
-    isTransferred?: true
-    createdAt?: true
+    rpc?: true
+    chainId?: true
+    mainKey?: true
+    swapKey?: true
+    mintKey?: true
+    contractCode?: true
+    tokensJson?: true
+    solcVersion?: true
   }
 
-  export type ScanWalletCountAggregateInputType = {
+  export type ConfigCountAggregateInputType = {
     id?: true
-    wallet?: true
-    tx?: true
-    token?: true
-    destination?: true
-    amount?: true
-    isTransferred?: true
-    createdAt?: true
+    rpc?: true
+    chainId?: true
+    mainKey?: true
+    swapKey?: true
+    mintKey?: true
+    contractCode?: true
+    tokensJson?: true
+    solcVersion?: true
     _all?: true
   }
 
-  export type ScanWalletAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanWallet to aggregate.
+     * Filter which Config to aggregate.
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanWallets to fetch.
+     * Determine the order of Configs to fetch.
      */
-    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
+    orderBy?: ConfigOrderByWithRelationInput | ConfigOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ScanWalletWhereUniqueInput
+    cursor?: ConfigWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanWallets from the position of the cursor.
+     * Take `±n` Configs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanWallets.
+     * Skip the first `n` Configs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ScanWallets
+     * Count returned Configs
     **/
-    _count?: true | ScanWalletCountAggregateInputType
+    _count?: true | ConfigCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ScanWalletMinAggregateInputType
+    _min?: ConfigMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ScanWalletMaxAggregateInputType
+    _max?: ConfigMaxAggregateInputType
   }
 
-  export type GetScanWalletAggregateType<T extends ScanWalletAggregateArgs> = {
-        [P in keyof T & keyof AggregateScanWallet]: P extends '_count' | 'count'
+  export type GetConfigAggregateType<T extends ConfigAggregateArgs> = {
+        [P in keyof T & keyof AggregateConfig]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateScanWallet[P]>
-      : GetScalarType<T[P], AggregateScanWallet[P]>
+        : GetScalarType<T[P], AggregateConfig[P]>
+      : GetScalarType<T[P], AggregateConfig[P]>
   }
 
 
 
 
-  export type ScanWalletGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScanWalletWhereInput
-    orderBy?: ScanWalletOrderByWithAggregationInput | ScanWalletOrderByWithAggregationInput[]
-    by: ScanWalletScalarFieldEnum[] | ScanWalletScalarFieldEnum
-    having?: ScanWalletScalarWhereWithAggregatesInput
+  export type ConfigGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConfigWhereInput
+    orderBy?: ConfigOrderByWithAggregationInput | ConfigOrderByWithAggregationInput[]
+    by: ConfigScalarFieldEnum[] | ConfigScalarFieldEnum
+    having?: ConfigScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ScanWalletCountAggregateInputType | true
-    _min?: ScanWalletMinAggregateInputType
-    _max?: ScanWalletMaxAggregateInputType
+    _count?: ConfigCountAggregateInputType | true
+    _min?: ConfigMinAggregateInputType
+    _max?: ConfigMaxAggregateInputType
   }
 
-  export type ScanWalletGroupByOutputType = {
+  export type ConfigGroupByOutputType = {
     id: string
-    wallet: string
-    tx: string
-    token: string | null
-    destination: string | null
-    amount: string | null
-    isTransferred: boolean
-    createdAt: Date
-    _count: ScanWalletCountAggregateOutputType | null
-    _min: ScanWalletMinAggregateOutputType | null
-    _max: ScanWalletMaxAggregateOutputType | null
+    rpc: string
+    chainId: string
+    mainKey: string
+    swapKey: string
+    mintKey: string
+    contractCode: string
+    tokensJson: string
+    solcVersion: string
+    _count: ConfigCountAggregateOutputType | null
+    _min: ConfigMinAggregateOutputType | null
+    _max: ConfigMaxAggregateOutputType | null
   }
 
-  type GetScanWalletGroupByPayload<T extends ScanWalletGroupByArgs> = Prisma.PrismaPromise<
+  type GetConfigGroupByPayload<T extends ConfigGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ScanWalletGroupByOutputType, T['by']> &
+      PickEnumerable<ConfigGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ScanWalletGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof ConfigGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ScanWalletGroupByOutputType[P]>
-            : GetScalarType<T[P], ScanWalletGroupByOutputType[P]>
+              : GetScalarType<T[P], ConfigGroupByOutputType[P]>
+            : GetScalarType<T[P], ConfigGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ScanWalletSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ConfigSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    tx?: boolean
-    token?: boolean
-    destination?: boolean
-    amount?: boolean
-    isTransferred?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanWallet"]>
+    rpc?: boolean
+    chainId?: boolean
+    mainKey?: boolean
+    swapKey?: boolean
+    mintKey?: boolean
+    contractCode?: boolean
+    tokensJson?: boolean
+    solcVersion?: boolean
+  }, ExtArgs["result"]["config"]>
 
-  export type ScanWalletSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    tx?: boolean
-    token?: boolean
-    destination?: boolean
-    amount?: boolean
-    isTransferred?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanWallet"]>
+    rpc?: boolean
+    chainId?: boolean
+    mainKey?: boolean
+    swapKey?: boolean
+    mintKey?: boolean
+    contractCode?: boolean
+    tokensJson?: boolean
+    solcVersion?: boolean
+  }, ExtArgs["result"]["config"]>
 
-  export type ScanWalletSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    wallet?: boolean
-    tx?: boolean
-    token?: boolean
-    destination?: boolean
-    amount?: boolean
-    isTransferred?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["scanWallet"]>
+    rpc?: boolean
+    chainId?: boolean
+    mainKey?: boolean
+    swapKey?: boolean
+    mintKey?: boolean
+    contractCode?: boolean
+    tokensJson?: boolean
+    solcVersion?: boolean
+  }, ExtArgs["result"]["config"]>
 
-  export type ScanWalletSelectScalar = {
+  export type ConfigSelectScalar = {
     id?: boolean
-    wallet?: boolean
-    tx?: boolean
-    token?: boolean
-    destination?: boolean
-    amount?: boolean
-    isTransferred?: boolean
-    createdAt?: boolean
+    rpc?: boolean
+    chainId?: boolean
+    mainKey?: boolean
+    swapKey?: boolean
+    mintKey?: boolean
+    contractCode?: boolean
+    tokensJson?: boolean
+    solcVersion?: boolean
   }
 
-  export type ScanWalletOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "wallet" | "tx" | "token" | "destination" | "amount" | "isTransferred" | "createdAt", ExtArgs["result"]["scanWallet"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion", ExtArgs["result"]["config"]>
 
-  export type $ScanWalletPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScanWallet"
+  export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Config"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      wallet: string
-      tx: string
-      token: string | null
-      destination: string | null
-      amount: string | null
-      isTransferred: boolean
-      createdAt: Date
-    }, ExtArgs["result"]["scanWallet"]>
+      rpc: string
+      chainId: string
+      mainKey: string
+      swapKey: string
+      mintKey: string
+      contractCode: string
+      tokensJson: string
+      solcVersion: string
+    }, ExtArgs["result"]["config"]>
     composites: {}
   }
 
-  type ScanWalletGetPayload<S extends boolean | null | undefined | ScanWalletDefaultArgs> = $Result.GetResult<Prisma.$ScanWalletPayload, S>
+  type ConfigGetPayload<S extends boolean | null | undefined | ConfigDefaultArgs> = $Result.GetResult<Prisma.$ConfigPayload, S>
 
-  type ScanWalletCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ScanWalletFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ScanWalletCountAggregateInputType | true
+  type ConfigCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ConfigFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ConfigCountAggregateInputType | true
     }
 
-  export interface ScanWalletDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScanWallet'], meta: { name: 'ScanWallet' } }
+  export interface ConfigDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Config'], meta: { name: 'Config' } }
     /**
-     * Find zero or one ScanWallet that matches the filter.
-     * @param {ScanWalletFindUniqueArgs} args - Arguments to find a ScanWallet
+     * Find zero or one Config that matches the filter.
+     * @param {ConfigFindUniqueArgs} args - Arguments to find a Config
      * @example
-     * // Get one ScanWallet
-     * const scanWallet = await prisma.scanWallet.findUnique({
+     * // Get one Config
+     * const config = await prisma.config.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ScanWalletFindUniqueArgs>(args: SelectSubset<T, ScanWalletFindUniqueArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends ConfigFindUniqueArgs>(args: SelectSubset<T, ConfigFindUniqueArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one ScanWallet that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Config that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {ScanWalletFindUniqueOrThrowArgs} args - Arguments to find a ScanWallet
+     * @param {ConfigFindUniqueOrThrowArgs} args - Arguments to find a Config
      * @example
-     * // Get one ScanWallet
-     * const scanWallet = await prisma.scanWallet.findUniqueOrThrow({
+     * // Get one Config
+     * const config = await prisma.config.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ScanWalletFindUniqueOrThrowArgs>(args: SelectSubset<T, ScanWalletFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends ConfigFindUniqueOrThrowArgs>(args: SelectSubset<T, ConfigFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanWallet that matches the filter.
+     * Find the first Config that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletFindFirstArgs} args - Arguments to find a ScanWallet
+     * @param {ConfigFindFirstArgs} args - Arguments to find a Config
      * @example
-     * // Get one ScanWallet
-     * const scanWallet = await prisma.scanWallet.findFirst({
+     * // Get one Config
+     * const config = await prisma.config.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ScanWalletFindFirstArgs>(args?: SelectSubset<T, ScanWalletFindFirstArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends ConfigFindFirstArgs>(args?: SelectSubset<T, ConfigFindFirstArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first ScanWallet that matches the filter or
+     * Find the first Config that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletFindFirstOrThrowArgs} args - Arguments to find a ScanWallet
+     * @param {ConfigFindFirstOrThrowArgs} args - Arguments to find a Config
      * @example
-     * // Get one ScanWallet
-     * const scanWallet = await prisma.scanWallet.findFirstOrThrow({
+     * // Get one Config
+     * const config = await prisma.config.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ScanWalletFindFirstOrThrowArgs>(args?: SelectSubset<T, ScanWalletFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends ConfigFindFirstOrThrowArgs>(args?: SelectSubset<T, ConfigFindFirstOrThrowArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more ScanWallets that matches the filter.
+     * Find zero or more Configs that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {ConfigFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ScanWallets
-     * const scanWallets = await prisma.scanWallet.findMany()
+     * // Get all Configs
+     * const configs = await prisma.config.findMany()
      * 
-     * // Get first 10 ScanWallets
-     * const scanWallets = await prisma.scanWallet.findMany({ take: 10 })
+     * // Get first 10 Configs
+     * const configs = await prisma.config.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const scanWalletWithIdOnly = await prisma.scanWallet.findMany({ select: { id: true } })
+     * const configWithIdOnly = await prisma.config.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ScanWalletFindManyArgs>(args?: SelectSubset<T, ScanWalletFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends ConfigFindManyArgs>(args?: SelectSubset<T, ConfigFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a ScanWallet.
-     * @param {ScanWalletCreateArgs} args - Arguments to create a ScanWallet.
+     * Create a Config.
+     * @param {ConfigCreateArgs} args - Arguments to create a Config.
      * @example
-     * // Create one ScanWallet
-     * const ScanWallet = await prisma.scanWallet.create({
+     * // Create one Config
+     * const Config = await prisma.config.create({
      *   data: {
-     *     // ... data to create a ScanWallet
+     *     // ... data to create a Config
      *   }
      * })
      * 
      */
-    create<T extends ScanWalletCreateArgs>(args: SelectSubset<T, ScanWalletCreateArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends ConfigCreateArgs>(args: SelectSubset<T, ConfigCreateArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many ScanWallets.
-     * @param {ScanWalletCreateManyArgs} args - Arguments to create many ScanWallets.
+     * Create many Configs.
+     * @param {ConfigCreateManyArgs} args - Arguments to create many Configs.
      * @example
-     * // Create many ScanWallets
-     * const scanWallet = await prisma.scanWallet.createMany({
+     * // Create many Configs
+     * const config = await prisma.config.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ScanWalletCreateManyArgs>(args?: SelectSubset<T, ScanWalletCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends ConfigCreateManyArgs>(args?: SelectSubset<T, ConfigCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ScanWallets and returns the data saved in the database.
-     * @param {ScanWalletCreateManyAndReturnArgs} args - Arguments to create many ScanWallets.
+     * Create many Configs and returns the data saved in the database.
+     * @param {ConfigCreateManyAndReturnArgs} args - Arguments to create many Configs.
      * @example
-     * // Create many ScanWallets
-     * const scanWallet = await prisma.scanWallet.createManyAndReturn({
+     * // Create many Configs
+     * const config = await prisma.config.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ScanWallets and only return the `id`
-     * const scanWalletWithIdOnly = await prisma.scanWallet.createManyAndReturn({
+     * // Create many Configs and only return the `id`
+     * const configWithIdOnly = await prisma.config.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -1237,28 +1249,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ScanWalletCreateManyAndReturnArgs>(args?: SelectSubset<T, ScanWalletCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends ConfigCreateManyAndReturnArgs>(args?: SelectSubset<T, ConfigCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a ScanWallet.
-     * @param {ScanWalletDeleteArgs} args - Arguments to delete one ScanWallet.
+     * Delete a Config.
+     * @param {ConfigDeleteArgs} args - Arguments to delete one Config.
      * @example
-     * // Delete one ScanWallet
-     * const ScanWallet = await prisma.scanWallet.delete({
+     * // Delete one Config
+     * const Config = await prisma.config.delete({
      *   where: {
-     *     // ... filter to delete one ScanWallet
+     *     // ... filter to delete one Config
      *   }
      * })
      * 
      */
-    delete<T extends ScanWalletDeleteArgs>(args: SelectSubset<T, ScanWalletDeleteArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends ConfigDeleteArgs>(args: SelectSubset<T, ConfigDeleteArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one ScanWallet.
-     * @param {ScanWalletUpdateArgs} args - Arguments to update one ScanWallet.
+     * Update one Config.
+     * @param {ConfigUpdateArgs} args - Arguments to update one Config.
      * @example
-     * // Update one ScanWallet
-     * const scanWallet = await prisma.scanWallet.update({
+     * // Update one Config
+     * const config = await prisma.config.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1268,30 +1280,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ScanWalletUpdateArgs>(args: SelectSubset<T, ScanWalletUpdateArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends ConfigUpdateArgs>(args: SelectSubset<T, ConfigUpdateArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more ScanWallets.
-     * @param {ScanWalletDeleteManyArgs} args - Arguments to filter ScanWallets to delete.
+     * Delete zero or more Configs.
+     * @param {ConfigDeleteManyArgs} args - Arguments to filter Configs to delete.
      * @example
-     * // Delete a few ScanWallets
-     * const { count } = await prisma.scanWallet.deleteMany({
+     * // Delete a few Configs
+     * const { count } = await prisma.config.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ScanWalletDeleteManyArgs>(args?: SelectSubset<T, ScanWalletDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends ConfigDeleteManyArgs>(args?: SelectSubset<T, ConfigDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanWallets.
+     * Update zero or more Configs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {ConfigUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ScanWallets
-     * const scanWallet = await prisma.scanWallet.updateMany({
+     * // Update many Configs
+     * const config = await prisma.config.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1301,14 +1313,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ScanWalletUpdateManyArgs>(args: SelectSubset<T, ScanWalletUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends ConfigUpdateManyArgs>(args: SelectSubset<T, ConfigUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScanWallets and returns the data updated in the database.
-     * @param {ScanWalletUpdateManyAndReturnArgs} args - Arguments to update many ScanWallets.
+     * Update zero or more Configs and returns the data updated in the database.
+     * @param {ConfigUpdateManyAndReturnArgs} args - Arguments to update many Configs.
      * @example
-     * // Update many ScanWallets
-     * const scanWallet = await prisma.scanWallet.updateManyAndReturn({
+     * // Update many Configs
+     * const config = await prisma.config.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -1317,8 +1329,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more ScanWallets and only return the `id`
-     * const scanWalletWithIdOnly = await prisma.scanWallet.updateManyAndReturn({
+     * // Update zero or more Configs and only return the `id`
+     * const configWithIdOnly = await prisma.config.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -1331,56 +1343,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends ScanWalletUpdateManyAndReturnArgs>(args: SelectSubset<T, ScanWalletUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends ConfigUpdateManyAndReturnArgs>(args: SelectSubset<T, ConfigUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one ScanWallet.
-     * @param {ScanWalletUpsertArgs} args - Arguments to update or create a ScanWallet.
+     * Create or update one Config.
+     * @param {ConfigUpsertArgs} args - Arguments to update or create a Config.
      * @example
-     * // Update or create a ScanWallet
-     * const scanWallet = await prisma.scanWallet.upsert({
+     * // Update or create a Config
+     * const config = await prisma.config.upsert({
      *   create: {
-     *     // ... data to create a ScanWallet
+     *     // ... data to create a Config
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ScanWallet we want to update
+     *     // ... the filter for the Config we want to update
      *   }
      * })
      */
-    upsert<T extends ScanWalletUpsertArgs>(args: SelectSubset<T, ScanWalletUpsertArgs<ExtArgs>>): Prisma__ScanWalletClient<$Result.GetResult<Prisma.$ScanWalletPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends ConfigUpsertArgs>(args: SelectSubset<T, ConfigUpsertArgs<ExtArgs>>): Prisma__ConfigClient<$Result.GetResult<Prisma.$ConfigPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of ScanWallets.
+     * Count the number of Configs.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletCountArgs} args - Arguments to filter ScanWallets to count.
+     * @param {ConfigCountArgs} args - Arguments to filter Configs to count.
      * @example
-     * // Count the number of ScanWallets
-     * const count = await prisma.scanWallet.count({
+     * // Count the number of Configs
+     * const count = await prisma.config.count({
      *   where: {
-     *     // ... the filter for the ScanWallets we want to count
+     *     // ... the filter for the Configs we want to count
      *   }
      * })
     **/
-    count<T extends ScanWalletCountArgs>(
-      args?: Subset<T, ScanWalletCountArgs>,
+    count<T extends ConfigCountArgs>(
+      args?: Subset<T, ConfigCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ScanWalletCountAggregateOutputType>
+          : GetScalarType<T['select'], ConfigCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ScanWallet.
+     * Allows you to perform aggregations operations on a Config.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {ConfigAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -1400,13 +1412,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ScanWalletAggregateArgs>(args: Subset<T, ScanWalletAggregateArgs>): Prisma.PrismaPromise<GetScanWalletAggregateType<T>>
+    aggregate<T extends ConfigAggregateArgs>(args: Subset<T, ConfigAggregateArgs>): Prisma.PrismaPromise<GetConfigAggregateType<T>>
 
     /**
-     * Group by ScanWallet.
+     * Group by Config.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScanWalletGroupByArgs} args - Group by arguments.
+     * @param {ConfigGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -1421,14 +1433,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ScanWalletGroupByArgs,
+      T extends ConfigGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScanWalletGroupByArgs['orderBy'] }
-        : { orderBy?: ScanWalletGroupByArgs['orderBy'] },
+        ? { orderBy: ConfigGroupByArgs['orderBy'] }
+        : { orderBy?: ConfigGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -1477,20 +1489,20 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ScanWalletGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScanWalletGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, ConfigGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetConfigGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ScanWallet model
+   * Fields of the Config model
    */
-  readonly fields: ScanWalletFieldRefs;
+  readonly fields: ConfigFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ScanWallet.
+   * The delegate class that acts as a "Promise-like" for Config.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ScanWalletClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__ConfigClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1518,378 +1530,379 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ScanWallet model
+   * Fields of the Config model
    */
-  interface ScanWalletFieldRefs {
-    readonly id: FieldRef<"ScanWallet", 'String'>
-    readonly wallet: FieldRef<"ScanWallet", 'String'>
-    readonly tx: FieldRef<"ScanWallet", 'String'>
-    readonly token: FieldRef<"ScanWallet", 'String'>
-    readonly destination: FieldRef<"ScanWallet", 'String'>
-    readonly amount: FieldRef<"ScanWallet", 'String'>
-    readonly isTransferred: FieldRef<"ScanWallet", 'Boolean'>
-    readonly createdAt: FieldRef<"ScanWallet", 'DateTime'>
+  interface ConfigFieldRefs {
+    readonly id: FieldRef<"Config", 'String'>
+    readonly rpc: FieldRef<"Config", 'String'>
+    readonly chainId: FieldRef<"Config", 'String'>
+    readonly mainKey: FieldRef<"Config", 'String'>
+    readonly swapKey: FieldRef<"Config", 'String'>
+    readonly mintKey: FieldRef<"Config", 'String'>
+    readonly contractCode: FieldRef<"Config", 'String'>
+    readonly tokensJson: FieldRef<"Config", 'String'>
+    readonly solcVersion: FieldRef<"Config", 'String'>
   }
     
 
   // Custom InputTypes
   /**
-   * ScanWallet findUnique
+   * Config findUnique
    */
-  export type ScanWalletFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter, which ScanWallet to fetch.
+     * Filter, which Config to fetch.
      */
-    where: ScanWalletWhereUniqueInput
+    where: ConfigWhereUniqueInput
   }
 
   /**
-   * ScanWallet findUniqueOrThrow
+   * Config findUniqueOrThrow
    */
-  export type ScanWalletFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter, which ScanWallet to fetch.
+     * Filter, which Config to fetch.
      */
-    where: ScanWalletWhereUniqueInput
+    where: ConfigWhereUniqueInput
   }
 
   /**
-   * ScanWallet findFirst
+   * Config findFirst
    */
-  export type ScanWalletFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter, which ScanWallet to fetch.
+     * Filter, which Config to fetch.
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanWallets to fetch.
+     * Determine the order of Configs to fetch.
      */
-    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
+    orderBy?: ConfigOrderByWithRelationInput | ConfigOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanWallets.
+     * Sets the position for searching for Configs.
      */
-    cursor?: ScanWalletWhereUniqueInput
+    cursor?: ConfigWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanWallets from the position of the cursor.
+     * Take `±n` Configs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanWallets.
+     * Skip the first `n` Configs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanWallets.
+     * Filter by unique combinations of Configs.
      */
-    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
+    distinct?: ConfigScalarFieldEnum | ConfigScalarFieldEnum[]
   }
 
   /**
-   * ScanWallet findFirstOrThrow
+   * Config findFirstOrThrow
    */
-  export type ScanWalletFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter, which ScanWallet to fetch.
+     * Filter, which Config to fetch.
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanWallets to fetch.
+     * Determine the order of Configs to fetch.
      */
-    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
+    orderBy?: ConfigOrderByWithRelationInput | ConfigOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScanWallets.
+     * Sets the position for searching for Configs.
      */
-    cursor?: ScanWalletWhereUniqueInput
+    cursor?: ConfigWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanWallets from the position of the cursor.
+     * Take `±n` Configs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanWallets.
+     * Skip the first `n` Configs.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScanWallets.
+     * Filter by unique combinations of Configs.
      */
-    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
+    distinct?: ConfigScalarFieldEnum | ConfigScalarFieldEnum[]
   }
 
   /**
-   * ScanWallet findMany
+   * Config findMany
    */
-  export type ScanWalletFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter, which ScanWallets to fetch.
+     * Filter, which Configs to fetch.
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScanWallets to fetch.
+     * Determine the order of Configs to fetch.
      */
-    orderBy?: ScanWalletOrderByWithRelationInput | ScanWalletOrderByWithRelationInput[]
+    orderBy?: ConfigOrderByWithRelationInput | ConfigOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ScanWallets.
+     * Sets the position for listing Configs.
      */
-    cursor?: ScanWalletWhereUniqueInput
+    cursor?: ConfigWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScanWallets from the position of the cursor.
+     * Take `±n` Configs from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScanWallets.
+     * Skip the first `n` Configs.
      */
     skip?: number
-    distinct?: ScanWalletScalarFieldEnum | ScanWalletScalarFieldEnum[]
+    distinct?: ConfigScalarFieldEnum | ConfigScalarFieldEnum[]
   }
 
   /**
-   * ScanWallet create
+   * Config create
    */
-  export type ScanWalletCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * The data needed to create a ScanWallet.
+     * The data needed to create a Config.
      */
-    data: XOR<ScanWalletCreateInput, ScanWalletUncheckedCreateInput>
+    data?: XOR<ConfigCreateInput, ConfigUncheckedCreateInput>
   }
 
   /**
-   * ScanWallet createMany
+   * Config createMany
    */
-  export type ScanWalletCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ScanWallets.
+     * The data used to create many Configs.
      */
-    data: ScanWalletCreateManyInput | ScanWalletCreateManyInput[]
+    data: ConfigCreateManyInput | ConfigCreateManyInput[]
   }
 
   /**
-   * ScanWallet createManyAndReturn
+   * Config createManyAndReturn
    */
-  export type ScanWalletCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelectCreateManyAndReturn<ExtArgs> | null
+    select?: ConfigSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * The data used to create many ScanWallets.
+     * The data used to create many Configs.
      */
-    data: ScanWalletCreateManyInput | ScanWalletCreateManyInput[]
+    data: ConfigCreateManyInput | ConfigCreateManyInput[]
   }
 
   /**
-   * ScanWallet update
+   * Config update
    */
-  export type ScanWalletUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * The data needed to update a ScanWallet.
+     * The data needed to update a Config.
      */
-    data: XOR<ScanWalletUpdateInput, ScanWalletUncheckedUpdateInput>
+    data: XOR<ConfigUpdateInput, ConfigUncheckedUpdateInput>
     /**
-     * Choose, which ScanWallet to update.
+     * Choose, which Config to update.
      */
-    where: ScanWalletWhereUniqueInput
+    where: ConfigWhereUniqueInput
   }
 
   /**
-   * ScanWallet updateMany
+   * Config updateMany
    */
-  export type ScanWalletUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ScanWallets.
+     * The data used to update Configs.
      */
-    data: XOR<ScanWalletUpdateManyMutationInput, ScanWalletUncheckedUpdateManyInput>
+    data: XOR<ConfigUpdateManyMutationInput, ConfigUncheckedUpdateManyInput>
     /**
-     * Filter which ScanWallets to update
+     * Filter which Configs to update
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
-     * Limit how many ScanWallets to update.
+     * Limit how many Configs to update.
      */
     limit?: number
   }
 
   /**
-   * ScanWallet updateManyAndReturn
+   * Config updateManyAndReturn
    */
-  export type ScanWalletUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: ConfigSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * The data used to update ScanWallets.
+     * The data used to update Configs.
      */
-    data: XOR<ScanWalletUpdateManyMutationInput, ScanWalletUncheckedUpdateManyInput>
+    data: XOR<ConfigUpdateManyMutationInput, ConfigUncheckedUpdateManyInput>
     /**
-     * Filter which ScanWallets to update
+     * Filter which Configs to update
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
-     * Limit how many ScanWallets to update.
+     * Limit how many Configs to update.
      */
     limit?: number
   }
 
   /**
-   * ScanWallet upsert
+   * Config upsert
    */
-  export type ScanWalletUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * The filter to search for the ScanWallet to update in case it exists.
+     * The filter to search for the Config to update in case it exists.
      */
-    where: ScanWalletWhereUniqueInput
+    where: ConfigWhereUniqueInput
     /**
-     * In case the ScanWallet found by the `where` argument doesn't exist, create a new ScanWallet with this data.
+     * In case the Config found by the `where` argument doesn't exist, create a new Config with this data.
      */
-    create: XOR<ScanWalletCreateInput, ScanWalletUncheckedCreateInput>
+    create: XOR<ConfigCreateInput, ConfigUncheckedCreateInput>
     /**
-     * In case the ScanWallet was found with the provided `where` argument, update it with this data.
+     * In case the Config was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<ScanWalletUpdateInput, ScanWalletUncheckedUpdateInput>
+    update: XOR<ConfigUpdateInput, ConfigUncheckedUpdateInput>
   }
 
   /**
-   * ScanWallet delete
+   * Config delete
    */
-  export type ScanWalletDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
     /**
-     * Filter which ScanWallet to delete.
+     * Filter which Config to delete.
      */
-    where: ScanWalletWhereUniqueInput
+    where: ConfigWhereUniqueInput
   }
 
   /**
-   * ScanWallet deleteMany
+   * Config deleteMany
    */
-  export type ScanWalletDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScanWallets to delete
+     * Filter which Configs to delete
      */
-    where?: ScanWalletWhereInput
+    where?: ConfigWhereInput
     /**
-     * Limit how many ScanWallets to delete.
+     * Limit how many Configs to delete.
      */
     limit?: number
   }
 
   /**
-   * ScanWallet without action
+   * Config without action
    */
-  export type ScanWalletDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ConfigDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScanWallet
+     * Select specific fields to fetch from the Config
      */
-    select?: ScanWalletSelect<ExtArgs> | null
+    select?: ConfigSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ScanWallet
+     * Omit specific fields from the Config
      */
-    omit?: ScanWalletOmit<ExtArgs> | null
+    omit?: ConfigOmit<ExtArgs> | null
   }
 
 
@@ -1904,18 +1917,19 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-  export const ScanWalletScalarFieldEnum: {
+  export const ConfigScalarFieldEnum: {
     id: 'id',
-    wallet: 'wallet',
-    tx: 'tx',
-    token: 'token',
-    destination: 'destination',
-    amount: 'amount',
-    isTransferred: 'isTransferred',
-    createdAt: 'createdAt'
+    rpc: 'rpc',
+    chainId: 'chainId',
+    mainKey: 'mainKey',
+    swapKey: 'swapKey',
+    mintKey: 'mintKey',
+    contractCode: 'contractCode',
+    tokensJson: 'tokensJson',
+    solcVersion: 'solcVersion'
   };
 
-  export type ScanWalletScalarFieldEnum = (typeof ScanWalletScalarFieldEnum)[keyof typeof ScanWalletScalarFieldEnum]
+  export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -1924,14 +1938,6 @@ export namespace Prisma {
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-  export const NullsOrder: {
-    first: 'first',
-    last: 'last'
-  };
-
-  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -1947,20 +1953,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-  /**
-   * Reference to a field of type 'DateTime'
-   */
-  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
-    
-
-
-  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -1970,148 +1962,160 @@ export namespace Prisma {
    */
 
 
-  export type ScanWalletWhereInput = {
-    AND?: ScanWalletWhereInput | ScanWalletWhereInput[]
-    OR?: ScanWalletWhereInput[]
-    NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
-    id?: StringFilter<"ScanWallet"> | string
-    wallet?: StringFilter<"ScanWallet"> | string
-    tx?: StringFilter<"ScanWallet"> | string
-    token?: StringNullableFilter<"ScanWallet"> | string | null
-    destination?: StringNullableFilter<"ScanWallet"> | string | null
-    amount?: StringNullableFilter<"ScanWallet"> | string | null
-    isTransferred?: BoolFilter<"ScanWallet"> | boolean
-    createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
+  export type ConfigWhereInput = {
+    AND?: ConfigWhereInput | ConfigWhereInput[]
+    OR?: ConfigWhereInput[]
+    NOT?: ConfigWhereInput | ConfigWhereInput[]
+    id?: StringFilter<"Config"> | string
+    rpc?: StringFilter<"Config"> | string
+    chainId?: StringFilter<"Config"> | string
+    mainKey?: StringFilter<"Config"> | string
+    swapKey?: StringFilter<"Config"> | string
+    mintKey?: StringFilter<"Config"> | string
+    contractCode?: StringFilter<"Config"> | string
+    tokensJson?: StringFilter<"Config"> | string
+    solcVersion?: StringFilter<"Config"> | string
   }
 
-  export type ScanWalletOrderByWithRelationInput = {
+  export type ConfigOrderByWithRelationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    tx?: SortOrder
-    token?: SortOrderInput | SortOrder
-    destination?: SortOrderInput | SortOrder
-    amount?: SortOrderInput | SortOrder
-    isTransferred?: SortOrder
-    createdAt?: SortOrder
+    rpc?: SortOrder
+    chainId?: SortOrder
+    mainKey?: SortOrder
+    swapKey?: SortOrder
+    mintKey?: SortOrder
+    contractCode?: SortOrder
+    tokensJson?: SortOrder
+    solcVersion?: SortOrder
   }
 
-  export type ScanWalletWhereUniqueInput = Prisma.AtLeast<{
+  export type ConfigWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: ScanWalletWhereInput | ScanWalletWhereInput[]
-    OR?: ScanWalletWhereInput[]
-    NOT?: ScanWalletWhereInput | ScanWalletWhereInput[]
-    wallet?: StringFilter<"ScanWallet"> | string
-    tx?: StringFilter<"ScanWallet"> | string
-    token?: StringNullableFilter<"ScanWallet"> | string | null
-    destination?: StringNullableFilter<"ScanWallet"> | string | null
-    amount?: StringNullableFilter<"ScanWallet"> | string | null
-    isTransferred?: BoolFilter<"ScanWallet"> | boolean
-    createdAt?: DateTimeFilter<"ScanWallet"> | Date | string
+    AND?: ConfigWhereInput | ConfigWhereInput[]
+    OR?: ConfigWhereInput[]
+    NOT?: ConfigWhereInput | ConfigWhereInput[]
+    rpc?: StringFilter<"Config"> | string
+    chainId?: StringFilter<"Config"> | string
+    mainKey?: StringFilter<"Config"> | string
+    swapKey?: StringFilter<"Config"> | string
+    mintKey?: StringFilter<"Config"> | string
+    contractCode?: StringFilter<"Config"> | string
+    tokensJson?: StringFilter<"Config"> | string
+    solcVersion?: StringFilter<"Config"> | string
   }, "id">
 
-  export type ScanWalletOrderByWithAggregationInput = {
+  export type ConfigOrderByWithAggregationInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    tx?: SortOrder
-    token?: SortOrderInput | SortOrder
-    destination?: SortOrderInput | SortOrder
-    amount?: SortOrderInput | SortOrder
-    isTransferred?: SortOrder
-    createdAt?: SortOrder
-    _count?: ScanWalletCountOrderByAggregateInput
-    _max?: ScanWalletMaxOrderByAggregateInput
-    _min?: ScanWalletMinOrderByAggregateInput
+    rpc?: SortOrder
+    chainId?: SortOrder
+    mainKey?: SortOrder
+    swapKey?: SortOrder
+    mintKey?: SortOrder
+    contractCode?: SortOrder
+    tokensJson?: SortOrder
+    solcVersion?: SortOrder
+    _count?: ConfigCountOrderByAggregateInput
+    _max?: ConfigMaxOrderByAggregateInput
+    _min?: ConfigMinOrderByAggregateInput
   }
 
-  export type ScanWalletScalarWhereWithAggregatesInput = {
-    AND?: ScanWalletScalarWhereWithAggregatesInput | ScanWalletScalarWhereWithAggregatesInput[]
-    OR?: ScanWalletScalarWhereWithAggregatesInput[]
-    NOT?: ScanWalletScalarWhereWithAggregatesInput | ScanWalletScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScanWallet"> | string
-    wallet?: StringWithAggregatesFilter<"ScanWallet"> | string
-    tx?: StringWithAggregatesFilter<"ScanWallet"> | string
-    token?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
-    destination?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
-    amount?: StringNullableWithAggregatesFilter<"ScanWallet"> | string | null
-    isTransferred?: BoolWithAggregatesFilter<"ScanWallet"> | boolean
-    createdAt?: DateTimeWithAggregatesFilter<"ScanWallet"> | Date | string
+  export type ConfigScalarWhereWithAggregatesInput = {
+    AND?: ConfigScalarWhereWithAggregatesInput | ConfigScalarWhereWithAggregatesInput[]
+    OR?: ConfigScalarWhereWithAggregatesInput[]
+    NOT?: ConfigScalarWhereWithAggregatesInput | ConfigScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Config"> | string
+    rpc?: StringWithAggregatesFilter<"Config"> | string
+    chainId?: StringWithAggregatesFilter<"Config"> | string
+    mainKey?: StringWithAggregatesFilter<"Config"> | string
+    swapKey?: StringWithAggregatesFilter<"Config"> | string
+    mintKey?: StringWithAggregatesFilter<"Config"> | string
+    contractCode?: StringWithAggregatesFilter<"Config"> | string
+    tokensJson?: StringWithAggregatesFilter<"Config"> | string
+    solcVersion?: StringWithAggregatesFilter<"Config"> | string
   }
 
-  export type ScanWalletCreateInput = {
+  export type ConfigCreateInput = {
     id?: string
-    wallet: string
-    tx: string
-    token?: string | null
-    destination?: string | null
-    amount?: string | null
-    isTransferred?: boolean
-    createdAt?: Date | string
+    rpc?: string
+    chainId?: string
+    mainKey?: string
+    swapKey?: string
+    mintKey?: string
+    contractCode?: string
+    tokensJson?: string
+    solcVersion?: string
   }
 
-  export type ScanWalletUncheckedCreateInput = {
+  export type ConfigUncheckedCreateInput = {
     id?: string
-    wallet: string
-    tx: string
-    token?: string | null
-    destination?: string | null
-    amount?: string | null
-    isTransferred?: boolean
-    createdAt?: Date | string
+    rpc?: string
+    chainId?: string
+    mainKey?: string
+    swapKey?: string
+    mintKey?: string
+    contractCode?: string
+    tokensJson?: string
+    solcVersion?: string
   }
 
-  export type ScanWalletUpdateInput = {
+  export type ConfigUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    tx?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    destination?: NullableStringFieldUpdateOperationsInput | string | null
-    amount?: NullableStringFieldUpdateOperationsInput | string | null
-    isTransferred?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rpc?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    mainKey?: StringFieldUpdateOperationsInput | string
+    swapKey?: StringFieldUpdateOperationsInput | string
+    mintKey?: StringFieldUpdateOperationsInput | string
+    contractCode?: StringFieldUpdateOperationsInput | string
+    tokensJson?: StringFieldUpdateOperationsInput | string
+    solcVersion?: StringFieldUpdateOperationsInput | string
   }
 
-  export type ScanWalletUncheckedUpdateInput = {
+  export type ConfigUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    tx?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    destination?: NullableStringFieldUpdateOperationsInput | string | null
-    amount?: NullableStringFieldUpdateOperationsInput | string | null
-    isTransferred?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rpc?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    mainKey?: StringFieldUpdateOperationsInput | string
+    swapKey?: StringFieldUpdateOperationsInput | string
+    mintKey?: StringFieldUpdateOperationsInput | string
+    contractCode?: StringFieldUpdateOperationsInput | string
+    tokensJson?: StringFieldUpdateOperationsInput | string
+    solcVersion?: StringFieldUpdateOperationsInput | string
   }
 
-  export type ScanWalletCreateManyInput = {
+  export type ConfigCreateManyInput = {
     id?: string
-    wallet: string
-    tx: string
-    token?: string | null
-    destination?: string | null
-    amount?: string | null
-    isTransferred?: boolean
-    createdAt?: Date | string
+    rpc?: string
+    chainId?: string
+    mainKey?: string
+    swapKey?: string
+    mintKey?: string
+    contractCode?: string
+    tokensJson?: string
+    solcVersion?: string
   }
 
-  export type ScanWalletUpdateManyMutationInput = {
+  export type ConfigUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    tx?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    destination?: NullableStringFieldUpdateOperationsInput | string | null
-    amount?: NullableStringFieldUpdateOperationsInput | string | null
-    isTransferred?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rpc?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    mainKey?: StringFieldUpdateOperationsInput | string
+    swapKey?: StringFieldUpdateOperationsInput | string
+    mintKey?: StringFieldUpdateOperationsInput | string
+    contractCode?: StringFieldUpdateOperationsInput | string
+    tokensJson?: StringFieldUpdateOperationsInput | string
+    solcVersion?: StringFieldUpdateOperationsInput | string
   }
 
-  export type ScanWalletUncheckedUpdateManyInput = {
+  export type ConfigUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    wallet?: StringFieldUpdateOperationsInput | string
-    tx?: StringFieldUpdateOperationsInput | string
-    token?: NullableStringFieldUpdateOperationsInput | string | null
-    destination?: NullableStringFieldUpdateOperationsInput | string | null
-    amount?: NullableStringFieldUpdateOperationsInput | string | null
-    isTransferred?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rpc?: StringFieldUpdateOperationsInput | string
+    chainId?: StringFieldUpdateOperationsInput | string
+    mainKey?: StringFieldUpdateOperationsInput | string
+    swapKey?: StringFieldUpdateOperationsInput | string
+    mintKey?: StringFieldUpdateOperationsInput | string
+    contractCode?: StringFieldUpdateOperationsInput | string
+    tokensJson?: StringFieldUpdateOperationsInput | string
+    solcVersion?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -2128,72 +2132,40 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
-  export type DateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
-  }
-
-  export type ScanWalletCountOrderByAggregateInput = {
+  export type ConfigCountOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    tx?: SortOrder
-    token?: SortOrder
-    destination?: SortOrder
-    amount?: SortOrder
-    isTransferred?: SortOrder
-    createdAt?: SortOrder
+    rpc?: SortOrder
+    chainId?: SortOrder
+    mainKey?: SortOrder
+    swapKey?: SortOrder
+    mintKey?: SortOrder
+    contractCode?: SortOrder
+    tokensJson?: SortOrder
+    solcVersion?: SortOrder
   }
 
-  export type ScanWalletMaxOrderByAggregateInput = {
+  export type ConfigMaxOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    tx?: SortOrder
-    token?: SortOrder
-    destination?: SortOrder
-    amount?: SortOrder
-    isTransferred?: SortOrder
-    createdAt?: SortOrder
+    rpc?: SortOrder
+    chainId?: SortOrder
+    mainKey?: SortOrder
+    swapKey?: SortOrder
+    mintKey?: SortOrder
+    contractCode?: SortOrder
+    tokensJson?: SortOrder
+    solcVersion?: SortOrder
   }
 
-  export type ScanWalletMinOrderByAggregateInput = {
+  export type ConfigMinOrderByAggregateInput = {
     id?: SortOrder
-    wallet?: SortOrder
-    tx?: SortOrder
-    token?: SortOrder
-    destination?: SortOrder
-    amount?: SortOrder
-    isTransferred?: SortOrder
-    createdAt?: SortOrder
+    rpc?: SortOrder
+    chainId?: SortOrder
+    mainKey?: SortOrder
+    swapKey?: SortOrder
+    mintKey?: SortOrder
+    contractCode?: SortOrder
+    tokensJson?: SortOrder
+    solcVersion?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2213,59 +2185,8 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type StringFieldUpdateOperationsInput = {
     set?: string
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
-  }
-
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -2280,36 +2201,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
-  }
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
-  export type NestedDateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2338,56 +2229,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
-  }
-
-  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
 

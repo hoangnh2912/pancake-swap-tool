@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn add *)",
+      "Bash(npx tsc *)",
+      "Bash(yarn start *)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(node -e \"const solc = require\\('solc'\\); console.log\\(solc.loadRemoteVersion.toString\\(\\).slice\\(0, 400\\)\\)\")"
+    ]
+  }
+}

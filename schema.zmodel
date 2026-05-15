@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider      = "prisma-client-js"
   output        = "./client"
@@ -15,20 +9,14 @@ datasource db {
   url      = "file:./scan-transfer.sqlite"
 }
 
-plugin hooks {
-  provider = '@zenstackhq/tanstack-query'
-  target = 'react'
-  output = 'src/hooks/zenstack'
-}
-
-model ScanWallet {
-  id            String   @id @default(cuid())
-  wallet        String
-  tx            String
-  token         String?
-  destination   String?
-  amount        String?
-  isTransferred Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  @@index([destination])
+model Config {
+  id           String @id @default("default")
+  rpc          String @default("https://bsc.drpc.org")
+  chainId      String @default("56")
+  mainKey      String @default("")
+  swapKey      String @default("")
+  mintKey      String @default("")
+  contractCode String @default("")
+  tokensJson   String @default("[]")
+  solcVersion  String @default("0.8.27")
 }
