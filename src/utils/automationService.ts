@@ -478,7 +478,7 @@ export async function runAutomation(
                 const sellDeadline = Math.floor(Date.now() / 1000) + 600
                 await ensureApproval(swapErc20, PANCAKE_ROUTER, sellAmt, onLog, '[6]', params.shouldStop)
                 tx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                    sellAmt, 0, [contractAddress, WBNB], swapWallet.address, sellDeadline,
+                    sellAmt, 1, [contractAddress, WBNB], swapWallet.address, sellDeadline,
                     { gasLimit: 500_000, gasPrice: GAS_PRICE }
                 )
                 await raceStop(tx.wait(), params.shouldStop)
