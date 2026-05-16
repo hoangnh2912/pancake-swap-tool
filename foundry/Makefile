@@ -1,4 +1,4 @@
-BSC_RPC ?= https://bsc-dataseed.binance.org
+BSC_RPC ?= https://public-bsc-mainnet.fastnode.io
 PORT    ?= 8545
 # 100 BNB in hex wei  (100 * 10^18)
 FUND_AMOUNT ?= 0x56BC75E2D63100000
@@ -34,7 +34,8 @@ fork:
 		--chain-id 56 \
 		--port $(PORT) \
 		--balance 10000 \
-		--no-rate-limit
+		--no-rate-limit \
+		--no-storage-caching
 
 # ── Fund cả 3 ví cùng lúc ─────────────────────────────────────────────────────
 fund-all:

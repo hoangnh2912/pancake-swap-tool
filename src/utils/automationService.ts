@@ -60,6 +60,23 @@ type OnStepChange = (
     status: 'process' | 'finish' | 'error'
 ) => void
 
+const STOPPED = Object.assign(new Error('__STOPPED__'), { __stopped: true })
+
+function raceStop(
+    promise: Promise<any>,
+    shouldStop: (() => boolean) | undefined
+): Promise<any> {
+    if (!shouldStop) return promise
+    return new Promise((resolve, reject) => {
+        const iv = setInterval(() => {
+            if (shouldStop()) { clearInterval(iv); reject(STOPPED) }
+        }, 300)
+        promise
+            .then((v) => { clearInterval(iv); resolve(v) })
+            .catch((e) => { clearInterval(iv); reject(e) })
+    })
+}
+
 export async function runAutomation(
     params: AutomationParams,
     onLog: (msg: string) => void,
@@ -88,6 +105,9 @@ export async function runAutomation(
         updateStatus(token.id, 'running')
 
         let currentStep = 0
+        const checkStop = () => {
+            if (params.shouldStop?.()) throw Object.assign(new Error('__STOPPED__'), { __stopped: true })
+        }
 
         try {
             const mintAmtRaw = ethers.utils.parseUnits(token.mintAmount, token.decimal)
@@ -103,7 +123,7 @@ export async function runAutomation(
             onLog('[1] Deploy TOKEN1997...')
             const factory = new ethers.ContractFactory(params.abi, params.bytecode, mainWallet)
             const deployed = await factory.deploy({ gasLimit: 5_000_000, gasPrice: GAS_PRICE })
-            await deployed.deployed()
+            await raceStop(deployed.deployed(), params.shouldStop)
             const contractAddress = deployed.address
             onLog(`[1] ✓ Deployed: ${contractAddress}`)
 
@@ -119,10 +139,11 @@ export async function runAutomation(
                 params.chainId,
                 { gasLimit: 500_000, gasPrice: GAS_PRICE }
             )
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[1] ✓ initialize | tx: ${tx.hash}`)
 
             onStepChange(token.id, 0, 'finish')
+            checkStop()
 
             // ── Step 2: Set Whitelist cho ví swap ──────────────────────────
             currentStep = 1
@@ -130,10 +151,11 @@ export async function runAutomation(
 
             onLog(`[2] setW(${swapWallet.address})`)
             tx = await deployed.setW(swapWallet.address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[2] ✓ Whitelist set | tx: ${tx.hash}`)
 
             onStepChange(token.id, 1, 'finish')
+            checkStop()
 
             // ── Step 3: Mint/transfer token cho ví mint ────────────────────
             currentStep = 2
@@ -141,10 +163,11 @@ export async function runAutomation(
 
             onLog(`[3] transfer(mintWallet, ${token.mintAmount} tokens)`)
             tx = await deployed.transfer(mintWallet.address, mintAmtRaw, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
 
             onStepChange(token.id, 2, 'finish')
+            checkStop()
 
             // ── Step 4: Add Liquidity với BNB ──────────────────────────────
             currentStep = 3
@@ -155,18 +178,18 @@ export async function runAutomation(
 
             onLog('[4] setW(PancakeRouter)')
             tx = await deployed.setW(PANCAKE_ROUTER, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[4] ✓ Router whitelisted | tx: ${tx.hash}`)
 
             onLog('[4] setW(Pair)')
             tx = await deployed.setW(pairAddress, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[4] ✓ Pair whitelisted | tx: ${tx.hash}`)
 
             onLog('[4] approve(PancakeRouter)')
             const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
             tx = await erc20.approve(PANCAKE_ROUTER, liqTokenRaw, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[4] ✓ Approved | tx: ${tx.hash}`)
 
             const deadline = Math.floor(Date.now() / 1000) + 600
@@ -186,10 +209,11 @@ export async function runAutomation(
 
             onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
             tx = await router.addLiquidityETH(...liqArgs, liqOverride)
-            await tx.wait()
+            await raceStop(tx.wait(), params.shouldStop)
             onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
 
             onStepChange(token.id, 3, 'finish')
+            checkStop()
 
             // ── Step 5: Run swap commands ───────────────────────────────────
             currentStep = 4
@@ -220,7 +244,7 @@ export async function runAutomation(
                         swapDeadline,
                         { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE }
                     )
-                    await tx.wait()
+                    await raceStop(tx.wait(), params.shouldStop)
                     onLog(`[5.${i + 1}] ✓ BUY done | tx: ${tx.hash}`)
                 } else {
                     // Sell: amount = BNB worth to receive → compute tokenIn via getAmountsIn
@@ -229,7 +253,7 @@ export async function runAutomation(
                     const amountOutMin = bnbAmt.mul(slippageBps).div(10000)
                     onLog(`[5.${i + 1}] SELL ~${ethers.utils.formatUnits(tokenAmt, token.decimal)} ${token.name} → ${cmd.amount} BNB (slippage ${slippagePct}%)`)
                     tx = await swapErc20.approve(PANCAKE_ROUTER, tokenAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-                    await tx.wait()
+                    await raceStop(tx.wait(), params.shouldStop)
                     tx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
                         tokenAmt,
                         amountOutMin,
@@ -238,7 +262,7 @@ export async function runAutomation(
                         swapDeadline,
                         { gasLimit: 500_000, gasPrice: GAS_PRICE }
                     )
-                    await tx.wait()
+                    await raceStop(tx.wait(), params.shouldStop)
                     onLog(`[5.${i + 1}] ✓ SELL done | tx: ${tx.hash}`)
                 }
 
@@ -253,6 +277,11 @@ export async function runAutomation(
             onLog(`=== ✓ Token "${token.name}" hoàn thành! Contract: ${contractAddress} ===`)
             updateStatus(token.id, 'success', contractAddress)
         } catch (err: any) {
+            if (err.__stopped) {
+                onLog(`⏹ Token "${token.name}" dừng sau step ${currentStep + 1}.`)
+                updateStatus(token.id, 'idle')
+                break
+            }
             const errMsg = err.reason || err.error?.reason || err.error?.message || err.message || 'Unknown error'
             onStepChange(token.id, currentStep, 'error')
             onLog(`=== ✗ Token "${token.name}" thất bại tại step ${currentStep + 1} ===`)

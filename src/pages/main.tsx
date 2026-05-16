@@ -694,8 +694,6 @@ const Main = () => {
                                     min="0"
                                     value={row.amount || undefined}
                                     onChange={(v) => updateSwapCmd(row.id, 'amount', v ?? '')}
-                                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-                                    parser={(v) => v ? v.replace(/,/g, '') : ''}
                                     placeholder="VD: 0.1"
                                     disabled={running}
                                     style={{ width: '100%' }}
