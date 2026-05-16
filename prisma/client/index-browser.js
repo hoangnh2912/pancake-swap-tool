@@ -127,7 +127,9 @@ exports.Prisma.ConfigScalarFieldEnum = {
   mintKey: 'mintKey',
   contractCode: 'contractCode',
   tokensJson: 'tokensJson',
-  solcVersion: 'solcVersion'
+  solcVersion: 'solcVersion',
+  swapCommandsJson: 'swapCommandsJson',
+  swapDelay: 'swapDelay'
 };
 
 exports.Prisma.SortOrder = {

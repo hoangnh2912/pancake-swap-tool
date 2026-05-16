@@ -15,13 +15,15 @@ generator client {
 }
 
 model Config {
-  id           String @id() @default("default")
-  rpc          String @default("https://bsc.drpc.org")
-  chainId      String @default("56")
-  mainKey      String @default("")
-  swapKey      String @default("")
-  mintKey      String @default("")
-  contractCode String @default("")
-  tokensJson   String @default("[]")
-  solcVersion  String @default("0.8.27")
+  id               String @id() @default("default")
+  rpc              String @default("https://bsc.drpc.org")
+  chainId          String @default("56")
+  mainKey          String @default("")
+  swapKey          String @default("")
+  mintKey          String @default("")
+  contractCode     String @default("")
+  tokensJson       String @default("[]")
+  solcVersion      String @default("0.8.27")
+  swapCommandsJson String @default("[]")
+  swapDelay        String @default("0")
 }

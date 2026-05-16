@@ -881,6 +881,8 @@ export namespace Prisma {
     contractCode: string | null
     tokensJson: string | null
     solcVersion: string | null
+    swapCommandsJson: string | null
+    swapDelay: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -893,6 +895,8 @@ export namespace Prisma {
     contractCode: string | null
     tokensJson: string | null
     solcVersion: string | null
+    swapCommandsJson: string | null
+    swapDelay: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -905,6 +909,8 @@ export namespace Prisma {
     contractCode: number
     tokensJson: number
     solcVersion: number
+    swapCommandsJson: number
+    swapDelay: number
     _all: number
   }
 
@@ -919,6 +925,8 @@ export namespace Prisma {
     contractCode?: true
     tokensJson?: true
     solcVersion?: true
+    swapCommandsJson?: true
+    swapDelay?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -931,6 +939,8 @@ export namespace Prisma {
     contractCode?: true
     tokensJson?: true
     solcVersion?: true
+    swapCommandsJson?: true
+    swapDelay?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -943,6 +953,8 @@ export namespace Prisma {
     contractCode?: true
     tokensJson?: true
     solcVersion?: true
+    swapCommandsJson?: true
+    swapDelay?: true
     _all?: true
   }
 
@@ -1028,6 +1040,8 @@ export namespace Prisma {
     contractCode: string
     tokensJson: string
     solcVersion: string
+    swapCommandsJson: string
+    swapDelay: string
     _count: ConfigCountAggregateOutputType | null
     _min: ConfigMinAggregateOutputType | null
     _max: ConfigMaxAggregateOutputType | null
@@ -1057,6 +1071,8 @@ export namespace Prisma {
     contractCode?: boolean
     tokensJson?: boolean
     solcVersion?: boolean
+    swapCommandsJson?: boolean
+    swapDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1069,6 +1085,8 @@ export namespace Prisma {
     contractCode?: boolean
     tokensJson?: boolean
     solcVersion?: boolean
+    swapCommandsJson?: boolean
+    swapDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1081,6 +1099,8 @@ export namespace Prisma {
     contractCode?: boolean
     tokensJson?: boolean
     solcVersion?: boolean
+    swapCommandsJson?: boolean
+    swapDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -1093,9 +1113,11 @@ export namespace Prisma {
     contractCode?: boolean
     tokensJson?: boolean
     solcVersion?: boolean
+    swapCommandsJson?: boolean
+    swapDelay?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -1110,6 +1132,8 @@ export namespace Prisma {
       contractCode: string
       tokensJson: string
       solcVersion: string
+      swapCommandsJson: string
+      swapDelay: string
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -1542,6 +1566,8 @@ export namespace Prisma {
     readonly contractCode: FieldRef<"Config", 'String'>
     readonly tokensJson: FieldRef<"Config", 'String'>
     readonly solcVersion: FieldRef<"Config", 'String'>
+    readonly swapCommandsJson: FieldRef<"Config", 'String'>
+    readonly swapDelay: FieldRef<"Config", 'String'>
   }
     
 
@@ -1926,7 +1952,9 @@ export namespace Prisma {
     mintKey: 'mintKey',
     contractCode: 'contractCode',
     tokensJson: 'tokensJson',
-    solcVersion: 'solcVersion'
+    solcVersion: 'solcVersion',
+    swapCommandsJson: 'swapCommandsJson',
+    swapDelay: 'swapDelay'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -1975,6 +2003,8 @@ export namespace Prisma {
     contractCode?: StringFilter<"Config"> | string
     tokensJson?: StringFilter<"Config"> | string
     solcVersion?: StringFilter<"Config"> | string
+    swapCommandsJson?: StringFilter<"Config"> | string
+    swapDelay?: StringFilter<"Config"> | string
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -1987,6 +2017,8 @@ export namespace Prisma {
     contractCode?: SortOrder
     tokensJson?: SortOrder
     solcVersion?: SortOrder
+    swapCommandsJson?: SortOrder
+    swapDelay?: SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -2002,6 +2034,8 @@ export namespace Prisma {
     contractCode?: StringFilter<"Config"> | string
     tokensJson?: StringFilter<"Config"> | string
     solcVersion?: StringFilter<"Config"> | string
+    swapCommandsJson?: StringFilter<"Config"> | string
+    swapDelay?: StringFilter<"Config"> | string
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -2014,6 +2048,8 @@ export namespace Prisma {
     contractCode?: SortOrder
     tokensJson?: SortOrder
     solcVersion?: SortOrder
+    swapCommandsJson?: SortOrder
+    swapDelay?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
     _min?: ConfigMinOrderByAggregateInput
@@ -2032,6 +2068,8 @@ export namespace Prisma {
     contractCode?: StringWithAggregatesFilter<"Config"> | string
     tokensJson?: StringWithAggregatesFilter<"Config"> | string
     solcVersion?: StringWithAggregatesFilter<"Config"> | string
+    swapCommandsJson?: StringWithAggregatesFilter<"Config"> | string
+    swapDelay?: StringWithAggregatesFilter<"Config"> | string
   }
 
   export type ConfigCreateInput = {
@@ -2044,6 +2082,8 @@ export namespace Prisma {
     contractCode?: string
     tokensJson?: string
     solcVersion?: string
+    swapCommandsJson?: string
+    swapDelay?: string
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -2056,6 +2096,8 @@ export namespace Prisma {
     contractCode?: string
     tokensJson?: string
     solcVersion?: string
+    swapCommandsJson?: string
+    swapDelay?: string
   }
 
   export type ConfigUpdateInput = {
@@ -2068,6 +2110,8 @@ export namespace Prisma {
     contractCode?: StringFieldUpdateOperationsInput | string
     tokensJson?: StringFieldUpdateOperationsInput | string
     solcVersion?: StringFieldUpdateOperationsInput | string
+    swapCommandsJson?: StringFieldUpdateOperationsInput | string
+    swapDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -2080,6 +2124,8 @@ export namespace Prisma {
     contractCode?: StringFieldUpdateOperationsInput | string
     tokensJson?: StringFieldUpdateOperationsInput | string
     solcVersion?: StringFieldUpdateOperationsInput | string
+    swapCommandsJson?: StringFieldUpdateOperationsInput | string
+    swapDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigCreateManyInput = {
@@ -2092,6 +2138,8 @@ export namespace Prisma {
     contractCode?: string
     tokensJson?: string
     solcVersion?: string
+    swapCommandsJson?: string
+    swapDelay?: string
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -2104,6 +2152,8 @@ export namespace Prisma {
     contractCode?: StringFieldUpdateOperationsInput | string
     tokensJson?: StringFieldUpdateOperationsInput | string
     solcVersion?: StringFieldUpdateOperationsInput | string
+    swapCommandsJson?: StringFieldUpdateOperationsInput | string
+    swapDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -2116,6 +2166,8 @@ export namespace Prisma {
     contractCode?: StringFieldUpdateOperationsInput | string
     tokensJson?: StringFieldUpdateOperationsInput | string
     solcVersion?: StringFieldUpdateOperationsInput | string
+    swapCommandsJson?: StringFieldUpdateOperationsInput | string
+    swapDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -2142,6 +2194,8 @@ export namespace Prisma {
     contractCode?: SortOrder
     tokensJson?: SortOrder
     solcVersion?: SortOrder
+    swapCommandsJson?: SortOrder
+    swapDelay?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -2154,6 +2208,8 @@ export namespace Prisma {
     contractCode?: SortOrder
     tokensJson?: SortOrder
     solcVersion?: SortOrder
+    swapCommandsJson?: SortOrder
+    swapDelay?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -2166,6 +2222,8 @@ export namespace Prisma {
     contractCode?: SortOrder
     tokensJson?: SortOrder
     solcVersion?: SortOrder
+    swapCommandsJson?: SortOrder
+    swapDelay?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {

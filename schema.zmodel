@@ -17,6 +17,8 @@ model Config {
   swapKey      String @default("")
   mintKey      String @default("")
   contractCode String @default("")
-  tokensJson   String @default("[]")
-  solcVersion  String @default("0.8.27")
+  tokensJson        String @default("[]")
+  solcVersion       String @default("0.8.27")
+  swapCommandsJson  String @default("[]")
+  swapDelay         String @default("0")
 }
