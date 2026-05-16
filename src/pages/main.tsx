@@ -1,4 +1,4 @@
-import { DeleteOutlined, DownloadOutlined, PlayCircleOutlined, PlusOutlined, SettingOutlined, UploadOutlined } from '@ant-design/icons'
+import { DeleteOutlined, DownloadOutlined, PlayCircleOutlined, PlusOutlined, SettingOutlined, StopOutlined, UploadOutlined } from '@ant-design/icons'
 import { Box, Flex, Stack, Text } from '@chakra-ui/react'
 import Editor from '@monaco-editor/react'
 import { Button, Input, InputNumber, Modal, Select, Steps, Table, Tag, Tooltip, Typography, message } from 'antd'
@@ -81,6 +81,7 @@ const Main = () => {
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const logEndRef = useRef<HTMLDivElement>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const stopRef = useRef(false)
 
     const mainAddr = deriveAddress(mainKey)
     const swapAddr = deriveAddress(swapKey)
@@ -276,6 +277,7 @@ const Main = () => {
             return
         }
 
+        stopRef.current = false
         setRunning(true)
         setTokens((prev) =>
             prev.map((r) => ({ ...r, status: 'idle' as RowStatus, contractAddress: undefined, errorMsg: undefined }))
@@ -317,6 +319,7 @@ const Main = () => {
                     tokens: valid as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
+                    shouldStop: () => stopRef.current,
                 },
                 addLog,
                 updateRowStatus,
@@ -782,17 +785,30 @@ const Main = () => {
 
             {/* Start */}
             <Box mb={4}>
-                <Button
-                    type="primary"
-                    size="large"
-                    icon={<PlayCircleOutlined />}
-                    onClick={handleStart}
-                    loading={running}
-                    disabled={running}
-                    style={{ width: '100%', height: 48, fontSize: 15 }}
-                >
-                    {running ? 'Đang chạy automation...' : 'Bắt đầu Automation'}
-                </Button>
+                <Flex gap={2}>
+                    <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlayCircleOutlined />}
+                        onClick={handleStart}
+                        loading={running}
+                        disabled={running}
+                        style={{ flex: 1, height: 48, fontSize: 15 }}
+                    >
+                        {running ? 'Đang chạy automation...' : 'Bắt đầu Automation'}
+                    </Button>
+                    {running && (
+                        <Button
+                            danger
+                            size="large"
+                            icon={<StopOutlined />}
+                            onClick={() => { stopRef.current = true }}
+                            style={{ height: 48 }}
+                        >
+                            Dừng
+                        </Button>
+                    )}
+                </Flex>
             </Box>
 
             {/* Log */}

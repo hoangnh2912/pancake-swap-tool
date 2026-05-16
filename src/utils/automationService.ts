@@ -42,6 +42,7 @@ export interface AutomationParams {
     tokens: AutomationToken[]
     swapCommands: SwapCommand[]
     swapDelayMs: number
+    shouldStop?: () => boolean
 }
 
 export type StepStatus = 'wait' | 'process' | 'finish' | 'error'
@@ -79,6 +80,10 @@ export async function runAutomation(
     onLog(`BNB chủ : ${ethers.utils.formatEther(mainBal)} BNB`)
 
     for (const token of params.tokens) {
+        if (params.shouldStop?.()) {
+            onLog('\n⏹ Đã dừng automation.')
+            break
+        }
         onLog(`\n=== Token: ${token.name} (decimal=${token.decimal}) ===`)
         updateStatus(token.id, 'running')
 
@@ -194,6 +199,10 @@ export async function runAutomation(
             const swapErc20  = new ethers.Contract(contractAddress, ERC20_ABI, swapWallet)
 
             for (let i = 0; i < params.swapCommands.length; i++) {
+                if (params.shouldStop?.()) {
+                    onLog('[5] ⏹ Dừng giữa chừng lệnh swap.')
+                    break
+                }
                 const cmd = params.swapCommands[i]
                 const swapDeadline = Math.floor(Date.now() / 1000) + 600
                 const slippagePct  = Number(cmd.slippage) || 0

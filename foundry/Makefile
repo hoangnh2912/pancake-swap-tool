@@ -1,4 +1,4 @@
-BSC_RPC ?= https://bsc.drpc.org
+BSC_RPC ?= https://bsc-dataseed.binance.org
 PORT    ?= 8545
 # 100 BNB in hex wei  (100 * 10^18)
 FUND_AMOUNT ?= 0x56BC75E2D63100000
