@@ -1,6 +1,6 @@
 {
-  "name": "scan-transfer",
-  "productName": "scan-transfer",
+  "name": "auto-deploy",
+  "productName": "auto-deploy",
   "version": "1.0.1",
   "description": "",
   "main": ".webpack/main",

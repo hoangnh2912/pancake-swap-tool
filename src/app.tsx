@@ -1,16 +1,26 @@
 import { ChakraProvider } from '@chakra-ui/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ConfigProvider, theme } from 'antd'
 import { createRoot } from 'react-dom/client'
+import { Provider as ZenStackProvider } from './hooks/zenstack'
 import Main from './pages/main'
 
+export const endpoint = 'http://localhost:8080/api/model'
+export const fetchInstance = window.fetch.bind(window)
+
+const queryClient = new QueryClient()
 const root = createRoot(document.body)
 
 const App = () => (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-        <ChakraProvider>
-            <Main />
-        </ChakraProvider>
-    </ConfigProvider>
+    <QueryClientProvider client={queryClient}>
+        <ZenStackProvider value={{ endpoint, fetch: fetchInstance }}>
+            <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+                <ChakraProvider>
+                    <Main />
+                </ChakraProvider>
+            </ConfigProvider>
+        </ZenStackProvider>
+    </QueryClientProvider>
 )
 
 root.render(App())

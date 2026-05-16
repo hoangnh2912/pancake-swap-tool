@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./scan-transfer.sqlite"
+  url      = "file:./auto-deploy.sqlite"
 }
 
 model Config {
@@ -21,4 +21,8 @@ model Config {
   solcVersion       String @default("0.8.27")
   swapCommandsJson  String @default("[]")
   swapDelay         String @default("0")
+  transferBnbToMain String @default("")
+  scanContract      String @default("")
+  disperseAmount    String @default("")
+  scanDelay         String @default("30")
 }

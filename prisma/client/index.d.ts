@@ -883,6 +883,10 @@ export namespace Prisma {
     solcVersion: string | null
     swapCommandsJson: string | null
     swapDelay: string | null
+    transferBnbToMain: string | null
+    scanContract: string | null
+    disperseAmount: string | null
+    scanDelay: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -897,6 +901,10 @@ export namespace Prisma {
     solcVersion: string | null
     swapCommandsJson: string | null
     swapDelay: string | null
+    transferBnbToMain: string | null
+    scanContract: string | null
+    disperseAmount: string | null
+    scanDelay: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -911,6 +919,10 @@ export namespace Prisma {
     solcVersion: number
     swapCommandsJson: number
     swapDelay: number
+    transferBnbToMain: number
+    scanContract: number
+    disperseAmount: number
+    scanDelay: number
     _all: number
   }
 
@@ -927,6 +939,10 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    transferBnbToMain?: true
+    scanContract?: true
+    disperseAmount?: true
+    scanDelay?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -941,6 +957,10 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    transferBnbToMain?: true
+    scanContract?: true
+    disperseAmount?: true
+    scanDelay?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -955,6 +975,10 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    transferBnbToMain?: true
+    scanContract?: true
+    disperseAmount?: true
+    scanDelay?: true
     _all?: true
   }
 
@@ -1042,6 +1066,10 @@ export namespace Prisma {
     solcVersion: string
     swapCommandsJson: string
     swapDelay: string
+    transferBnbToMain: string
+    scanContract: string
+    disperseAmount: string
+    scanDelay: string
     _count: ConfigCountAggregateOutputType | null
     _min: ConfigMinAggregateOutputType | null
     _max: ConfigMaxAggregateOutputType | null
@@ -1073,6 +1101,10 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    transferBnbToMain?: boolean
+    scanContract?: boolean
+    disperseAmount?: boolean
+    scanDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1087,6 +1119,10 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    transferBnbToMain?: boolean
+    scanContract?: boolean
+    disperseAmount?: boolean
+    scanDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1101,6 +1137,10 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    transferBnbToMain?: boolean
+    scanContract?: boolean
+    disperseAmount?: boolean
+    scanDelay?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -1115,9 +1155,13 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    transferBnbToMain?: boolean
+    scanContract?: boolean
+    disperseAmount?: boolean
+    scanDelay?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "scanDelay", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -1134,6 +1178,10 @@ export namespace Prisma {
       solcVersion: string
       swapCommandsJson: string
       swapDelay: string
+      transferBnbToMain: string
+      scanContract: string
+      disperseAmount: string
+      scanDelay: string
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -1568,6 +1616,10 @@ export namespace Prisma {
     readonly solcVersion: FieldRef<"Config", 'String'>
     readonly swapCommandsJson: FieldRef<"Config", 'String'>
     readonly swapDelay: FieldRef<"Config", 'String'>
+    readonly transferBnbToMain: FieldRef<"Config", 'String'>
+    readonly scanContract: FieldRef<"Config", 'String'>
+    readonly disperseAmount: FieldRef<"Config", 'String'>
+    readonly scanDelay: FieldRef<"Config", 'String'>
   }
     
 
@@ -1954,7 +2006,11 @@ export namespace Prisma {
     tokensJson: 'tokensJson',
     solcVersion: 'solcVersion',
     swapCommandsJson: 'swapCommandsJson',
-    swapDelay: 'swapDelay'
+    swapDelay: 'swapDelay',
+    transferBnbToMain: 'transferBnbToMain',
+    scanContract: 'scanContract',
+    disperseAmount: 'disperseAmount',
+    scanDelay: 'scanDelay'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -2005,6 +2061,10 @@ export namespace Prisma {
     solcVersion?: StringFilter<"Config"> | string
     swapCommandsJson?: StringFilter<"Config"> | string
     swapDelay?: StringFilter<"Config"> | string
+    transferBnbToMain?: StringFilter<"Config"> | string
+    scanContract?: StringFilter<"Config"> | string
+    disperseAmount?: StringFilter<"Config"> | string
+    scanDelay?: StringFilter<"Config"> | string
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -2019,6 +2079,10 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    transferBnbToMain?: SortOrder
+    scanContract?: SortOrder
+    disperseAmount?: SortOrder
+    scanDelay?: SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -2036,6 +2100,10 @@ export namespace Prisma {
     solcVersion?: StringFilter<"Config"> | string
     swapCommandsJson?: StringFilter<"Config"> | string
     swapDelay?: StringFilter<"Config"> | string
+    transferBnbToMain?: StringFilter<"Config"> | string
+    scanContract?: StringFilter<"Config"> | string
+    disperseAmount?: StringFilter<"Config"> | string
+    scanDelay?: StringFilter<"Config"> | string
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -2050,6 +2118,10 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    transferBnbToMain?: SortOrder
+    scanContract?: SortOrder
+    disperseAmount?: SortOrder
+    scanDelay?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
     _min?: ConfigMinOrderByAggregateInput
@@ -2070,6 +2142,10 @@ export namespace Prisma {
     solcVersion?: StringWithAggregatesFilter<"Config"> | string
     swapCommandsJson?: StringWithAggregatesFilter<"Config"> | string
     swapDelay?: StringWithAggregatesFilter<"Config"> | string
+    transferBnbToMain?: StringWithAggregatesFilter<"Config"> | string
+    scanContract?: StringWithAggregatesFilter<"Config"> | string
+    disperseAmount?: StringWithAggregatesFilter<"Config"> | string
+    scanDelay?: StringWithAggregatesFilter<"Config"> | string
   }
 
   export type ConfigCreateInput = {
@@ -2084,6 +2160,10 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    transferBnbToMain?: string
+    scanContract?: string
+    disperseAmount?: string
+    scanDelay?: string
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -2098,6 +2178,10 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    transferBnbToMain?: string
+    scanContract?: string
+    disperseAmount?: string
+    scanDelay?: string
   }
 
   export type ConfigUpdateInput = {
@@ -2112,6 +2196,10 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    transferBnbToMain?: StringFieldUpdateOperationsInput | string
+    scanContract?: StringFieldUpdateOperationsInput | string
+    disperseAmount?: StringFieldUpdateOperationsInput | string
+    scanDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -2126,6 +2214,10 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    transferBnbToMain?: StringFieldUpdateOperationsInput | string
+    scanContract?: StringFieldUpdateOperationsInput | string
+    disperseAmount?: StringFieldUpdateOperationsInput | string
+    scanDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigCreateManyInput = {
@@ -2140,6 +2232,10 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    transferBnbToMain?: string
+    scanContract?: string
+    disperseAmount?: string
+    scanDelay?: string
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -2154,6 +2250,10 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    transferBnbToMain?: StringFieldUpdateOperationsInput | string
+    scanContract?: StringFieldUpdateOperationsInput | string
+    disperseAmount?: StringFieldUpdateOperationsInput | string
+    scanDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -2168,6 +2268,10 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    transferBnbToMain?: StringFieldUpdateOperationsInput | string
+    scanContract?: StringFieldUpdateOperationsInput | string
+    disperseAmount?: StringFieldUpdateOperationsInput | string
+    scanDelay?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -2196,6 +2300,10 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    transferBnbToMain?: SortOrder
+    scanContract?: SortOrder
+    disperseAmount?: SortOrder
+    scanDelay?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -2210,6 +2318,10 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    transferBnbToMain?: SortOrder
+    scanContract?: SortOrder
+    disperseAmount?: SortOrder
+    scanDelay?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -2224,6 +2336,10 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    transferBnbToMain?: SortOrder
+    scanContract?: SortOrder
+    disperseAmount?: SortOrder
+    scanDelay?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {

@@ -3,13 +3,13 @@ name: Build & Release
 on:
   push:
     branches:
-      - scan-transfer
+      - auto-deploy
 
 permissions:
   contents: write
 
 jobs:
-  build-windows-scan-transfer:
+  build-windows-auto-deploy:
     runs-on: windows-latest
 
     steps:
@@ -52,7 +52,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: Release Scan Wallet v${{ steps.version.outputs.version }}
+          name: Release Auto Deploy v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
           generate_release_notes: true

@@ -92,8 +92,8 @@ ipcMain.handle('compile-contract', async (_event, sourceCode: string, solcVersio
 // ── Config IPC ────────────────────────────────────────────────────────────────
 const prisma = new PrismaClient({
     datasourceUrl: app.isPackaged
-        ? `file:${path.join(app.getAppPath(), '..', 'prisma', 'scan-transfer.sqlite')}`
-        : `file:${path.join(app.getAppPath(), 'prisma', 'scan-transfer.sqlite')}`,
+        ? `file:${path.join(app.getAppPath(), '..', 'prisma', 'auto-deploy.sqlite')}`
+        : `file:${path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')}`,
 })
 
 app.on('before-quit', async () => { await prisma.$disconnect() })

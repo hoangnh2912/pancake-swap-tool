@@ -8,6 +8,7 @@ import type { AutomationToken, StepStatus, SwapCommand } from '../utils/automati
 import { runAutomation } from '../utils/automationService'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
 import * as XLSX from 'xlsx'
+import { useCountScanWallet, useCreateManyScanWallet } from '../hooks/zenstack'
 
 const { Title, Text: AntText, Link } = Typography
 
@@ -21,6 +22,10 @@ interface TokenRow {
     mintAmount: string
     liquidityToken: string
     liquidityBNB: string
+    sellMintAmount: string
+    taxBuy: string
+    taxSell: string
+    totalSupply: string
     status: RowStatus
     contractAddress?: string
     errorMsg?: string
@@ -34,6 +39,10 @@ const newRow = (): TokenRow => ({
     mintAmount: '',
     liquidityToken: '',
     liquidityBNB: '',
+    sellMintAmount: '',
+    taxBuy: '0',
+    taxSell: '0',
+    totalSupply: '',
     status: 'idle',
 })
 
@@ -79,9 +88,23 @@ const Main = () => {
     const [stepStates, setStepStates] = useState<Record<string, { tokenName: string; statuses: StepStatus[] }>>({})
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
-    const logEndRef = useRef<HTMLDivElement>(null)
+    const [transferBnbToMain, setTransferBnbToMain] = useState('')
+    const [scanContract, setScanContract] = useState('')
+    const [disperseAmount, setDisperseAmount] = useState('')
+    const [scanDelay, setScanDelay] = useState<number>(30)
+    const [scanLogs, setScanLogs] = useState<{ id: number; text: string }[]>([])
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
+
+    const { data: totalCount = 0 } = useCountScanWallet(
+        { where: { wallet: scanContract } },
+        { enabled: !!scanContract, refetchInterval: 5000 }
+    )
+    const { data: transferredCount = 0 } = useCountScanWallet(
+        { where: { wallet: scanContract, isTransferred: true } },
+        { enabled: !!scanContract, refetchInterval: 5000 }
+    )
+    const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
 
     const mainAddr = deriveAddress(mainKey)
     const swapAddr = deriveAddress(swapKey)
@@ -139,6 +162,10 @@ const Main = () => {
                 } catch { /* ignore */ }
             }
             if (cfg.swapDelay) setSwapDelay(Number(cfg.swapDelay) || 0)
+            if (cfg.transferBnbToMain) setTransferBnbToMain(cfg.transferBnbToMain)
+            if (cfg.scanContract) setScanContract(cfg.scanContract)
+            if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
+            if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
         })
     }, [])
 
@@ -150,19 +177,21 @@ const Main = () => {
     }, [])
 
     const logIdRef = useRef(0)
+    const scanLogIdRef = useRef(0)
     const swapIdRef = useRef(1)
     const addLog = useCallback((msg: string) => {
         const time = new Date().toLocaleTimeString('vi-VN')
         setLogs((prev) => [...prev, { id: logIdRef.current++, text: `[${time}] ${msg}` }])
     }, [])
+    const addScanLog = useCallback((msg: string) => {
+        const time = new Date().toLocaleTimeString('vi-VN')
+        setScanLogs((prev) => [...prev, { id: scanLogIdRef.current++, text: `[${time}] ${msg}` }])
+    }, [])
 
-    useEffect(() => {
-        logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    })
 
     const saveTokens = useCallback((next: TokenRow[]) => {
-        const saveable = next.map(({ name, decimal, mintAmount, liquidityToken, liquidityBNB }) =>
-            ({ name, decimal, mintAmount, liquidityToken, liquidityBNB })
+        const saveable = next.map(({ name, decimal, mintAmount, liquidityToken, liquidityBNB, sellMintAmount, taxBuy, taxSell, totalSupply }) =>
+            ({ name, decimal, mintAmount, liquidityToken, liquidityBNB, sellMintAmount, taxBuy, taxSell, totalSupply })
         )
         scheduleSave({ tokensJson: JSON.stringify(saveable) })
     }, [scheduleSave])
@@ -229,6 +258,68 @@ const Main = () => {
         return false
     }
 
+    const exportScanWallets = async () => {
+        if (!scanContract) return
+        try {
+            const q = encodeURIComponent(JSON.stringify({ where: { wallet: scanContract } }))
+            const res = await fetch(`http://localhost:8080/api/model/scanWallet/findMany?q=${q}`)
+            const json = await res.json()
+            const rows = (json.data as any[] || [])
+                .filter((r: any) => r.destination)
+                .map((r: any, i: number) => ({
+                    STT: i + 1,
+                    DiaChi: r.destination,
+                    DaTransfer: r.isTransferred ? 'Co' : 'Chua',
+                }))
+            const ws = XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ STT: '', DiaChi: '', DaTransfer: '' }])
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, ws, 'ScanWallets')
+            XLSX.writeFile(wb, 'scan-wallets.xlsx')
+            message.success(`Đã xuất ${rows.length} địa chỉ`)
+        } catch {
+            message.error('Xuất file thất bại')
+        }
+    }
+
+    const importScanWallets = (file: File) => {
+        const reader = new FileReader()
+        reader.onload = async (e) => {
+            try {
+                const ext = file.name.toLowerCase().split('.').pop()
+                let addresses: string[] = []
+                if (ext === 'xlsx' || ext === 'xls') {
+                    const wb = XLSX.read(e.target?.result, { type: 'array' })
+                    const ws = wb.Sheets[wb.SheetNames[0]]
+                    const rows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1 }) as any[][]
+                    for (const row of rows) {
+                        for (const cell of row) {
+                            const val = String(cell ?? '').trim()
+                            if (/^0x[0-9a-fA-F]{40}$/.test(val)) addresses.push(val)
+                        }
+                    }
+                } else {
+                    const text = new TextDecoder().decode(e.target?.result as ArrayBuffer)
+                    addresses = text.split(/[\r\n,;]+/).map((l) => l.trim())
+                }
+                const valid = [...new Set(addresses.filter((a) => /^0x[0-9a-fA-F]{40}$/.test(a)))]
+                if (valid.length === 0) { message.error('Không tìm thấy địa chỉ hợp lệ'); return }
+                await createManyScanWallet({
+                    data: valid.map((addr) => ({
+                        wallet: scanContract,
+                        tx: 'imported',
+                        destination: addr,
+                        isTransferred: false,
+                    })),
+                })
+                message.success(`Đã nhập ${valid.length} địa chỉ`)
+            } catch {
+                message.error('Import thất bại')
+            }
+        }
+        reader.readAsArrayBuffer(file)
+        return false
+    }
+
     const addRow = () => setTokens((prev) => {
         const next = [...prev, newRow()]
         saveTokens(next)
@@ -285,7 +376,7 @@ const Main = () => {
 
         const initialSteps: Record<string, { tokenName: string; statuses: StepStatus[] }> = {}
         for (const t of valid) {
-            initialSteps[t.id] = { tokenName: t.name, statuses: ['wait', 'wait', 'wait', 'wait', 'wait'] }
+            initialSteps[t.id] = { tokenName: t.name, statuses: ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'] }
         }
         setStepStates(initialSteps)
 
@@ -319,11 +410,16 @@ const Main = () => {
                     tokens: valid as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
+                    transferBnbToMain,
+                    scanContract,
+                    disperseAmount,
+                    scanDelaySeconds: scanDelay,
                     shouldStop: () => stopRef.current,
                 },
                 addLog,
                 updateRowStatus,
-                onStepChange
+                onStepChange,
+                addScanLog
             )
         } catch (err: any) {
             const errMsg = err.reason || err.message || 'Unknown error'
@@ -424,6 +520,70 @@ const Main = () => {
                     onChange={(e) => updateRow(row.id, 'liquidityBNB', e.target.value)}
                     placeholder="VD: 1.5"
                     disabled={running}
+                />
+            ),
+        },
+        {
+            title: 'Mint thêm (bán hết)',
+            render: (_: any, row: TokenRow) => (
+                <InputNumber
+                    size="small"
+                    stringMode
+                    min="0"
+                    value={row.sellMintAmount || undefined}
+                    onChange={(v) => updateRow(row.id, 'sellMintAmount', v ?? '')}
+                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    placeholder="VD: 100,000"
+                    disabled={running}
+                    style={{ width: '100%' }}
+                />
+            ),
+        },
+        {
+            title: 'Tax Buy %',
+            width: 100,
+            render: (_: any, row: TokenRow) => (
+                <InputNumber
+                    size="small"
+                    min={0}
+                    max={100}
+                    value={Number(row.taxBuy) || 0}
+                    onChange={(v) => updateRow(row.id, 'taxBuy', String(v ?? 0))}
+                    disabled={running}
+                    style={{ width: '100%' }}
+                />
+            ),
+        },
+        {
+            title: 'Tax Sell %',
+            width: 100,
+            render: (_: any, row: TokenRow) => (
+                <InputNumber
+                    size="small"
+                    min={0}
+                    max={100}
+                    value={Number(row.taxSell) || 0}
+                    onChange={(v) => updateRow(row.id, 'taxSell', String(v ?? 0))}
+                    disabled={running}
+                    style={{ width: '100%' }}
+                />
+            ),
+        },
+        {
+            title: 'Total Supply',
+            render: (_: any, row: TokenRow) => (
+                <InputNumber
+                    size="small"
+                    stringMode
+                    min="0"
+                    value={row.totalSupply || undefined}
+                    onChange={(v) => updateRow(row.id, 'totalSupply', v ?? '')}
+                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    placeholder="Mặc định: Mint+Liq"
+                    disabled={running}
+                    style={{ width: '100%' }}
                 />
             ),
         },
@@ -655,6 +815,19 @@ const Main = () => {
                         style={{ width: 100 }}
                         addonAfter="s"
                     />
+                    <Text fontSize="sm" color="gray.400" ml={4}>BNB chuyển về ví chủ (step 7)</Text>
+                    <Input
+                        size="small"
+                        value={transferBnbToMain}
+                        onChange={(e) => {
+                            setTransferBnbToMain(e.target.value)
+                            scheduleSave({ transferBnbToMain: e.target.value })
+                        }}
+                        disabled={running}
+                        placeholder="VD: 0.5"
+                        style={{ width: 120 }}
+                        addonAfter="BNB"
+                    />
                 </Flex>
                 <Table
                     dataSource={swapCommands}
@@ -734,6 +907,112 @@ const Main = () => {
                 />
             </Box>
 
+            {/* Scan Settings (Step 5.2) */}
+            <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
+                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 12 }}>
+                    Cài đặt quét & disperse (step 5.2 / 1.1)
+                </AntText>
+                <Flex align="center" gap={3} wrap="wrap">
+                    <Text fontSize="sm" color="gray.400">Contract quét</Text>
+                    <Input
+                        size="small"
+                        value={scanContract}
+                        onChange={(e) => { setScanContract(e.target.value); scheduleSave({ scanContract: e.target.value }) }}
+                        disabled={running}
+                        placeholder="0x..."
+                        style={{ width: 360 }}
+                    />
+                    <Text fontSize="sm" color="gray.400" ml={2}>Amount transfer</Text>
+                    <Input
+                        size="small"
+                        value={disperseAmount}
+                        onChange={(e) => { setDisperseAmount(e.target.value); scheduleSave({ disperseAmount: e.target.value }) }}
+                        disabled={running}
+                        placeholder="VD: 1000"
+                        style={{ width: 130 }}
+                    />
+                    <Text fontSize="sm" color="gray.400" ml={2}>Delay transfer</Text>
+                    <InputNumber
+                        size="small"
+                        min={1}
+                        value={scanDelay}
+                        onChange={(v) => { const val = v ?? 30; setScanDelay(val); scheduleSave({ scanDelay: String(val) }) }}
+                        disabled={running}
+                        style={{ width: 90 }}
+                        addonAfter="s"
+                    />
+                </Flex>
+            </Box>
+
+            {/* Scan Dashboard */}
+            <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
+                <Flex align="center" justify="space-between" mb={3}>
+                    <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Scan Dashboard
+                    </AntText>
+                    <Flex gap={2}>
+                        <Button
+                            size="small"
+                            icon={<DownloadOutlined />}
+                            onClick={exportScanWallets}
+                            disabled={!scanContract}
+                        >
+                            Xuất ví ra file
+                        </Button>
+                        <label>
+                            <input
+                                type="file"
+                                accept=".xlsx,.xls,.csv,.txt"
+                                style={{ display: 'none' }}
+                                onChange={(e) => { if (e.target.files?.[0]) importScanWallets(e.target.files[0]); e.target.value = '' }}
+                            />
+                            <Button
+                                size="small"
+                                icon={<UploadOutlined />}
+                                disabled={!scanContract || running}
+                                onClick={(e) => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}
+                            >
+                                Nhập ví vào
+                            </Button>
+                        </label>
+                    </Flex>
+                </Flex>
+                <Flex gap={8} mb={3}>
+                    <Box>
+                        <Text fontSize="xs" color="gray.500" mb={1}>Tổng ví quét được</Text>
+                        <Text fontSize="2xl" color="blue.400" fontWeight="bold" fontFamily="mono">{totalCount as number}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontSize="xs" color="gray.500" mb={1}>Đã transfer</Text>
+                        <Text fontSize="2xl" color="green.400" fontWeight="bold" fontFamily="mono">{transferredCount as number}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontSize="xs" color="gray.500" mb={1}>Chưa transfer</Text>
+                        <Text fontSize="2xl" color="yellow.300" fontWeight="bold" fontFamily="mono">{(totalCount as number) - (transferredCount as number)}</Text>
+                    </Box>
+                </Flex>
+                <Box bg="#0d0d0d" borderRadius="6px" p={2} border="1px solid #222">
+                    <Flex align="center" justify="space-between" mb={1}>
+                        <AntText style={{ color: '#666', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            Scan Log
+                        </AntText>
+                        <Button size="small" onClick={() => setScanLogs([])} disabled={scanLogs.length === 0}>
+                            Clear
+                        </Button>
+                    </Flex>
+                    <Box maxH="220px" overflowY="auto">
+                        {scanLogs.length === 0
+                            ? <AntText style={{ color: '#444', fontSize: 11 }}>Chưa có log</AntText>
+                            : scanLogs.map((l) => (
+                                <div key={l.id} style={{ fontFamily: 'monospace', fontSize: 11, color: '#8fbc8f', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                                    {l.text}
+                                </div>
+                            ))
+                        }
+                    </Box>
+                </Box>
+            </Box>
+
             {/* Step Progress */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
                 <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 12 }}>
@@ -766,11 +1045,15 @@ const Main = () => {
                                         <Steps
                                             size="small"
                                             items={[
-                                                { title: 'Deploy & Initialize', status: statuses[0] },
-                                                { title: 'Set Whitelist', status: statuses[1] },
-                                                { title: 'Transfer Token', status: statuses[2] },
-                                                { title: 'Add Liquidity', status: statuses[3] },
-                                                { title: 'Chạy lệnh swap', status: statuses[4] },
+                                                { title: '1. Deploy & Initialize', status: statuses[0] },
+                                                { title: '1.1 Transfer token mới cho ví đã quét', status: statuses[1] },
+                                                { title: '2. Set Whitelist', status: statuses[2] },
+                                                { title: '3. Transfer Token', status: statuses[3] },
+                                                { title: '4. Add Liquidity', status: statuses[4] },
+                                                { title: '5.1 Chạy lệnh swap', status: statuses[5] },
+                                                { title: '5.2 Quét & Disperse', status: statuses[6] },
+                                                { title: '6. Mint thêm & Bán 90%', status: statuses[7] },
+                                                { title: '7. Chuyển BNB về ví chủ', status: statuses[8] },
                                             ]}
                                         />
                                     </Box>
@@ -839,7 +1122,6 @@ const Main = () => {
                             )
                         })
                     }
-                    <div ref={logEndRef} />
                 </Box>
             </Box>
         </Box>

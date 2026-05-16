@@ -129,7 +129,11 @@ exports.Prisma.ConfigScalarFieldEnum = {
   tokensJson: 'tokensJson',
   solcVersion: 'solcVersion',
   swapCommandsJson: 'swapCommandsJson',
-  swapDelay: 'swapDelay'
+  swapDelay: 'swapDelay',
+  transferBnbToMain: 'transferBnbToMain',
+  scanContract: 'scanContract',
+  disperseAmount: 'disperseAmount',
+  scanDelay: 'scanDelay'
 };
 
 exports.Prisma.SortOrder = {

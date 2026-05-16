@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "scan-transfer",
+      "name": "auto-deploy",
       "dependencies": {
         "@ajna/pagination": "^1.4.19",
         "@chakra-ui/icons": "^2.1.1",
