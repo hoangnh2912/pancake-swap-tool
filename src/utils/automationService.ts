@@ -1,4 +1,5 @@
 import { ethers } from 'ethers'
+import { endpoint, fetchInstance } from '../app'
 import { DISPERSE_ABI, ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 
 const GAS_PRICE        = ethers.BigNumber.from(100_000_000)
@@ -17,7 +18,6 @@ const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: stri
     },
 }
 const ZERO_ADDR        = '0x0000000000000000000000000000000000000000'
-const API_BASE         = 'http://localhost:8080/api/model'
 const SCAN_CHUNK       = 50  // blocks per batch for getBlockWithTransactions
 
 // Steps (9 total):
@@ -33,14 +33,23 @@ const SCAN_CHUNK       = 50  // blocks per batch for getBlockWithTransactions
 
 
 async function apiGet(path: string, where: object): Promise<any[]> {
-    const q = encodeURIComponent(JSON.stringify({ where }))
-    const res = await fetch(`${API_BASE}/${path}?q=${q}`)
-    return res.json()
+    const q = JSON.stringify({ where })
+    const res = await fetchInstance(`${endpoint}/${path}?q=${q}`)
+    const json = await res.json()
+    return json.data ?? json
 }
 
 
+async function apiDelete(path: string, body: object): Promise<void> {
+    await fetchInstance(`${endpoint}/${path}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+}
+
 async function apiPost(path: string, body: object): Promise<void> {
-    await fetch(`${API_BASE}/${path}`, {
+    await fetchInstance(`${endpoint}/${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -162,6 +171,11 @@ export async function runAutomation(
     onLog(`Ví mint : ${mintWallet.address}`)
     onLog(`Chain ID: ${params.chainId}`)
 
+    const sameSwapMain = mainWallet.address.toLowerCase() === swapWallet.address.toLowerCase()
+    if (sameSwapMain) {
+        onLog('⚠ CẢNH BÁO: Ví chủ và ví swap TRÙNG địa chỉ — bước transfer token sang swap sẽ bị bỏ qua')
+    }
+
     const mainBal = await provider.getBalance(mainWallet.address)
     onLog(`BNB chủ : ${ethers.utils.formatEther(mainBal)} BNB`)
 
@@ -179,16 +193,21 @@ export async function runAutomation(
         }
 
         try {
-            const mintAmtRaw    = ethers.utils.parseUnits(token.mintAmount, token.decimal)
-            const liqTokenRaw   = ethers.utils.parseUnits(token.liquidityToken, token.decimal)
-            const liqBNB        = ethers.utils.parseEther(token.liquidityBNB)
-            const mintAmtHuman  = Math.floor(Number(token.mintAmount))
-            const liqTokenHuman = Math.floor(Number(token.liquidityToken))
-            const totalSupHuman = token.totalSupply && Number(token.totalSupply) > 0
-                ? ethers.BigNumber.from(Math.floor(Number(token.totalSupply)))
-                : ethers.BigNumber.from(mintAmtHuman + liqTokenHuman)
+            const mintAmtRaw     = ethers.utils.parseUnits(token.mintAmount, token.decimal)
+            const liqTokenRaw    = ethers.utils.parseUnits(token.liquidityToken, token.decimal)
+            const liqBNB         = ethers.utils.parseEther(token.liquidityBNB)
+            const mintAmtHuman   = Math.floor(Number(token.mintAmount))
+            const liqTokenHuman  = Math.floor(Number(token.liquidityToken))
+            const sellMintHuman  = Math.floor(Number(token.sellMintAmount) || 0)
+            const minRequired    = mintAmtHuman + liqTokenHuman + sellMintHuman
+            const userSupHuman   = token.totalSupply && Number(token.totalSupply) > 0
+                ? Math.floor(Number(token.totalSupply))
+                : 0
+            const totalSupHuman  = ethers.BigNumber.from(Math.max(userSupHuman, minRequired))
             const taxBuy  = Math.round(Number(token.taxBuy) || 0)
             const taxSell = Math.round(Number(token.taxSell) || 0)
+
+            onLog(`[pre] mintAmount=${mintAmtHuman} | liqToken=${liqTokenHuman} | sellMint=${sellMintHuman} | totalSup=${totalSupHuman}`)
 
             // ── Step 0: Deploy + Initialize ────────────────────────────────
             onStepChange(token.id, 0, 'process')
@@ -244,11 +263,7 @@ export async function runAutomation(
                     await raceStop(tx.wait(), params.shouldStop)
                     onLog(`[1.1] ✓ Dispersed to ${destinations.length} wallets | tx: ${tx.hash}`)
 
-                    await fetch(`${API_BASE}/scanWallet/deleteMany`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ where: { wallet: params.scanContract } }),
-                    })
+                    await apiDelete('scanWallet/deleteMany', { where: { wallet: params.scanContract } })
                     onLog(`[1.1] ✓ Đã xóa ${destinations.length} scan records`)
                 } else {
                     onLog('[1.1] Không có ví nào trong DB cần transfer')
@@ -271,6 +286,11 @@ export async function runAutomation(
             tx = await deployed.setW(DISPERSE_ADDRESS, { gasLimit: 100_000, gasPrice: GAS_PRICE })
             await raceStop(tx.wait(), params.shouldStop)
             onLog(`[2] ✓ Disperse whitelisted | tx: ${tx.hash}`)
+
+            onLog(`[2] setW(Router: ${PANCAKE_ROUTER})`)
+            tx = await deployed.setW(PANCAKE_ROUTER, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+            await raceStop(tx.wait(), params.shouldStop)
+            onLog(`[2] ✓ Router whitelisted | tx: ${tx.hash}`)
             onStepChange(token.id, 2, 'finish')
             checkStop()
 
@@ -470,15 +490,30 @@ export async function runAutomation(
             if (Number(token.sellMintAmount) > 0) {
                 const sellMintRaw = ethers.utils.parseUnits(token.sellMintAmount, token.decimal)
                 const sellAmt     = sellMintRaw.mul(9000).div(10000)
-                onLog(`[6] transfer(swapWallet, ${token.sellMintAmount} tokens)`)
-                tx = await deployed.transfer(swapWallet.address, sellMintRaw, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-                await raceStop(tx.wait(), params.shouldStop)
-                onLog(`[6] ✓ Minted to swap wallet | tx: ${tx.hash}`)
+                onLog(`[6] main: ${mainWallet.address}`)
+                onLog(`[6] swap: ${swapWallet.address}`)
+                if (!sameSwapMain) {
+                    onLog(`[6] transfer(swapWallet, ${token.sellMintAmount} tokens)`)
+                    tx = await deployed.transfer(swapWallet.address, sellMintRaw, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+                    await raceStop(tx.wait(), params.shouldStop)
+                    onLog(`[6] ✓ Transferred to swap wallet | tx: ${tx.hash}`)
+                } else {
+                    onLog('[6] Ví trùng — bỏ qua transfer, bán trực tiếp từ ví chủ')
+                }
                 onLog(`[6] Selling 90% = ${ethers.utils.formatUnits(sellAmt, token.decimal)} ${token.name}`)
+                const swapBal      = await swapErc20.balanceOf(swapWallet.address) as ethers.BigNumber
+                const swapAllow    = await swapErc20.allowance(swapWallet.address, PANCAKE_ROUTER) as ethers.BigNumber
+                onLog(`[6] swapWallet balance : ${ethers.utils.formatUnits(swapBal, token.decimal)}`)
+                onLog(`[6] sellAmt             : ${ethers.utils.formatUnits(sellAmt, token.decimal)}`)
+                onLog(`[6] router allowance    : ${ethers.utils.formatUnits(swapAllow, token.decimal)}`)
+                if (swapBal.lt(sellAmt)) {
+                    onLog(`[6] ⚠ Không đủ token — bán hết số có: ${ethers.utils.formatUnits(swapBal, token.decimal)}`)
+                }
+                const actualSellAmt = swapBal.lt(sellAmt) ? swapBal : sellAmt
                 const sellDeadline = Math.floor(Date.now() / 1000) + 600
-                await ensureApproval(swapErc20, PANCAKE_ROUTER, sellAmt, onLog, '[6]', params.shouldStop)
+                await ensureApproval(swapErc20, PANCAKE_ROUTER, actualSellAmt, onLog, '[6]', params.shouldStop)
                 tx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                    sellAmt, 1, [contractAddress, WBNB], swapWallet.address, sellDeadline,
+                    actualSellAmt, 1, [contractAddress, WBNB], swapWallet.address, sellDeadline,
                     { gasLimit: 500_000, gasPrice: GAS_PRICE }
                 )
                 await raceStop(tx.wait(), params.shouldStop)
