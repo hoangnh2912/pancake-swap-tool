@@ -4,330 +4,735 @@
 
 /* eslint-disable */
 
-import type { Prisma, ScanWallet } from "../../../prisma/client";
-import type { UseMutationOptions, UseQueryOptions, UseInfiniteQueryOptions, InfiniteData } from '@tanstack/react-query';
-import { getHooksContext } from '@zenstackhq/tanstack-query/runtime-v5/react';
-import { useModelQuery, useInfiniteModelQuery, useModelMutation } from '@zenstackhq/tanstack-query/runtime-v5/react';
-import type { PickEnumerable, CheckSelect, QueryError, ExtraQueryOptions, ExtraMutationOptions } from '@zenstackhq/tanstack-query/runtime-v5';
+import type { Prisma, ScanWallet } from '../../../prisma/client'
+import type {
+    UseMutationOptions,
+    UseQueryOptions,
+    UseInfiniteQueryOptions,
+    InfiniteData,
+} from '@tanstack/react-query'
+import { getHooksContext } from '@zenstackhq/tanstack-query/runtime-v5/react'
+import {
+    useModelQuery,
+    useInfiniteModelQuery,
+    useModelMutation,
+} from '@zenstackhq/tanstack-query/runtime-v5/react'
+import type {
+    PickEnumerable,
+    CheckSelect,
+    QueryError,
+    ExtraQueryOptions,
+    ExtraMutationOptions,
+} from '@zenstackhq/tanstack-query/runtime-v5'
 import type { PolicyCrudKind } from '@zenstackhq/runtime'
-import metadata from './__model_meta';
-type DefaultError = QueryError;
-import { useSuspenseModelQuery, useSuspenseInfiniteModelQuery } from '@zenstackhq/tanstack-query/runtime-v5/react';
-import type { UseSuspenseQueryOptions, UseSuspenseInfiniteQueryOptions } from '@tanstack/react-query';
+import metadata from './__model_meta'
+type DefaultError = QueryError
+import {
+    useSuspenseModelQuery,
+    useSuspenseInfiniteModelQuery,
+} from '@zenstackhq/tanstack-query/runtime-v5/react'
+import type {
+    UseSuspenseQueryOptions,
+    UseSuspenseInfiniteQueryOptions,
+} from '@tanstack/react-query'
 
-export function useCreateScanWallet(options?: Omit<(UseMutationOptions<(ScanWallet | undefined), DefaultError, Prisma.ScanWalletCreateArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletCreateArgs, DefaultError, ScanWallet, true>('ScanWallet', 'POST', `${endpoint}/scanWallet/create`, metadata, options, fetch, true)
-        ;
+export function useCreateScanWallet(
+    options?: Omit<
+        UseMutationOptions<ScanWallet | undefined, DefaultError, Prisma.ScanWalletCreateArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<Prisma.ScanWalletCreateArgs, DefaultError, ScanWallet, true>(
+        'ScanWallet',
+        'POST',
+        `${endpoint}/scanWallet/create`,
+        metadata,
+        options,
+        fetch,
+        true
+    )
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletCreateArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletCreateArgs>,
-            options?: Omit<(UseMutationOptions<(CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined), DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletCreateArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletCreateArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as (CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined);
+            return (await _mutation.mutateAsync(args, options as any)) as
+                | CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>>
+                | undefined
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useCreateManyScanWallet(options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletCreateManyArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletCreateManyArgs, DefaultError, Prisma.BatchPayload, false>('ScanWallet', 'POST', `${endpoint}/scanWallet/createMany`, metadata, options, fetch, false)
-        ;
+export function useCreateManyScanWallet(
+    options?: Omit<
+        UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletCreateManyArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<
+        Prisma.ScanWalletCreateManyArgs,
+        DefaultError,
+        Prisma.BatchPayload,
+        false
+    >('ScanWallet', 'POST', `${endpoint}/scanWallet/createMany`, metadata, options, fetch, false)
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletCreateManyArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletCreateManyArgs>,
-            options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletCreateManyArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    Prisma.BatchPayload,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletCreateManyArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as Prisma.BatchPayload;
+            return (await _mutation.mutateAsync(args, options as any)) as Prisma.BatchPayload
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useFindManyScanWallet<TArgs extends Prisma.ScanWalletFindManyArgs, TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }>, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findMany`, args, options, fetch);
+export function useFindManyScanWallet<
+    TArgs extends Prisma.ScanWalletFindManyArgs,
+    TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findMany`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useInfiniteFindManyScanWallet<TArgs extends Prisma.ScanWalletFindManyArgs, TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs>>, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>, options?: Omit<UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TData>>, 'queryKey' | 'initialPageParam'>) {
-    options = options ?? { getNextPageParam: () => null };
-    const { endpoint, fetch } = getHooksContext();
-    return useInfiniteModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findMany`, args, options, fetch);
+export function useInfiniteFindManyScanWallet<
+    TArgs extends Prisma.ScanWalletFindManyArgs,
+    TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs>>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>,
+    options?: Omit<
+        UseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TData>>,
+        'queryKey' | 'initialPageParam'
+    >
+) {
+    options = options ?? { getNextPageParam: () => null }
+    const { endpoint, fetch } = getHooksContext()
+    return useInfiniteModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findMany`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useSuspenseFindManyScanWallet<TArgs extends Prisma.ScanWalletFindManyArgs, TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }>, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findMany`, args, options, fetch);
+export function useSuspenseFindManyScanWallet<
+    TArgs extends Prisma.ScanWalletFindManyArgs,
+    TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findMany`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useSuspenseInfiniteFindManyScanWallet<TArgs extends Prisma.ScanWalletFindManyArgs, TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs>>, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>, options?: Omit<UseSuspenseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TData>>, 'queryKey' | 'initialPageParam'>) {
-    options = options ?? { getNextPageParam: () => null };
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseInfiniteModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findMany`, args, options, fetch);
+export function useSuspenseInfiniteFindManyScanWallet<
+    TArgs extends Prisma.ScanWalletFindManyArgs,
+    TQueryFnData = Array<Prisma.ScanWalletGetPayload<TArgs>>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindManyArgs>,
+    options?: Omit<
+        UseSuspenseInfiniteQueryOptions<TQueryFnData, TError, InfiniteData<TData>>,
+        'queryKey' | 'initialPageParam'
+    >
+) {
+    options = options ?? { getNextPageParam: () => null }
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseInfiniteModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findMany`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useFindUniqueScanWallet<TArgs extends Prisma.ScanWalletFindUniqueArgs, TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindUniqueArgs>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findUnique`, args, options, fetch);
+export function useFindUniqueScanWallet<
+    TArgs extends Prisma.ScanWalletFindUniqueArgs,
+    TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean },
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindUniqueArgs>,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findUnique`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useSuspenseFindUniqueScanWallet<TArgs extends Prisma.ScanWalletFindUniqueArgs, TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindUniqueArgs>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findUnique`, args, options, fetch);
+export function useSuspenseFindUniqueScanWallet<
+    TArgs extends Prisma.ScanWalletFindUniqueArgs,
+    TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean },
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindUniqueArgs>,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findUnique`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useFindFirstScanWallet<TArgs extends Prisma.ScanWalletFindFirstArgs, TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindFirstArgs>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findFirst`, args, options, fetch);
+export function useFindFirstScanWallet<
+    TArgs extends Prisma.ScanWalletFindFirstArgs,
+    TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean },
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindFirstArgs>,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findFirst`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useSuspenseFindFirstScanWallet<TArgs extends Prisma.ScanWalletFindFirstArgs, TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean }, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindFirstArgs>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/findFirst`, args, options, fetch);
+export function useSuspenseFindFirstScanWallet<
+    TArgs extends Prisma.ScanWalletFindFirstArgs,
+    TQueryFnData = Prisma.ScanWalletGetPayload<TArgs> & { $optimistic?: boolean },
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletFindFirstArgs>,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/findFirst`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useUpdateScanWallet(options?: Omit<(UseMutationOptions<(ScanWallet | undefined), DefaultError, Prisma.ScanWalletUpdateArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletUpdateArgs, DefaultError, ScanWallet, true>('ScanWallet', 'PUT', `${endpoint}/scanWallet/update`, metadata, options, fetch, true)
-        ;
+export function useUpdateScanWallet(
+    options?: Omit<
+        UseMutationOptions<ScanWallet | undefined, DefaultError, Prisma.ScanWalletUpdateArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<Prisma.ScanWalletUpdateArgs, DefaultError, ScanWallet, true>(
+        'ScanWallet',
+        'PUT',
+        `${endpoint}/scanWallet/update`,
+        metadata,
+        options,
+        fetch,
+        true
+    )
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletUpdateArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletUpdateArgs>,
-            options?: Omit<(UseMutationOptions<(CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined), DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletUpdateArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletUpdateArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as (CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined);
+            return (await _mutation.mutateAsync(args, options as any)) as
+                | CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>>
+                | undefined
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useUpdateManyScanWallet(options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletUpdateManyArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletUpdateManyArgs, DefaultError, Prisma.BatchPayload, false>('ScanWallet', 'PUT', `${endpoint}/scanWallet/updateMany`, metadata, options, fetch, false)
-        ;
+export function useUpdateManyScanWallet(
+    options?: Omit<
+        UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletUpdateManyArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<
+        Prisma.ScanWalletUpdateManyArgs,
+        DefaultError,
+        Prisma.BatchPayload,
+        false
+    >('ScanWallet', 'PUT', `${endpoint}/scanWallet/updateMany`, metadata, options, fetch, false)
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletUpdateManyArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletUpdateManyArgs>,
-            options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletUpdateManyArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    Prisma.BatchPayload,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletUpdateManyArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as Prisma.BatchPayload;
+            return (await _mutation.mutateAsync(args, options as any)) as Prisma.BatchPayload
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useUpsertScanWallet(options?: Omit<(UseMutationOptions<(ScanWallet | undefined), DefaultError, Prisma.ScanWalletUpsertArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletUpsertArgs, DefaultError, ScanWallet, true>('ScanWallet', 'POST', `${endpoint}/scanWallet/upsert`, metadata, options, fetch, true)
-        ;
+export function useUpsertScanWallet(
+    options?: Omit<
+        UseMutationOptions<ScanWallet | undefined, DefaultError, Prisma.ScanWalletUpsertArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<Prisma.ScanWalletUpsertArgs, DefaultError, ScanWallet, true>(
+        'ScanWallet',
+        'POST',
+        `${endpoint}/scanWallet/upsert`,
+        metadata,
+        options,
+        fetch,
+        true
+    )
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletUpsertArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletUpsertArgs>,
-            options?: Omit<(UseMutationOptions<(CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined), DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletUpsertArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletUpsertArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as (CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined);
+            return (await _mutation.mutateAsync(args, options as any)) as
+                | CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>>
+                | undefined
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useDeleteScanWallet(options?: Omit<(UseMutationOptions<(ScanWallet | undefined), DefaultError, Prisma.ScanWalletDeleteArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletDeleteArgs, DefaultError, ScanWallet, true>('ScanWallet', 'DELETE', `${endpoint}/scanWallet/delete`, metadata, options, fetch, true)
-        ;
+export function useDeleteScanWallet(
+    options?: Omit<
+        UseMutationOptions<ScanWallet | undefined, DefaultError, Prisma.ScanWalletDeleteArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<Prisma.ScanWalletDeleteArgs, DefaultError, ScanWallet, true>(
+        'ScanWallet',
+        'DELETE',
+        `${endpoint}/scanWallet/delete`,
+        metadata,
+        options,
+        fetch,
+        true
+    )
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletDeleteArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletDeleteArgs>,
-            options?: Omit<(UseMutationOptions<(CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined), DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletDeleteArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletDeleteArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as (CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>> | undefined);
+            return (await _mutation.mutateAsync(args, options as any)) as
+                | CheckSelect<T, ScanWallet, Prisma.ScanWalletGetPayload<T>>
+                | undefined
         },
-    };
-    return mutation;
+    }
+    return mutation
 }
 
-export function useDeleteManyScanWallet(options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletDeleteManyArgs> & ExtraMutationOptions), 'mutationFn'>) {
-    const { endpoint, fetch } = getHooksContext();
-    const _mutation =
-        useModelMutation<Prisma.ScanWalletDeleteManyArgs, DefaultError, Prisma.BatchPayload, false>('ScanWallet', 'DELETE', `${endpoint}/scanWallet/deleteMany`, metadata, options, fetch, false)
-        ;
+export function useDeleteManyScanWallet(
+    options?: Omit<
+        UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.ScanWalletDeleteManyArgs> &
+            ExtraMutationOptions,
+        'mutationFn'
+    >
+) {
+    const { endpoint, fetch } = getHooksContext()
+    const _mutation = useModelMutation<
+        Prisma.ScanWalletDeleteManyArgs,
+        DefaultError,
+        Prisma.BatchPayload,
+        false
+    >('ScanWallet', 'DELETE', `${endpoint}/scanWallet/deleteMany`, metadata, options, fetch, false)
     const mutation = {
         ..._mutation,
         mutateAsync: async <T extends Prisma.ScanWalletDeleteManyArgs>(
             args: Prisma.SelectSubset<T, Prisma.ScanWalletDeleteManyArgs>,
-            options?: Omit<(UseMutationOptions<Prisma.BatchPayload, DefaultError, Prisma.SelectSubset<T, Prisma.ScanWalletDeleteManyArgs>> & ExtraMutationOptions), 'mutationFn'>
+            options?: Omit<
+                UseMutationOptions<
+                    Prisma.BatchPayload,
+                    DefaultError,
+                    Prisma.SelectSubset<T, Prisma.ScanWalletDeleteManyArgs>
+                > &
+                    ExtraMutationOptions,
+                'mutationFn'
+            >
         ) => {
-            return (await _mutation.mutateAsync(
-                args,
-                options as any
-            )) as Prisma.BatchPayload;
+            return (await _mutation.mutateAsync(args, options as any)) as Prisma.BatchPayload
         },
-    };
-    return mutation;
-}
-
-export function useAggregateScanWallet<TArgs extends Prisma.ScanWalletAggregateArgs, TQueryFnData = Prisma.GetScanWalletAggregateType<TArgs>, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletAggregateArgs>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/aggregate`, args, options, fetch);
-}
-
-export function useSuspenseAggregateScanWallet<TArgs extends Prisma.ScanWalletAggregateArgs, TQueryFnData = Prisma.GetScanWalletAggregateType<TArgs>, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletAggregateArgs>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/aggregate`, args, options, fetch);
-}
-
-export function useGroupByScanWallet<TArgs extends Prisma.ScanWalletGroupByArgs, HasSelectOrTake extends Prisma.Or<Prisma.Extends<'skip', Prisma.Keys<TArgs>>, Prisma.Extends<'take', Prisma.Keys<TArgs>>>, OrderByArg extends Prisma.True extends HasSelectOrTake ? { orderBy: Prisma.ScanWalletGroupByArgs['orderBy'] } : { orderBy?: Prisma.ScanWalletGroupByArgs['orderBy'] }, OrderFields extends Prisma.ExcludeUnderscoreKeys<Prisma.Keys<Prisma.MaybeTupleToUnion<TArgs['orderBy']>>>, ByFields extends Prisma.MaybeTupleToUnion<TArgs['by']>, ByValid extends Prisma.Has<ByFields, OrderFields>, HavingFields extends Prisma.GetHavingFields<TArgs['having']>, HavingValid extends Prisma.Has<ByFields, HavingFields>, ByEmpty extends TArgs['by'] extends never[] ? Prisma.True : Prisma.False, InputErrors extends ByEmpty extends Prisma.True
-    ? `Error: "by" must not be empty.`
-    : HavingValid extends Prisma.False
-    ? {
-        [P in HavingFields]: P extends ByFields
-        ? never
-        : P extends string
-        ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-        : [
-            Error,
-            'Field ',
-            P,
-            ` in "having" needs to be provided in "by"`,
-        ]
-    }[HavingFields]
-    : 'take' extends Prisma.Keys<TArgs>
-    ? 'orderBy' extends Prisma.Keys<TArgs>
-    ? ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields]
-    : 'Error: If you provide "take", you also need to provide "orderBy"'
-    : 'skip' extends Prisma.Keys<TArgs>
-    ? 'orderBy' extends Prisma.Keys<TArgs>
-    ? ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields]
-    : 'Error: If you provide "skip", you also need to provide "orderBy"'
-    : ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields], TQueryFnData = {} extends InputErrors ?
-    Array<PickEnumerable<Prisma.ScanWalletGroupByOutputType, TArgs['by']> &
-    {
-        [P in ((keyof TArgs) & (keyof Prisma.ScanWalletGroupByOutputType))]: P extends '_count'
-        ? TArgs[P] extends boolean
-        ? number
-        : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
-        : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
     }
-    > : InputErrors, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.SubsetIntersection<TArgs, Prisma.ScanWalletGroupByArgs, OrderByArg> & InputErrors>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/groupBy`, args, options, fetch);
+    return mutation
 }
 
-export function useSuspenseGroupByScanWallet<TArgs extends Prisma.ScanWalletGroupByArgs, HasSelectOrTake extends Prisma.Or<Prisma.Extends<'skip', Prisma.Keys<TArgs>>, Prisma.Extends<'take', Prisma.Keys<TArgs>>>, OrderByArg extends Prisma.True extends HasSelectOrTake ? { orderBy: Prisma.ScanWalletGroupByArgs['orderBy'] } : { orderBy?: Prisma.ScanWalletGroupByArgs['orderBy'] }, OrderFields extends Prisma.ExcludeUnderscoreKeys<Prisma.Keys<Prisma.MaybeTupleToUnion<TArgs['orderBy']>>>, ByFields extends Prisma.MaybeTupleToUnion<TArgs['by']>, ByValid extends Prisma.Has<ByFields, OrderFields>, HavingFields extends Prisma.GetHavingFields<TArgs['having']>, HavingValid extends Prisma.Has<ByFields, HavingFields>, ByEmpty extends TArgs['by'] extends never[] ? Prisma.True : Prisma.False, InputErrors extends ByEmpty extends Prisma.True
-    ? `Error: "by" must not be empty.`
-    : HavingValid extends Prisma.False
-    ? {
-        [P in HavingFields]: P extends ByFields
-        ? never
-        : P extends string
-        ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-        : [
-            Error,
-            'Field ',
-            P,
-            ` in "having" needs to be provided in "by"`,
-        ]
-    }[HavingFields]
-    : 'take' extends Prisma.Keys<TArgs>
-    ? 'orderBy' extends Prisma.Keys<TArgs>
-    ? ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields]
-    : 'Error: If you provide "take", you also need to provide "orderBy"'
-    : 'skip' extends Prisma.Keys<TArgs>
-    ? 'orderBy' extends Prisma.Keys<TArgs>
-    ? ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields]
-    : 'Error: If you provide "skip", you also need to provide "orderBy"'
-    : ByValid extends Prisma.True
-    ? {}
-    : {
-        [P in OrderFields]: P extends ByFields
-        ? never
-        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-    }[OrderFields], TQueryFnData = {} extends InputErrors ?
-    Array<PickEnumerable<Prisma.ScanWalletGroupByOutputType, TArgs['by']> &
-    {
-        [P in ((keyof TArgs) & (keyof Prisma.ScanWalletGroupByOutputType))]: P extends '_count'
-        ? TArgs[P] extends boolean
-        ? number
-        : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
-        : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
-    }
-    > : InputErrors, TData = TQueryFnData, TError = DefaultError>(args: Prisma.SelectSubset<TArgs, Prisma.SubsetIntersection<TArgs, Prisma.ScanWalletGroupByArgs, OrderByArg> & InputErrors>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/groupBy`, args, options, fetch);
+export function useAggregateScanWallet<
+    TArgs extends Prisma.ScanWalletAggregateArgs,
+    TQueryFnData = Prisma.GetScanWalletAggregateType<TArgs>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletAggregateArgs>,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/aggregate`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useCountScanWallet<TArgs extends Prisma.ScanWalletCountArgs, TQueryFnData = TArgs extends { select: any; } ? TArgs['select'] extends true ? number : Prisma.GetScalarType<TArgs['select'], Prisma.ScanWalletCountAggregateOutputType> : number, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletCountArgs>, options?: (Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/count`, args, options, fetch);
+export function useSuspenseAggregateScanWallet<
+    TArgs extends Prisma.ScanWalletAggregateArgs,
+    TQueryFnData = Prisma.GetScanWalletAggregateType<TArgs>,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<TArgs, Prisma.ScanWalletAggregateArgs>,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/aggregate`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useSuspenseCountScanWallet<TArgs extends Prisma.ScanWalletCountArgs, TQueryFnData = TArgs extends { select: any; } ? TArgs['select'] extends true ? number : Prisma.GetScalarType<TArgs['select'], Prisma.ScanWalletCountAggregateOutputType> : number, TData = TQueryFnData, TError = DefaultError>(args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletCountArgs>, options?: (Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useSuspenseModelQuery<TQueryFnData, TData, TError>('ScanWallet', `${endpoint}/scanWallet/count`, args, options, fetch);
+export function useGroupByScanWallet<
+    TArgs extends Prisma.ScanWalletGroupByArgs,
+    HasSelectOrTake extends Prisma.Or<
+        Prisma.Extends<'skip', Prisma.Keys<TArgs>>,
+        Prisma.Extends<'take', Prisma.Keys<TArgs>>
+    >,
+    OrderByArg extends Prisma.True extends HasSelectOrTake
+        ? { orderBy: Prisma.ScanWalletGroupByArgs['orderBy'] }
+        : { orderBy?: Prisma.ScanWalletGroupByArgs['orderBy'] },
+    OrderFields extends Prisma.ExcludeUnderscoreKeys<
+        Prisma.Keys<Prisma.MaybeTupleToUnion<TArgs['orderBy']>>
+    >,
+    ByFields extends Prisma.MaybeTupleToUnion<TArgs['by']>,
+    ByValid extends Prisma.Has<ByFields, OrderFields>,
+    HavingFields extends Prisma.GetHavingFields<TArgs['having']>,
+    HavingValid extends Prisma.Has<ByFields, HavingFields>,
+    ByEmpty extends TArgs['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends Prisma.False
+          ? {
+                [P in HavingFields]: P extends ByFields
+                    ? never
+                    : P extends string
+                      ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                      : [Error, 'Field ', P, ` in "having" needs to be provided in "by"`]
+            }[HavingFields]
+          : 'take' extends Prisma.Keys<TArgs>
+            ? 'orderBy' extends Prisma.Keys<TArgs>
+                ? ByValid extends Prisma.True
+                    ? {}
+                    : {
+                          [P in OrderFields]: P extends ByFields
+                              ? never
+                              : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                      }[OrderFields]
+                : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Prisma.Keys<TArgs>
+              ? 'orderBy' extends Prisma.Keys<TArgs>
+                  ? ByValid extends Prisma.True
+                      ? {}
+                      : {
+                            [P in OrderFields]: P extends ByFields
+                                ? never
+                                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                        }[OrderFields]
+                  : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends Prisma.True
+                ? {}
+                : {
+                      [P in OrderFields]: P extends ByFields
+                          ? never
+                          : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                  }[OrderFields],
+    TQueryFnData = {} extends InputErrors
+        ? Array<
+              PickEnumerable<Prisma.ScanWalletGroupByOutputType, TArgs['by']> & {
+                  [P in keyof TArgs & keyof Prisma.ScanWalletGroupByOutputType]: P extends '_count'
+                      ? TArgs[P] extends boolean
+                          ? number
+                          : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
+                      : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
+              }
+          >
+        : InputErrors,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<
+        TArgs,
+        Prisma.SubsetIntersection<TArgs, Prisma.ScanWalletGroupByArgs, OrderByArg> & InputErrors
+    >,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/groupBy`,
+        args,
+        options,
+        fetch
+    )
 }
 
-export function useCheckScanWallet<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; wallet?: string; tx?: string; token?: string; destination?: string; amount?: string; isTransferred?: boolean }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
-    const { endpoint, fetch } = getHooksContext();
-    return useModelQuery<boolean, boolean, TError>('ScanWallet', `${endpoint}/scanWallet/check`, args, options, fetch);
+export function useSuspenseGroupByScanWallet<
+    TArgs extends Prisma.ScanWalletGroupByArgs,
+    HasSelectOrTake extends Prisma.Or<
+        Prisma.Extends<'skip', Prisma.Keys<TArgs>>,
+        Prisma.Extends<'take', Prisma.Keys<TArgs>>
+    >,
+    OrderByArg extends Prisma.True extends HasSelectOrTake
+        ? { orderBy: Prisma.ScanWalletGroupByArgs['orderBy'] }
+        : { orderBy?: Prisma.ScanWalletGroupByArgs['orderBy'] },
+    OrderFields extends Prisma.ExcludeUnderscoreKeys<
+        Prisma.Keys<Prisma.MaybeTupleToUnion<TArgs['orderBy']>>
+    >,
+    ByFields extends Prisma.MaybeTupleToUnion<TArgs['by']>,
+    ByValid extends Prisma.Has<ByFields, OrderFields>,
+    HavingFields extends Prisma.GetHavingFields<TArgs['having']>,
+    HavingValid extends Prisma.Has<ByFields, HavingFields>,
+    ByEmpty extends TArgs['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends Prisma.False
+          ? {
+                [P in HavingFields]: P extends ByFields
+                    ? never
+                    : P extends string
+                      ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                      : [Error, 'Field ', P, ` in "having" needs to be provided in "by"`]
+            }[HavingFields]
+          : 'take' extends Prisma.Keys<TArgs>
+            ? 'orderBy' extends Prisma.Keys<TArgs>
+                ? ByValid extends Prisma.True
+                    ? {}
+                    : {
+                          [P in OrderFields]: P extends ByFields
+                              ? never
+                              : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                      }[OrderFields]
+                : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Prisma.Keys<TArgs>
+              ? 'orderBy' extends Prisma.Keys<TArgs>
+                  ? ByValid extends Prisma.True
+                      ? {}
+                      : {
+                            [P in OrderFields]: P extends ByFields
+                                ? never
+                                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                        }[OrderFields]
+                  : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends Prisma.True
+                ? {}
+                : {
+                      [P in OrderFields]: P extends ByFields
+                          ? never
+                          : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+                  }[OrderFields],
+    TQueryFnData = {} extends InputErrors
+        ? Array<
+              PickEnumerable<Prisma.ScanWalletGroupByOutputType, TArgs['by']> & {
+                  [P in keyof TArgs & keyof Prisma.ScanWalletGroupByOutputType]: P extends '_count'
+                      ? TArgs[P] extends boolean
+                          ? number
+                          : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
+                      : Prisma.GetScalarType<TArgs[P], Prisma.ScanWalletGroupByOutputType[P]>
+              }
+          >
+        : InputErrors,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args: Prisma.SelectSubset<
+        TArgs,
+        Prisma.SubsetIntersection<TArgs, Prisma.ScanWalletGroupByArgs, OrderByArg> & InputErrors
+    >,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/groupBy`,
+        args,
+        options,
+        fetch
+    )
+}
+
+export function useCountScanWallet<
+    TArgs extends Prisma.ScanWalletCountArgs,
+    TQueryFnData = TArgs extends { select: any }
+        ? TArgs['select'] extends true
+            ? number
+            : Prisma.GetScalarType<TArgs['select'], Prisma.ScanWalletCountAggregateOutputType>
+        : number,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletCountArgs>,
+    options?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/count`,
+        args,
+        options,
+        fetch
+    )
+}
+
+export function useSuspenseCountScanWallet<
+    TArgs extends Prisma.ScanWalletCountArgs,
+    TQueryFnData = TArgs extends { select: any }
+        ? TArgs['select'] extends true
+            ? number
+            : Prisma.GetScalarType<TArgs['select'], Prisma.ScanWalletCountAggregateOutputType>
+        : number,
+    TData = TQueryFnData,
+    TError = DefaultError,
+>(
+    args?: Prisma.SelectSubset<TArgs, Prisma.ScanWalletCountArgs>,
+    options?: Omit<UseSuspenseQueryOptions<TQueryFnData, TError, TData>, 'queryKey'> &
+        ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useSuspenseModelQuery<TQueryFnData, TData, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/count`,
+        args,
+        options,
+        fetch
+    )
+}
+
+export function useCheckScanWallet<TError = DefaultError>(
+    args: {
+        operation: PolicyCrudKind
+        where?: {
+            id?: string
+            wallet?: string
+            tx?: string
+            token?: string
+            destination?: string
+            amount?: string
+            isTransferred?: boolean
+        }
+    },
+    options?: Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions
+) {
+    const { endpoint, fetch } = getHooksContext()
+    return useModelQuery<boolean, boolean, TError>(
+        'ScanWallet',
+        `${endpoint}/scanWallet/check`,
+        args,
+        options,
+        fetch
+    )
 }

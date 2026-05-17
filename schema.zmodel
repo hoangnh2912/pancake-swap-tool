@@ -9,6 +9,19 @@ datasource db {
   url      = "file:./auto-deploy.sqlite"
 }
 
+model ScanWallet {
+  id            String   @id @default(cuid())
+  wallet        String
+  tx            String
+  token         String?
+  destination   String?
+  amount        String?
+  isTransferred Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([destination])
+}
+
 model Config {
   id           String @id @default("default")
   rpc          String @default("https://bsc.drpc.org")
@@ -25,4 +38,6 @@ model Config {
   scanContract      String @default("")
   disperseAmount    String @default("")
   scanDelay         String @default("30")
+  logsJson          String @default("[]")
+  stepStatesJson    String @default("{}")
 }

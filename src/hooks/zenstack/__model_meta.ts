@@ -4,56 +4,61 @@
 
 /* eslint-disable */
 
-import type { ModelMeta } from "@zenstackhq/runtime";
+import type { ModelMeta } from '@zenstackhq/runtime'
 
 const metadata: ModelMeta = {
     models: {
         scanWallet: {
-            name: 'ScanWallet', fields: {
+            name: 'ScanWallet',
+            fields: {
                 id: {
-                    name: "id",
-                    type: "String",
+                    name: 'id',
+                    type: 'String',
                     isId: true,
-                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
-                }, wallet: {
-                    name: "wallet",
-                    type: "String",
-                }, tx: {
-                    name: "tx",
-                    type: "String",
-                }, token: {
-                    name: "token",
-                    type: "String",
-                    isOptional: true,
-                }, destination: {
-                    name: "destination",
-                    type: "String",
-                    isOptional: true,
-                }, amount: {
-                    name: "amount",
-                    type: "String",
-                    isOptional: true,
-                }, isTransferred: {
-                    name: "isTransferred",
-                    type: "Boolean",
-                    attributes: [{ "name": "@default", "args": [{ "name": "value", "value": false }] }],
-                }, createdAt: {
-                    name: "createdAt",
-                    type: "DateTime",
-                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                    attributes: [{ name: '@default', args: [{ name: 'value' }] }],
                 },
-            }, uniqueConstraints: {
+                wallet: {
+                    name: 'wallet',
+                    type: 'String',
+                },
+                tx: {
+                    name: 'tx',
+                    type: 'String',
+                },
+                token: {
+                    name: 'token',
+                    type: 'String',
+                    isOptional: true,
+                },
+                destination: {
+                    name: 'destination',
+                    type: 'String',
+                    isOptional: true,
+                },
+                amount: {
+                    name: 'amount',
+                    type: 'String',
+                    isOptional: true,
+                },
+                isTransferred: {
+                    name: 'isTransferred',
+                    type: 'Boolean',
+                    attributes: [{ name: '@default', args: [{ name: 'value', value: false }] }],
+                },
+                createdAt: {
+                    name: 'createdAt',
+                    type: 'DateTime',
+                    attributes: [{ name: '@default', args: [{ name: 'value' }] }],
+                },
+            },
+            uniqueConstraints: {
                 id: {
-                    name: "id",
-                    fields: ["id"]
+                    name: 'id',
+                    fields: ['id'],
                 },
             },
         },
-
     },
-    deleteCascade: {
-
-    },
-
-};
-export default metadata;
+    deleteCascade: {},
+}
+export default metadata

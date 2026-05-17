@@ -1,7 +1,11 @@
-import type { Prisma } from "../../prisma/client"
-import { endpoint, fetchInstance } from "../app"
+import type { Prisma } from '../../prisma/client'
+import { endpoint, fetchInstance } from '../app'
 
-const zenStackFunction = async <T, K = unknown>(model: Prisma.ModelName, ops: Prisma.PrismaAction, q: T): Promise<K> => {
+const zenStackFunction = async <T, K = unknown>(
+    model: Prisma.ModelName,
+    ops: Prisma.PrismaAction,
+    q: T
+): Promise<K> => {
     const method = (() => {
         if (ops.startsWith('find') || ops === 'aggregate' || ops === 'count' || ops === 'groupBy') {
             return 'GET'
@@ -18,14 +22,17 @@ const zenStackFunction = async <T, K = unknown>(model: Prisma.ModelName, ops: Pr
         return 'POST'
     })()
     const modelFormatted = model.charAt(0).toLowerCase() + model.slice(1)
-    const res = await fetchInstance(
-        `${endpoint}/${modelFormatted}/${ops}?q=${JSON.stringify(
-            q
-        )}`,
-        {
-            method,
-        }
-    )
+    const url =
+        method === 'GET'
+            ? `${endpoint}/${modelFormatted}/${ops}?q=${JSON.stringify(q)}`
+            : `${endpoint}/${modelFormatted}/${ops}`
+    const res = await fetchInstance(url, {
+        method,
+        ...(method !== 'GET' && {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(q),
+        }),
+    })
     const data = await res.json()
     return data.data
 }

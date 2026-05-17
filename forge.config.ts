@@ -10,9 +10,7 @@ const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
         icon: './src/favicon',
-        extraResource: [
-            path.resolve(__dirname, 'prisma'),
-        ]
+        extraResource: [path.resolve(__dirname, 'prisma')],
     },
     rebuildConfig: {},
     makers: [new MakerZIP({})],

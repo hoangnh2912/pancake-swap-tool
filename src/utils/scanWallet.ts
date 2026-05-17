@@ -1,7 +1,7 @@
 import { notification } from 'antd/es'
 import { ethers } from 'ethers'
 import zenStackFunction from './zenstack-function'
-import type { Prisma } from "../../prisma/client"
+import type { Prisma } from '../../prisma/client'
 
 export type BatchProgress = {
     batchIndex: number
@@ -84,12 +84,16 @@ export class WalletScanner {
     public async save(params: ScanParams) {
         this.provider = new ethers.providers.JsonRpcProvider(params.rpcUrl)
         this.signer = new ethers.Wallet(params.privateKey, this.provider)
-        this.tokenContract = new ethers.Contract(params.tokenAddress, [
-            'function decimals() view returns (uint8)',
-            'function transfer(address to, uint amount) returns (bool)',
-            'function allowance(address owner, address spender) view returns (uint256)',
-            'function approve(address spender, uint256 amount) returns (bool)',
-        ], this.signer)
+        this.tokenContract = new ethers.Contract(
+            params.tokenAddress,
+            [
+                'function decimals() view returns (uint8)',
+                'function transfer(address to, uint amount) returns (bool)',
+                'function allowance(address owner, address spender) view returns (uint256)',
+                'function approve(address spender, uint256 amount) returns (bool)',
+            ],
+            this.signer
+        )
         this.tokenDecimals = await this.tokenContract.decimals()
         this.amount = String(params.amount)
         this.options = {
@@ -185,7 +189,7 @@ export class WalletScanner {
      */
     private async scanERC20Transfers(fromBlock: number, toBlock: number) {
         await Promise.all(
-            this.wallets.map(wallet => this._scanSingleWallet(wallet, fromBlock, toBlock))
+            this.wallets.map((wallet) => this._scanSingleWallet(wallet, fromBlock, toBlock))
         )
     }
 
@@ -236,7 +240,6 @@ export class WalletScanner {
         }
     }
 
-
     /**
      * Transfer ERC20 token to all destination wallets that not yet received tokens
      * Ensures a delay between transfers to avoid spamming the network
@@ -265,7 +268,7 @@ export class WalletScanner {
                 isTransferred: false,
             },
             select: {
-                destination: true
+                destination: true,
             },
             orderBy: {
                 createdAt: 'desc',
@@ -273,9 +276,9 @@ export class WalletScanner {
         })
 
         const BATCH_SIZE = this.transferBatchSize
-        const allRecipients = [...new Set(
-            data.map(item => item.destination).filter((d): d is string => d !== null)
-        )]
+        const allRecipients = [
+            ...new Set(data.map((item) => item.destination).filter((d): d is string => d !== null)),
+        ]
         if (allRecipients.length === 0) {
             console.log('No destination wallets to transfer tokens to.')
             return
@@ -285,14 +288,17 @@ export class WalletScanner {
         for (let i = 0; i < allRecipients.length; i += BATCH_SIZE) {
             batches.push(allRecipients.slice(i, i + BATCH_SIZE))
         }
-        console.log(`Transferring tokens to ${allRecipients.length} destination wallets in ${batches.length} batch(es)...`)
+        console.log(
+            `Transferring tokens to ${allRecipients.length} destination wallets in ${batches.length} batch(es)...`
+        )
 
         try {
             const approval = await this.tokenContract.allowance(
                 this.signer.address,
                 disperseAddress
             )
-            const totalAmount = ethers.utils.parseUnits(this.amount, this.tokenDecimals)
+            const totalAmount = ethers.utils
+                .parseUnits(this.amount, this.tokenDecimals)
                 .mul(allRecipients.length)
             if (approval.lt(totalAmount)) {
                 console.log('Approving tokens for Disperse contract...')
@@ -300,7 +306,7 @@ export class WalletScanner {
                     disperseAddress,
                     ethers.constants.MaxUint256,
                     {
-                        gasPrice: 50000000
+                        gasPrice: 50000000,
                     }
                 )
                 console.log('Approval transaction sent:', approveTx.hash)
@@ -312,7 +318,9 @@ export class WalletScanner {
 
             for (let i = 0; i < batches.length; i++) {
                 const recipients = batches[i]
-                console.log(`Sending batch ${i + 1}/${batches.length} with ${recipients.length} recipients...`)
+                console.log(
+                    `Sending batch ${i + 1}/${batches.length} with ${recipients.length} recipients...`
+                )
                 let tx: any
                 try {
                     tx = await disperseContract.disperseTokenSimple(
@@ -320,7 +328,7 @@ export class WalletScanner {
                         recipients,
                         ethers.utils.parseUnits(this.amount, this.tokenDecimals),
                         {
-                            gasPrice: 50000000
+                            gasPrice: 50000000,
                         }
                     )
                 } catch (err) {
@@ -335,7 +343,9 @@ export class WalletScanner {
                     throw err
                 }
                 console.log(`Batch ${i + 1} transaction sent:`, tx.hash)
-                message.success(`Batch ${i + 1}/${batches.length} — Đã gửi giao dịch chuyển token: ${tx.hash}`)
+                message.success(
+                    `Batch ${i + 1}/${batches.length} — Đã gửi giao dịch chuyển token: ${tx.hash}`
+                )
                 this.onBatchProgress?.({
                     batchIndex: i + 1,
                     totalBatches: batches.length,
@@ -345,20 +355,24 @@ export class WalletScanner {
                     timestamp: Date.now(),
                 })
                 await tx.wait()
-                await zenStackFunction<
-                    Prisma.ScanWalletUpdateManyArgs
-                >('ScanWallet', 'updateMany', {
-                    where: {
-                        destination: {
-                            in: recipients
-                        }
-                    },
-                    data: {
-                        isTransferred: true
+                await zenStackFunction<Prisma.ScanWalletUpdateManyArgs>(
+                    'ScanWallet',
+                    'updateMany',
+                    {
+                        where: {
+                            destination: {
+                                in: recipients,
+                            },
+                        },
+                        data: {
+                            isTransferred: true,
+                        },
                     }
-                })
+                )
                 console.log(`Batch ${i + 1} confirmed`)
-                message.success(`Batch ${i + 1}/${batches.length} — Giao dịch chuyển token đã được xác nhận`)
+                message.success(
+                    `Batch ${i + 1}/${batches.length} — Giao dịch chuyển token đã được xác nhận`
+                )
                 this.onBatchProgress?.({
                     batchIndex: i + 1,
                     totalBatches: batches.length,

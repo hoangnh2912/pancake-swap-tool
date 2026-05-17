@@ -1,6 +1,7 @@
 import { BrowserWindow, app, ipcMain } from 'electron'
 import path from 'node:path'
 import { PrismaClient } from '../prisma/client'
+import './server'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -96,7 +97,9 @@ const prisma = new PrismaClient({
         : `file:${path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')}`,
 })
 
-app.on('before-quit', async () => { await prisma.$disconnect() })
+app.on('before-quit', async () => {
+    await prisma.$disconnect()
+})
 
 ipcMain.handle('load-config', async () => {
     return await prisma.config.findUnique({ where: { id: 'default' } })
@@ -119,7 +122,9 @@ ipcMain.handle('get-solc-versions', () => {
 })
 
 // ── Window ────────────────────────────────────────────────────────────────────
-if (require('electron-squirrel-startup')) { app.quit() }
+if (require('electron-squirrel-startup')) {
+    app.quit()
+}
 
 let mainWindow: BrowserWindow
 
@@ -140,5 +145,9 @@ const createWindow = (): void => {
 }
 
 app.on('ready', createWindow)
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit() })
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+})
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})

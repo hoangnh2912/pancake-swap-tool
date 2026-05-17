@@ -4,7 +4,7 @@
 
 /* eslint-disable */
 
-export * from './scan-wallet';
-export { getQueryKey } from '@zenstackhq/tanstack-query/runtime-v5';
-export { Provider } from '@zenstackhq/tanstack-query/runtime-v5/react';
-export { default as metadata } from './__model_meta';
+export * from './scan-wallet'
+export { getQueryKey } from '@zenstackhq/tanstack-query/runtime-v5'
+export { Provider } from '@zenstackhq/tanstack-query/runtime-v5/react'
+export { default as metadata } from './__model_meta'

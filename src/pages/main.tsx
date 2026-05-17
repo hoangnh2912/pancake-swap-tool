@@ -1,17 +1,41 @@
-import { DeleteOutlined, DownloadOutlined, PlayCircleOutlined, PlusOutlined, SettingOutlined, StopOutlined, UploadOutlined } from '@ant-design/icons'
+import {
+    DeleteOutlined,
+    DownloadOutlined,
+    PlayCircleOutlined,
+    PlusOutlined,
+    SettingOutlined,
+    StopOutlined,
+    UploadOutlined,
+} from '@ant-design/icons'
 import { Box, Flex, Stack, Text } from '@chakra-ui/react'
 import Editor from '@monaco-editor/react'
-import { Button, Input, InputNumber, Modal, Select, Steps, Table, Tag, Tooltip, Typography, message } from 'antd'
+import {
+    Button,
+    Input,
+    InputNumber,
+    Modal,
+    Select,
+    Steps,
+    Table,
+    Tag,
+    Tooltip,
+    Typography,
+    message,
+} from 'antd'
 import { ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AutomationToken, StepStatus, SwapCommand } from '../utils/automationService'
 import { runAutomation } from '../utils/automationService'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
 import * as XLSX from 'xlsx'
-import { useCountScanWallet, useCreateManyScanWallet } from '../hooks/zenstack'
+import {
+    useCountScanWallet,
+    useCreateManyScanWallet,
+    useFindManyScanWallet,
+} from '../hooks/zenstack'
+import zenStackFunction from '../utils/zenstack-function'
 
 const { Title, Text: AntText, Link } = Typography
-
 
 type RowStatus = 'idle' | 'running' | 'success' | 'error'
 
@@ -83,18 +107,24 @@ const Main = () => {
     const [running, setRunning] = useState(false)
     const [logs, setLogs] = useState<{ id: number; text: string }[]>([])
     const [solcVersion, setSolcVersion] = useState('0.8.27')
-    const [solcVersionOptions, setSolcVersionOptions] = useState<{ value: string; label: string }[]>([])
+    const [solcVersionOptions, setSolcVersionOptions] = useState<
+        { value: string; label: string }[]
+    >([])
     const [settingsOpen, setSettingsOpen] = useState(false)
-    const [stepStates, setStepStates] = useState<Record<string, { tokenName: string; statuses: StepStatus[] }>>({})
+    const [stepStates, setStepStates] = useState<
+        Record<string, { tokenName: string; statuses: StepStatus[] }>
+    >({})
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContract, setScanContract] = useState('')
     const [disperseAmount, setDisperseAmount] = useState('')
     const [scanDelay, setScanDelay] = useState<number>(30)
-    const [scanLogs, setScanLogs] = useState<{ id: number; text: string }[]>([])
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
+
+    const [scanPage, setScanPage] = useState(1)
+    const SCAN_PAGE_SIZE = 20
 
     const { data: totalCount = 0 } = useCountScanWallet(
         { where: { wallet: scanContract } },
@@ -102,6 +132,15 @@ const Main = () => {
     )
     const { data: transferredCount = 0 } = useCountScanWallet(
         { where: { wallet: scanContract, isTransferred: true } },
+        { enabled: !!scanContract, refetchInterval: 5000 }
+    )
+    const { data: scanRows = [] } = useFindManyScanWallet(
+        {
+            where: { wallet: scanContract },
+            orderBy: { createdAt: 'desc' },
+            skip: (scanPage - 1) * SCAN_PAGE_SIZE,
+            take: SCAN_PAGE_SIZE,
+        },
         { enabled: !!scanContract, refetchInterval: 5000 }
     )
     const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
@@ -118,9 +157,15 @@ const Main = () => {
         if (!rpc) return
         const provider = new ethers.providers.JsonRpcProvider(rpc)
         const fetchBal = (addr: string, set: (v: string) => void) => {
-            if (!addr) { set(''); return }
-            provider.getBalance(addr)
-                .then((b) => set(`${Number.parseFloat(ethers.utils.formatEther(b)).toFixed(4)} BNB`))
+            if (!addr) {
+                set('')
+                return
+            }
+            provider
+                .getBalance(addr)
+                .then((b) =>
+                    set(`${Number.parseFloat(ethers.utils.formatEther(b)).toFixed(4)} BNB`)
+                )
                 .catch(() => set(''))
         }
         const poll = () => {
@@ -149,23 +194,51 @@ const Main = () => {
             if (cfg.solcVersion) setSolcVersion(cfg.solcVersion)
             if (cfg.tokensJson) {
                 try {
-                    const saved = JSON.parse(cfg.tokensJson) as Omit<TokenRow, 'status' | 'contractAddress' | 'errorMsg'>[]
+                    const saved = JSON.parse(cfg.tokensJson) as Omit<
+                        TokenRow,
+                        'status' | 'contractAddress' | 'errorMsg'
+                    >[]
                     if (Array.isArray(saved) && saved.length > 0) {
-                        setTokens(saved.map((t) => ({ ...t, id: String(_rowId++), status: 'idle' })))
+                        setTokens(
+                            saved.map((t) => ({ ...t, id: String(_rowId++), status: 'idle' }))
+                        )
                     }
-                } catch { /* ignore */ }
+                } catch {
+                    /* ignore */
+                }
             }
             if (cfg.swapCommandsJson) {
                 try {
                     const saved = JSON.parse(cfg.swapCommandsJson) as SwapCommand[]
-                    if (Array.isArray(saved)) setSwapCommands(saved.map((c) => ({ ...c, id: String(swapIdRef.current++) })))
-                } catch { /* ignore */ }
+                    if (Array.isArray(saved))
+                        setSwapCommands(
+                            saved.map((c) => ({ ...c, id: String(swapIdRef.current++) }))
+                        )
+                } catch {
+                    /* ignore */
+                }
             }
             if (cfg.swapDelay) setSwapDelay(Number(cfg.swapDelay) || 0)
             if (cfg.transferBnbToMain) setTransferBnbToMain(cfg.transferBnbToMain)
             if (cfg.scanContract) setScanContract(cfg.scanContract)
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
+            if (cfg.logsJson) {
+                try {
+                    const saved = JSON.parse(cfg.logsJson)
+                    if (Array.isArray(saved) && saved.length > 0) setLogs(saved)
+                } catch {
+                    /* ignore */
+                }
+            }
+            if (cfg.stepStatesJson) {
+                try {
+                    const saved = JSON.parse(cfg.stepStatesJson)
+                    if (saved && typeof saved === 'object') setStepStates(saved)
+                } catch {
+                    /* ignore */
+                }
+            }
         })
     }, [])
 
@@ -177,40 +250,75 @@ const Main = () => {
     }, [])
 
     const logIdRef = useRef(0)
-    const scanLogIdRef = useRef(0)
     const swapIdRef = useRef(1)
+    const logSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const addLog = useCallback((msg: string) => {
         const time = new Date().toLocaleTimeString('vi-VN')
-        setLogs((prev) => [...prev, { id: logIdRef.current++, text: `[${time}] ${msg}` }])
+        setLogs((prev) => {
+            const next = [...prev, { id: logIdRef.current++, text: `[${time}] ${msg}` }]
+            const trimmed = next.slice(-500)
+            if (logSaveTimer.current) clearTimeout(logSaveTimer.current)
+            logSaveTimer.current = setTimeout(() => {
+                electron.saveConfig({ logsJson: JSON.stringify(trimmed) })
+            }, 1500)
+            return trimmed
+        })
     }, [])
-    const addScanLog = useCallback((msg: string) => {
-        const time = new Date().toLocaleTimeString('vi-VN')
-        setScanLogs((prev) => [...prev, { id: scanLogIdRef.current++, text: `[${time}] ${msg}` }])
-    }, [])
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const addScanLog = useCallback((_msg: string) => {}, [])
 
+    const saveTokens = useCallback(
+        (next: TokenRow[]) => {
+            const saveable = next.map(
+                ({
+                    name,
+                    decimal,
+                    mintAmount,
+                    liquidityToken,
+                    liquidityBNB,
+                    sellMintAmount,
+                    taxBuy,
+                    taxSell,
+                    totalSupply,
+                }) => ({
+                    name,
+                    decimal,
+                    mintAmount,
+                    liquidityToken,
+                    liquidityBNB,
+                    sellMintAmount,
+                    taxBuy,
+                    taxSell,
+                    totalSupply,
+                })
+            )
+            scheduleSave({ tokensJson: JSON.stringify(saveable) })
+        },
+        [scheduleSave]
+    )
 
-    const saveTokens = useCallback((next: TokenRow[]) => {
-        const saveable = next.map(({ name, decimal, mintAmount, liquidityToken, liquidityBNB, sellMintAmount, taxBuy, taxSell, totalSupply }) =>
-            ({ name, decimal, mintAmount, liquidityToken, liquidityBNB, sellMintAmount, taxBuy, taxSell, totalSupply })
-        )
-        scheduleSave({ tokensJson: JSON.stringify(saveable) })
-    }, [scheduleSave])
-
-    const newSwapCmd = (): SwapCommand => ({ id: String(swapIdRef.current++), type: 'buy', amount: '', slippage: '5' })
+    const newSwapCmd = (): SwapCommand => ({
+        id: String(swapIdRef.current++),
+        type: 'buy',
+        amount: '',
+        slippage: '5',
+    })
 
     const saveSwapCommands = (cmds: SwapCommand[]) =>
         scheduleSave({ swapCommandsJson: JSON.stringify(cmds) })
 
-    const addSwapCmd = () => setSwapCommands((prev) => {
-        const next = [...prev, newSwapCmd()]
-        saveSwapCommands(next)
-        return next
-    })
-    const removeSwapCmd = (id: string) => setSwapCommands((prev) => {
-        const next = prev.filter((c) => c.id !== id)
-        saveSwapCommands(next)
-        return next
-    })
+    const addSwapCmd = () =>
+        setSwapCommands((prev) => {
+            const next = [...prev, newSwapCmd()]
+            saveSwapCommands(next)
+            return next
+        })
+    const removeSwapCmd = (id: string) =>
+        setSwapCommands((prev) => {
+            const next = prev.filter((c) => c.id !== id)
+            saveSwapCommands(next)
+            return next
+        })
     const updateSwapCmd = (id: string, field: keyof SwapCommand, value: any) =>
         setSwapCommands((prev) => {
             const next = prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
@@ -226,9 +334,8 @@ const Main = () => {
             SoLuongBNB: c.amount,
             Slippage: c.slippage,
         }))
-        const ws = rows.length > 0
-            ? XLSX.utils.json_to_sheet(rows)
-            : XLSX.utils.aoa_to_sheet([headers])
+        const ws =
+            rows.length > 0 ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([headers])
         const wb = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(wb, ws, 'SwapCommands')
         XLSX.writeFile(wb, 'swap-commands.xlsx')
@@ -243,7 +350,11 @@ const Main = () => {
                 const rows = XLSX.utils.sheet_to_json<any>(ws)
                 const cmds: SwapCommand[] = rows.map((r: any, i: number) => ({
                     id: String(Date.now() + i),
-                    type: String(r.Loai || r.loai || r.type || 'buy').toLowerCase().includes('ban') ? 'sell' : 'buy',
+                    type: String(r.Loai || r.loai || r.type || 'buy')
+                        .toLowerCase()
+                        .includes('ban')
+                        ? 'sell'
+                        : 'buy',
                     amount: String(r.SoLuongBNB || r.amount || ''),
                     slippage: String(r.Slippage || r.slippage || '5'),
                 }))
@@ -261,22 +372,26 @@ const Main = () => {
     const exportScanWallets = async () => {
         if (!scanContract) return
         try {
-            const q = encodeURIComponent(JSON.stringify({ where: { wallet: scanContract } }))
-            const res = await fetch(`http://localhost:8080/api/model/scanWallet/findMany?q=${q}`)
-            const json = await res.json()
-            const rows = (json.data as any[] || [])
+            const data: any[] =
+                (await zenStackFunction('ScanWallet' as any, 'findMany', {
+                    where: { wallet: scanContract },
+                })) ?? []
+            const rows = data
                 .filter((r: any) => r.destination)
                 .map((r: any, i: number) => ({
                     STT: i + 1,
                     DiaChi: r.destination,
                     DaTransfer: r.isTransferred ? 'Co' : 'Chua',
                 }))
-            const ws = XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ STT: '', DiaChi: '', DaTransfer: '' }])
+            const ws = XLSX.utils.json_to_sheet(
+                rows.length > 0 ? rows : [{ STT: '', DiaChi: '', DaTransfer: '' }]
+            )
             const wb = XLSX.utils.book_new()
             XLSX.utils.book_append_sheet(wb, ws, 'ScanWallets')
             XLSX.writeFile(wb, 'scan-wallets.xlsx')
             message.success(`Đã xuất ${rows.length} địa chỉ`)
-        } catch {
+        } catch (e) {
+            console.error('exportScanWallets error:', e)
             message.error('Xuất file thất bại')
         }
     }
@@ -302,7 +417,10 @@ const Main = () => {
                     addresses = text.split(/[\r\n,;]+/).map((l) => l.trim())
                 }
                 const valid = [...new Set(addresses.filter((a) => /^0x[0-9a-fA-F]{40}$/.test(a)))]
-                if (valid.length === 0) { message.error('Không tìm thấy địa chỉ hợp lệ'); return }
+                if (valid.length === 0) {
+                    message.error('Không tìm thấy địa chỉ hợp lệ')
+                    return
+                }
                 await createManyScanWallet({
                     data: valid.map((addr) => ({
                         wallet: scanContract,
@@ -320,17 +438,19 @@ const Main = () => {
         return false
     }
 
-    const addRow = () => setTokens((prev) => {
-        const next = [...prev, newRow()]
-        saveTokens(next)
-        return next
-    })
+    const addRow = () =>
+        setTokens((prev) => {
+            const next = [...prev, newRow()]
+            saveTokens(next)
+            return next
+        })
 
-    const removeRow = (id: string) => setTokens((prev) => {
-        const next = prev.filter((r) => r.id !== id)
-        saveTokens(next)
-        return next
-    })
+    const removeRow = (id: string) =>
+        setTokens((prev) => {
+            const next = prev.filter((r) => r.id !== id)
+            saveTokens(next)
+            return next
+        })
 
     const updateRow = (id: string, field: keyof TokenRow, value: any) =>
         setTokens((prev) => {
@@ -346,9 +466,7 @@ const Main = () => {
         errorMsg?: string
     ) =>
         setTokens((prev) =>
-            prev.map((r) =>
-                r.id === id ? { ...r, status, contractAddress, errorMsg } : r
-            )
+            prev.map((r) => (r.id === id ? { ...r, status, contractAddress, errorMsg } : r))
         )
 
     const handleStart = async () => {
@@ -371,29 +489,45 @@ const Main = () => {
         stopRef.current = false
         setRunning(true)
         setTokens((prev) =>
-            prev.map((r) => ({ ...r, status: 'idle' as RowStatus, contractAddress: undefined, errorMsg: undefined }))
+            prev.map((r) => ({
+                ...r,
+                status: 'idle' as RowStatus,
+                contractAddress: undefined,
+                errorMsg: undefined,
+            }))
         )
 
         const initialSteps: Record<string, { tokenName: string; statuses: StepStatus[] }> = {}
         for (const t of valid) {
-            initialSteps[t.id] = { tokenName: t.name, statuses: ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'] }
+            initialSteps[t.id] = {
+                tokenName: t.name,
+                statuses: ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'],
+            }
         }
         setStepStates(initialSteps)
 
-        const onStepChange = (tokenId: string, step: number, status: 'process' | 'finish' | 'error') => {
+        const onStepChange = (
+            tokenId: string,
+            step: number,
+            status: 'process' | 'finish' | 'error'
+        ) => {
             setStepStates((prev) => {
                 const curr = prev[tokenId]
                 if (!curr) return prev
                 const statuses = [...curr.statuses] as StepStatus[]
                 statuses[step] = status
-                return { ...prev, [tokenId]: { ...curr, statuses } }
+                const next = { ...prev, [tokenId]: { ...curr, statuses } }
+                electron.saveConfig({ stepStatesJson: JSON.stringify(next) })
+                return next
             })
         }
 
         try {
             addLog(`Đang compile contract (solc v${solcVersion})...`)
             const compileResult = await electron.compileContract(contractCode, solcVersion)
-            addLog(`Compile thành công: contract "${compileResult.contractName}" [solc ${solcVersion}]`)
+            addLog(
+                `Compile thành công: contract "${compileResult.contractName}" [solc ${solcVersion}]`
+            )
 
             const normalizeKey = (k: string) =>
                 k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`
@@ -477,7 +611,7 @@ const Main = () => {
             ),
         },
         {
-            title: 'Mint amount',
+            title: 'Mint amount(Ví mint)',
             render: (_: any, row: TokenRow) => (
                 <InputNumber
                     size="small"
@@ -485,8 +619,8 @@ const Main = () => {
                     min="0"
                     value={row.mintAmount || undefined}
                     onChange={(v) => updateRow(row.id, 'mintAmount', v ?? '')}
-                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                    parser={(v) => (v ? v.replace(/,/g, '') : '')}
                     placeholder="VD: 1,000,000"
                     disabled={running}
                     style={{ width: '100%' }}
@@ -502,8 +636,8 @@ const Main = () => {
                     min="0"
                     value={row.liquidityToken || undefined}
                     onChange={(v) => updateRow(row.id, 'liquidityToken', v ?? '')}
-                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                    parser={(v) => (v ? v.replace(/,/g, '') : '')}
                     placeholder="VD: 500,000"
                     disabled={running}
                     style={{ width: '100%' }}
@@ -532,8 +666,8 @@ const Main = () => {
                     min="0"
                     value={row.sellMintAmount || undefined}
                     onChange={(v) => updateRow(row.id, 'sellMintAmount', v ?? '')}
-                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                    parser={(v) => (v ? v.replace(/,/g, '') : '')}
                     placeholder="VD: 100,000"
                     disabled={running}
                     style={{ width: '100%' }}
@@ -571,7 +705,7 @@ const Main = () => {
             ),
         },
         {
-            title: 'Total Supply',
+            title: 'Total Supply (Ví chủ deploy)',
             render: (_: any, row: TokenRow) => (
                 <InputNumber
                     size="small"
@@ -579,8 +713,8 @@ const Main = () => {
                     min="0"
                     value={row.totalSupply || undefined}
                     onChange={(v) => updateRow(row.id, 'totalSupply', v ?? '')}
-                    formatter={(v) => v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
-                    parser={(v) => v ? v.replace(/,/g, '') : ''}
+                    formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+                    parser={(v) => (v ? v.replace(/,/g, '') : '')}
                     placeholder="Mặc định: Mint+Liq"
                     disabled={running}
                     style={{ width: '100%' }}
@@ -623,7 +757,9 @@ const Main = () => {
             >
                 <Stack spacing={4} mt={4}>
                     <Box>
-                        <Text fontSize="sm" color="gray.400" mb={2}>Solidity Compiler Version</Text>
+                        <Text fontSize="sm" color="gray.400" mb={2}>
+                            Solidity Compiler Version
+                        </Text>
                         <Select
                             value={solcVersion}
                             options={solcVersionOptions}
@@ -646,9 +782,7 @@ const Main = () => {
                     Token Automation Tool
                 </Title>
                 <Flex align="center" gap={2}>
-                    <AntText style={{ color: '#666', fontSize: 12 }}>
-                        solc v{solcVersion}
-                    </AntText>
+                    <AntText style={{ color: '#666', fontSize: 12 }}>solc v{solcVersion}</AntText>
                     <Button
                         icon={<SettingOutlined />}
                         size="small"
@@ -660,72 +794,128 @@ const Main = () => {
 
             {/* Connection & Keys */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                <AntText
+                    style={{
+                        color: '#666',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                    }}
+                >
                     Cấu hình kết nối &amp; ví
                 </AntText>
                 <Stack spacing={3} mt={3}>
                     <Flex align="center" gap={3}>
-                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>RPC URL</Text>
+                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>
+                            RPC URL
+                        </Text>
                         <Input
                             value={rpc}
-                            onChange={(e) => { setRpc(e.target.value); scheduleSave({ rpc: e.target.value }) }}
+                            onChange={(e) => {
+                                setRpc(e.target.value)
+                                scheduleSave({ rpc: e.target.value })
+                            }}
                             placeholder="https://bsc.drpc.org"
                             style={{ flex: 1 }}
                         />
-                        <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right">Chain ID</Text>
+                        <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right">
+                            Chain ID
+                        </Text>
                         <Input
                             value={chainId}
-                            onChange={(e) => { setChainId(e.target.value); scheduleSave({ chainId: e.target.value }) }}
+                            onChange={(e) => {
+                                setChainId(e.target.value)
+                                scheduleSave({ chainId: e.target.value })
+                            }}
                             placeholder="56"
                             style={{ width: 80 }}
                         />
                     </Flex>
 
                     <Flex align="center" gap={3}>
-                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>Ví chủ (deploy)</Text>
+                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>
+                            Ví chủ (deploy)
+                        </Text>
                         <Input.Password
                             value={mainKey}
-                            onChange={(e) => { setMainKey(e.target.value); scheduleSave({ mainKey: e.target.value }) }}
+                            onChange={(e) => {
+                                setMainKey(e.target.value)
+                                scheduleSave({ mainKey: e.target.value })
+                            }}
                             placeholder="Private key"
                             style={{ flex: 1 }}
                         />
                         <Flex direction="column" minW="260px" gap={0}>
-                            <Text fontSize="xs" color={mainAddr ? 'green.400' : 'gray.600'} fontFamily="mono">
+                            <Text
+                                fontSize="xs"
+                                color={mainAddr ? 'green.400' : 'gray.600'}
+                                fontFamily="mono"
+                            >
                                 {mainAddr || '—'}
                             </Text>
-                            {mainBal && <Text fontSize="xs" color="yellow.300">{mainBal}</Text>}
+                            {mainBal && (
+                                <Text fontSize="xs" color="yellow.300">
+                                    {mainBal}
+                                </Text>
+                            )}
                         </Flex>
                     </Flex>
 
                     <Flex align="center" gap={3}>
-                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>Ví swap</Text>
+                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>
+                            Ví swap
+                        </Text>
                         <Input.Password
                             value={swapKey}
-                            onChange={(e) => { setSwapKey(e.target.value); scheduleSave({ swapKey: e.target.value }) }}
+                            onChange={(e) => {
+                                setSwapKey(e.target.value)
+                                scheduleSave({ swapKey: e.target.value })
+                            }}
                             placeholder="Private key"
                             style={{ flex: 1 }}
                         />
                         <Flex direction="column" minW="260px" gap={0}>
-                            <Text fontSize="xs" color={swapAddr ? 'blue.400' : 'gray.600'} fontFamily="mono">
+                            <Text
+                                fontSize="xs"
+                                color={swapAddr ? 'blue.400' : 'gray.600'}
+                                fontFamily="mono"
+                            >
                                 {swapAddr || '—'}
                             </Text>
-                            {swapBal && <Text fontSize="xs" color="yellow.300">{swapBal}</Text>}
+                            {swapBal && (
+                                <Text fontSize="xs" color="yellow.300">
+                                    {swapBal}
+                                </Text>
+                            )}
                         </Flex>
                     </Flex>
 
                     <Flex align="center" gap={3}>
-                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>Ví mint</Text>
+                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>
+                            Ví mint
+                        </Text>
                         <Input.Password
                             value={mintKey}
-                            onChange={(e) => { setMintKey(e.target.value); scheduleSave({ mintKey: e.target.value }) }}
+                            onChange={(e) => {
+                                setMintKey(e.target.value)
+                                scheduleSave({ mintKey: e.target.value })
+                            }}
                             placeholder="Private key"
                             style={{ flex: 1 }}
                         />
                         <Flex direction="column" minW="260px" gap={0}>
-                            <Text fontSize="xs" color={mintAddr ? 'purple.400' : 'gray.600'} fontFamily="mono">
+                            <Text
+                                fontSize="xs"
+                                color={mintAddr ? 'purple.400' : 'gray.600'}
+                                fontFamily="mono"
+                            >
                                 {mintAddr || '—'}
                             </Text>
-                            {mintBal && <Text fontSize="xs" color="yellow.300">{mintBal}</Text>}
+                            {mintBal && (
+                                <Text fontSize="xs" color="yellow.300">
+                                    {mintBal}
+                                </Text>
+                            )}
                         </Flex>
                     </Flex>
                 </Stack>
@@ -733,7 +923,14 @@ const Main = () => {
 
             {/* Contract Editor */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                <AntText
+                    style={{
+                        color: '#666',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                    }}
+                >
                     Contract Solidity
                 </AntText>
                 <Box mt={2} border="1px solid #333" borderRadius="4px" overflow="hidden">
@@ -741,7 +938,10 @@ const Main = () => {
                         height="380px"
                         language="sol"
                         value={contractCode}
-                        onChange={(v) => { setContractCode(v || ''); scheduleSave({ contractCode: v || '' }) }}
+                        onChange={(v) => {
+                            setContractCode(v || '')
+                            scheduleSave({ contractCode: v || '' })
+                        }}
                         theme="vs-dark"
                         options={{
                             minimap: { enabled: false },
@@ -758,10 +958,22 @@ const Main = () => {
             {/* Token Table */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
                 <Flex align="center" justify="space-between" mb={3}>
-                    <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
                         Danh sách token (chạy tuần tự)
                     </AntText>
-                    <Button size="small" icon={<PlusOutlined />} onClick={addRow} disabled={running}>
+                    <Button
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={addRow}
+                        disabled={running}
+                    >
                         Thêm token
                     </Button>
                 </Flex>
@@ -777,7 +989,14 @@ const Main = () => {
             {/* Swap Commands */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
                 <Flex align="center" justify="space-between" mb={3}>
-                    <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
                         Lệnh swap (ví swap, chạy tuần tự sau add liquidity)
                     </AntText>
                     <Flex gap={2}>
@@ -789,19 +1008,38 @@ const Main = () => {
                                 type="file"
                                 accept=".xlsx,.xls"
                                 style={{ display: 'none' }}
-                                onChange={(e) => { if (e.target.files?.[0]) importSwapExcel(e.target.files[0]); e.target.value = '' }}
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) importSwapExcel(e.target.files[0])
+                                    e.target.value = ''
+                                }}
                             />
-                            <Button size="small" icon={<UploadOutlined />} disabled={running} onClick={(e) => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}>
+                            <Button
+                                size="small"
+                                icon={<UploadOutlined />}
+                                disabled={running}
+                                onClick={(e) =>
+                                    (
+                                        e.currentTarget.previousElementSibling as HTMLInputElement
+                                    )?.click()
+                                }
+                            >
                                 Nhập Excel
                             </Button>
                         </label>
-                        <Button size="small" icon={<PlusOutlined />} onClick={addSwapCmd} disabled={running}>
+                        <Button
+                            size="small"
+                            icon={<PlusOutlined />}
+                            onClick={addSwapCmd}
+                            disabled={running}
+                        >
                             Thêm lệnh
                         </Button>
                     </Flex>
                 </Flex>
                 <Flex align="center" gap={3} mb={3}>
-                    <Text fontSize="sm" color="gray.400">Delay giữa các lệnh (giây)</Text>
+                    <Text fontSize="sm" color="gray.400">
+                        Delay giữa các lệnh (giây)
+                    </Text>
                     <InputNumber
                         size="small"
                         min={0}
@@ -815,7 +1053,9 @@ const Main = () => {
                         style={{ width: 100 }}
                         addonAfter="s"
                     />
-                    <Text fontSize="sm" color="gray.400" ml={4}>BNB chuyển về ví chủ (step 7)</Text>
+                    <Text fontSize="sm" color="gray.400" ml={4}>
+                        BNB chuyển về ví chủ (step 7)
+                    </Text>
                     <Input
                         size="small"
                         value={transferBnbToMain}
@@ -882,7 +1122,9 @@ const Main = () => {
                                     min={0}
                                     max={100}
                                     value={Number(row.slippage) || 0}
-                                    onChange={(v) => updateSwapCmd(row.id, 'slippage', String(v ?? 5))}
+                                    onChange={(v) =>
+                                        updateSwapCmd(row.id, 'slippage', String(v ?? 5))
+                                    }
                                     formatter={(v) => `${v}%`}
                                     parser={(v) => Number(v ? v.replace('%', '') : 5)}
                                     disabled={running}
@@ -909,34 +1151,59 @@ const Main = () => {
 
             {/* Scan Settings (Step 5.2) */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 12 }}>
+                <AntText
+                    style={{
+                        color: '#666',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                        display: 'block',
+                        marginBottom: 12,
+                    }}
+                >
                     Cài đặt quét & disperse (step 5.2 / 1.1)
                 </AntText>
                 <Flex align="center" gap={3} wrap="wrap">
-                    <Text fontSize="sm" color="gray.400">Contract quét</Text>
+                    <Text fontSize="sm" color="gray.400">
+                        Contract quét
+                    </Text>
                     <Input
                         size="small"
                         value={scanContract}
-                        onChange={(e) => { setScanContract(e.target.value); scheduleSave({ scanContract: e.target.value }) }}
+                        onChange={(e) => {
+                            setScanContract(e.target.value)
+                            scheduleSave({ scanContract: e.target.value })
+                        }}
                         disabled={running}
                         placeholder="0x..."
                         style={{ width: 360 }}
                     />
-                    <Text fontSize="sm" color="gray.400" ml={2}>Amount transfer</Text>
+                    <Text fontSize="sm" color="gray.400" ml={2}>
+                        Amount transfer
+                    </Text>
                     <Input
                         size="small"
                         value={disperseAmount}
-                        onChange={(e) => { setDisperseAmount(e.target.value); scheduleSave({ disperseAmount: e.target.value }) }}
+                        onChange={(e) => {
+                            setDisperseAmount(e.target.value)
+                            scheduleSave({ disperseAmount: e.target.value })
+                        }}
                         disabled={running}
                         placeholder="VD: 1000"
                         style={{ width: 130 }}
                     />
-                    <Text fontSize="sm" color="gray.400" ml={2}>Delay transfer</Text>
+                    <Text fontSize="sm" color="gray.400" ml={2}>
+                        Delay transfer
+                    </Text>
                     <InputNumber
                         size="small"
                         min={1}
                         value={scanDelay}
-                        onChange={(v) => { const val = v ?? 30; setScanDelay(val); scheduleSave({ scanDelay: String(val) }) }}
+                        onChange={(v) => {
+                            const val = v ?? 30
+                            setScanDelay(val)
+                            scheduleSave({ scanDelay: String(val) })
+                        }}
                         disabled={running}
                         style={{ width: 90 }}
                         addonAfter="s"
@@ -947,7 +1214,14 @@ const Main = () => {
             {/* Scan Dashboard */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
                 <Flex align="center" justify="space-between" mb={3}>
-                    <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
                         Scan Dashboard
                     </AntText>
                     <Flex gap={2}>
@@ -964,13 +1238,20 @@ const Main = () => {
                                 type="file"
                                 accept=".xlsx,.xls,.csv,.txt"
                                 style={{ display: 'none' }}
-                                onChange={(e) => { if (e.target.files?.[0]) importScanWallets(e.target.files[0]); e.target.value = '' }}
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) importScanWallets(e.target.files[0])
+                                    e.target.value = ''
+                                }}
                             />
                             <Button
                                 size="small"
                                 icon={<UploadOutlined />}
                                 disabled={!scanContract || running}
-                                onClick={(e) => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}
+                                onClick={(e) =>
+                                    (
+                                        e.currentTarget.previousElementSibling as HTMLInputElement
+                                    )?.click()
+                                }
                             >
                                 Nhập ví vào
                             </Button>
@@ -979,89 +1260,153 @@ const Main = () => {
                 </Flex>
                 <Flex gap={8} mb={3}>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>Tổng ví quét được</Text>
-                        <Text fontSize="2xl" color="blue.400" fontWeight="bold" fontFamily="mono">{totalCount as number}</Text>
+                        <Text fontSize="xs" color="gray.500" mb={1}>
+                            Tổng ví quét được
+                        </Text>
+                        <Text fontSize="2xl" color="blue.400" fontWeight="bold" fontFamily="mono">
+                            {totalCount as number}
+                        </Text>
                     </Box>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>Đã transfer</Text>
-                        <Text fontSize="2xl" color="green.400" fontWeight="bold" fontFamily="mono">{transferredCount as number}</Text>
+                        <Text fontSize="xs" color="gray.500" mb={1}>
+                            Đã transfer
+                        </Text>
+                        <Text fontSize="2xl" color="green.400" fontWeight="bold" fontFamily="mono">
+                            {transferredCount as number}
+                        </Text>
                     </Box>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>Chưa transfer</Text>
-                        <Text fontSize="2xl" color="yellow.300" fontWeight="bold" fontFamily="mono">{(totalCount as number) - (transferredCount as number)}</Text>
+                        <Text fontSize="xs" color="gray.500" mb={1}>
+                            Chưa transfer
+                        </Text>
+                        <Text fontSize="2xl" color="yellow.300" fontWeight="bold" fontFamily="mono">
+                            {(totalCount as number) - (transferredCount as number)}
+                        </Text>
                     </Box>
                 </Flex>
-                <Box bg="#0d0d0d" borderRadius="6px" p={2} border="1px solid #222">
-                    <Flex align="center" justify="space-between" mb={1}>
-                        <AntText style={{ color: '#666', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
-                            Scan Log
-                        </AntText>
-                        <Button size="small" onClick={() => setScanLogs([])} disabled={scanLogs.length === 0}>
-                            Clear
-                        </Button>
-                    </Flex>
-                    <Box maxH="220px" overflowY="auto">
-                        {scanLogs.length === 0
-                            ? <AntText style={{ color: '#444', fontSize: 11 }}>Chưa có log</AntText>
-                            : scanLogs.map((l) => (
-                                <div key={l.id} style={{ fontFamily: 'monospace', fontSize: 11, color: '#8fbc8f', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                                    {l.text}
-                                </div>
-                            ))
-                        }
-                    </Box>
-                </Box>
+                <Table
+                    size="small"
+                    dataSource={scanRows as any[]}
+                    rowKey="id"
+                    pagination={{
+                        current: scanPage,
+                        pageSize: SCAN_PAGE_SIZE,
+                        total: totalCount as number,
+                        onChange: setScanPage,
+                        showSizeChanger: false,
+                        showTotal: (t) => `${t} ví`,
+                    }}
+                    columns={[
+                        {
+                            title: 'STT',
+                            width: 60,
+                            render: (_: any, __: any, i: number) =>
+                                (scanPage - 1) * SCAN_PAGE_SIZE + i + 1,
+                        },
+                        {
+                            title: 'Ví nhận',
+                            dataIndex: 'destination',
+                            render: (v: string) => (
+                                <AntText code style={{ fontSize: 11 }}>
+                                    {v}
+                                </AntText>
+                            ),
+                        },
+                        {
+                            title: 'Số lượng',
+                            dataIndex: 'amount',
+                            width: 120,
+                        },
+                        {
+                            title: 'Trạng thái',
+                            dataIndex: 'isTransferred',
+                            width: 110,
+                            render: (v: boolean) => (
+                                <Tag color={v ? 'success' : 'warning'}>
+                                    {v ? 'Đã transfer' : 'Chưa'}
+                                </Tag>
+                            ),
+                        },
+                    ]}
+                    scroll={{ y: 300 }}
+                    style={{ marginTop: 8 }}
+                />
             </Box>
 
             {/* Step Progress */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 12 }}>
+                <AntText
+                    style={{
+                        color: '#666',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                        display: 'block',
+                        marginBottom: 12,
+                    }}
+                >
                     Tiến trình automation
                 </AntText>
-                {Object.keys(stepStates).length === 0
-                    ? <AntText type="secondary" style={{ fontSize: 12 }}>Chưa có tiến trình nào</AntText>
-                    : (
-                        <Stack spacing={4}>
-                            {Object.entries(stepStates).map(([tokenId, { tokenName, statuses }]) => {
-                                const contractAddress = tokens.find((t) => t.id === tokenId)?.contractAddress
-                                return (
-                                    <Box key={tokenId}>
-                                        <Flex align="center" gap={3} mb={2}>
-                                            <AntText style={{ color: '#aaa', fontSize: 12 }}>
-                                                {tokenName || tokenId}
-                                            </AntText>
-                                            {contractAddress && (
-                                                <Tooltip title={contractAddress}>
-                                                    <Link
-                                                        href={`https://bscscan.com/address/${contractAddress}`}
-                                                        target="_blank"
-                                                        style={{ fontSize: 11 }}
-                                                    >
-                                                        {contractAddress.slice(0, 6)}…{contractAddress.slice(-4)}
-                                                    </Link>
-                                                </Tooltip>
-                                            )}
-                                        </Flex>
-                                        <Steps
-                                            size="small"
-                                            items={[
-                                                { title: '1. Deploy & Initialize', status: statuses[0] },
-                                                { title: '1.1 Transfer token mới cho ví đã quét', status: statuses[1] },
-                                                { title: '2. Set Whitelist', status: statuses[2] },
-                                                { title: '3. Transfer Token', status: statuses[3] },
-                                                { title: '4. Add Liquidity', status: statuses[4] },
-                                                { title: '5.1 Chạy lệnh swap', status: statuses[5] },
-                                                { title: '5.2 Quét & Disperse', status: statuses[6] },
-                                                { title: '6. Mint thêm & Bán 90%', status: statuses[7] },
-                                                { title: '7. Chuyển BNB về ví chủ', status: statuses[8] },
-                                            ]}
-                                        />
-                                    </Box>
-                                )
-                            })}
-                        </Stack>
-                    )
-                }
+                {Object.keys(stepStates).length === 0 ? (
+                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                        Chưa có tiến trình nào
+                    </AntText>
+                ) : (
+                    <Stack spacing={4}>
+                        {Object.entries(stepStates).map(([tokenId, { tokenName, statuses }]) => {
+                            const contractAddress = tokens.find(
+                                (t) => t.id === tokenId
+                            )?.contractAddress
+                            return (
+                                <Box key={tokenId}>
+                                    <Flex align="center" gap={3} mb={2}>
+                                        <AntText style={{ color: '#aaa', fontSize: 12 }}>
+                                            {tokenName || tokenId}
+                                        </AntText>
+                                        {contractAddress && (
+                                            <Tooltip title={contractAddress}>
+                                                <Link
+                                                    href={`https://bscscan.com/address/${contractAddress}`}
+                                                    target="_blank"
+                                                    style={{ fontSize: 11 }}
+                                                >
+                                                    {contractAddress.slice(0, 6)}…
+                                                    {contractAddress.slice(-4)}
+                                                </Link>
+                                            </Tooltip>
+                                        )}
+                                    </Flex>
+                                    <Steps
+                                        size="small"
+                                        items={[
+                                            {
+                                                title: '1. Deploy & Initialize',
+                                                status: statuses[0],
+                                            },
+                                            {
+                                                title: '1.1 Transfer token mới cho ví đã quét',
+                                                status: statuses[1],
+                                            },
+                                            { title: '2. Set Whitelist', status: statuses[2] },
+                                            { title: '3. Transfer Token', status: statuses[3] },
+                                            { title: '4. Add Liquidity', status: statuses[4] },
+                                            { title: '5.1 Chạy lệnh swap', status: statuses[5] },
+                                            { title: '5.2 Quét & Disperse', status: statuses[6] },
+                                            {
+                                                title: '6. Mint thêm & Bán 90%',
+                                                status: statuses[7],
+                                            },
+                                            {
+                                                title: '7. Chuyển BNB về ví chủ',
+                                                status: statuses[8],
+                                            },
+                                        ]}
+                                    />
+                                </Box>
+                            )
+                        })}
+                    </Stack>
+                )}
             </Box>
 
             {/* Start */}
@@ -1083,7 +1428,9 @@ const Main = () => {
                             danger
                             size="large"
                             icon={<StopOutlined />}
-                            onClick={() => { stopRef.current = true }}
+                            onClick={() => {
+                                stopRef.current = true
+                            }}
                             style={{ height: 48 }}
                         >
                             Dừng
@@ -1095,7 +1442,14 @@ const Main = () => {
             {/* Log */}
             <Box bg="#0d0d0d" borderRadius="8px" p={3} border="1px solid #2a2a2a">
                 <Flex align="center" justify="space-between" mb={2}>
-                    <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
                         Log
                     </AntText>
                     <Button size="small" onClick={() => setLogs([])} disabled={logs.length === 0}>
@@ -1103,25 +1457,36 @@ const Main = () => {
                     </Button>
                 </Flex>
                 <Box maxH="320px" overflowY="auto">
-                    {logs.length === 0
-                        ? <AntText type="secondary" style={{ fontSize: 12 }}>Chưa có log</AntText>
-                        : logs.map(({ id, text }) => {
-                            const isError = text.includes('LỖI') || text.includes('ERROR') || text.includes('thất bại')
-                            const isSuccess = text.includes('thành công') || text.includes('hoàn thành') || text.includes('✓')
+                    {logs.length === 0 ? (
+                        <AntText type="secondary" style={{ fontSize: 12 }}>
+                            Chưa có log
+                        </AntText>
+                    ) : (
+                        logs.map(({ id, text }) => {
+                            const isError =
+                                text.includes('LỖI') ||
+                                text.includes('ERROR') ||
+                                text.includes('thất bại')
+                            const isSuccess =
+                                text.includes('thành công') ||
+                                text.includes('hoàn thành') ||
+                                text.includes('✓')
                             return (
                                 <Text
                                     key={id}
                                     fontSize="12px"
                                     fontFamily="mono"
                                     lineHeight="1.7"
-                                    color={isError ? 'red.400' : isSuccess ? 'green.400' : 'gray.300'}
+                                    color={
+                                        isError ? 'red.400' : isSuccess ? 'green.400' : 'gray.300'
+                                    }
                                     whiteSpace="pre-wrap"
                                 >
                                     {text}
                                 </Text>
                             )
                         })
-                    }
+                    )}
                 </Box>
             </Box>
         </Box>
