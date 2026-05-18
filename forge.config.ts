@@ -9,6 +9,7 @@ import path from 'path'
 const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
+        asarUnpack: ['**/node_modules/solc/**', '**/node_modules/@solidity-parser/**'],
         icon: './src/favicon',
         extraResource: [path.resolve(__dirname, 'prisma')],
     },
