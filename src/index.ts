@@ -5,9 +5,10 @@ import './server'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
+declare const __non_webpack_require__: NodeRequire
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const solc = require('solc')
+const solc = __non_webpack_require__('solc')
 
 // ── Solc version management ───────────────────────────────────────────────────
 
