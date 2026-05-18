@@ -8,7 +8,11 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 declare const __non_webpack_require__: NodeRequire
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const solc = __non_webpack_require__('solc')
+const solc = __non_webpack_require__(
+    app.isPackaged
+        ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'solc')
+        : 'solc'
+)
 
 // ── Solc version management ───────────────────────────────────────────────────
 
