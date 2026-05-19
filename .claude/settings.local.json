@@ -9,7 +9,8 @@
       "Bash(node -e \"const solc = require\\('solc'\\); console.log\\(solc.loadRemoteVersion.toString\\(\\).slice\\(0, 400\\)\\)\")",
       "Bash(yarn generate *)",
       "Bash(yarn db:push)",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(npx asar *)"
     ]
   }
 }

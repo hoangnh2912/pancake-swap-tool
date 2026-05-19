@@ -9,9 +9,6 @@ export const mainConfig: Configuration = {
         rules,
     },
     plugins: [definePlugin],
-    externals: {
-        solc: 'commonjs2 solc',
-    },
     resolve: {
         extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
     },
