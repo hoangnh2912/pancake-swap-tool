@@ -5,11 +5,9 @@ import { definePlugin } from './webpack.plugins'
 
 export const mainConfig: Configuration = {
     entry: './src/index.ts',
-    externals: {
-        solc: 'commonjs solc',
-    },
     module: {
         rules,
+        noParse: [/soljson\.js$/],
     },
     plugins: [definePlugin],
     resolve: {

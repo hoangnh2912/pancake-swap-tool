@@ -7,6 +7,9 @@ import './server'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
+// __non_webpack_require__ bypasses webpack bundling and uses Node.js native require
+declare const __non_webpack_require__: NodeRequire
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const solc = require('solc')
 
@@ -37,6 +40,27 @@ const SOLC_VERSION_MAP: Record<string, string> = {
 
 const solcCache = new Map<string, any>()
 
+// Download soljson.js content with redirect following
+function fetchSoljson(url: string, redirects = 5): Promise<string> {
+    return new Promise((resolve, reject) => {
+        if (redirects < 0) { reject(new Error('Too many redirects')); return }
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const https = require('node:https')
+        https.get(url, (res: any) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                res.resume()
+                fetchSoljson(res.headers.location, redirects - 1).then(resolve).catch(reject)
+                return
+            }
+            if (res.statusCode !== 200) { res.resume(); reject(new Error(`HTTP ${res.statusCode}`)); return }
+            const chunks: Buffer[] = []
+            res.on('data', (c: Buffer) => chunks.push(c))
+            res.on('end', () => resolve(Buffer.concat(chunks).toString()))
+            res.on('error', reject)
+        }).on('error', reject)
+    })
+}
+
 function getSolcForVersion(version: string): Promise<any> {
     if (version === BUILTIN_VERSION) return Promise.resolve(solc)
     if (solcCache.has(version)) return Promise.resolve(solcCache.get(version))
@@ -44,14 +68,17 @@ function getSolcForVersion(version: string): Promise<any> {
     const fullVersion = SOLC_VERSION_MAP[version]
     if (!fullVersion) return Promise.reject(new Error(`Version không hợp lệ: ${version}`))
 
-    return new Promise((resolve, reject) => {
-        solc.loadRemoteVersion(fullVersion, (err: any, snapshot: any) => {
-            if (err) reject(new Error(`Tải solc ${version} thất bại: ${err.message}`))
-            else {
-                solcCache.set(version, snapshot)
-                resolve(snapshot)
-            }
-        })
+    const url = `https://binaries.soliditylang.org/bin/soljson-${fullVersion}.js`
+    return fetchSoljson(url).then(code => {
+        // solc's loadRemoteVersion uses `module.constructor` (Node.js Module class) to
+        // evaluate soljson via _compile(). In webpack, module.constructor is webpack's
+        // class — not Node.js's. Use __non_webpack_require__('module') to get the real one.
+        const NodeModule = __non_webpack_require__('module')
+        const soljsonMod = new NodeModule()
+        soljsonMod._compile(code, `soljson-${fullVersion}.js`)
+        const snapshot = solc.setupMethods(soljsonMod.exports)
+        solcCache.set(version, snapshot)
+        return snapshot
     })
 }
 
