@@ -1,3 +1,5 @@
+import './setup'
+
 import { BrowserWindow, app, ipcMain } from 'electron'
 import path from 'node:path'
 import { PrismaClient } from '../prisma/client'
