@@ -7,6 +7,7 @@ export const mainConfig: Configuration = {
     entry: './src/index.ts',
     module: {
         rules,
+        noParse: [/soljson\.js$/],
     },
     plugins: [definePlugin],
     resolve: {
