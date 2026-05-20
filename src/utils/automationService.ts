@@ -258,10 +258,6 @@ export async function runAutomation(
                 if (destinations.length > 0) {
                     onLog(`[1.1] ${destinations.length} ví cần nhận token mới`)
 
-                    // Whitelist mintWallet + Disperse
-                    await ensureWhitelisted(deployed, mintWallet.address, onLog, '[1.1]', params.shouldStop)
-                    await ensureWhitelisted(deployed, DISPERSE_ADDRESS, onLog, '[1.1]', params.shouldStop)
-
                     const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                     const mainBal11 = await deployed.balanceOf(mainWallet.address) as ethers.BigNumber
                     const reserved = mintAmtRaw.add(liqTokenRaw)
@@ -312,10 +308,6 @@ export async function runAutomation(
             currentStep = 2
             onStepChange(token.id, 2, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, DISPERSE_ADDRESS, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, PANCAKE_ROUTER, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, mainWallet.address, onLog, '[2]', params.shouldStop)
             onStepChange(token.id, 2, 'finish')
             checkStop()
 
@@ -341,21 +333,9 @@ export async function runAutomation(
             currentStep = 4
             onStepChange(token.id, 4, 'process')
 
-            // Mint liqToken to mainWallet via Approve()
-            {
-                const approveValLiq = ethers.utils.parseUnits(token.liquidityToken, Math.max(0, token.decimal - 9))
-                const mintForLiq = new ethers.Contract(
-                    contractAddress,
-                    ['function Approve(address from, uint256 _value) external returns (bool)'],
-                    mainWallet
-                )
-                onLog(`[4] Approve(mainWallet, ${token.liquidityToken} tokens)`)
-                const txMint = await mintForLiq.Approve(mainWallet.address, approveValLiq, { gasLimit: 200_000, gasPrice: GAS_PRICE })
-                await raceStop(txMint.wait(), params.shouldStop)
-                onLog(`[4] ✓ Minted liqToken to mainWallet | tx: ${txMint.hash}`)
-            }
-
             const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
+            const mainTokenBal = await erc20.balanceOf(mainWallet.address) as ethers.BigNumber
+            onLog(`[4] mainWallet token balance: ${ethers.utils.formatUnits(mainTokenBal, token.decimal)}`)
             const bnbBal = await provider.getBalance(mainWallet.address)
             onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
             if (bnbBal.lt(liqBNB))
@@ -389,9 +369,6 @@ export async function runAutomation(
             )
             const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
             onLog(`[4] Pair address: ${pairAddress}`)
-            if (pairAddress && pairAddress !== ZERO_ADDR) {
-                await ensureWhitelisted(deployed, pairAddress, onLog, '[4]', params.shouldStop)
-            }
 
             onStepChange(token.id, 4, 'finish')
             checkStop()
