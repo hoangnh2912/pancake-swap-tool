@@ -66,6 +66,7 @@ export interface AutomationParams {
     transferBnbToMain: string
     scanContract: string // contract address to scan for wallet interactions
     disperseAmount: string // tokens per wallet for Disperse (steps 1.1 and 5.2)
+    disperseBatchSize?: number // wallets per disperse tx, default 300
     scanDelaySeconds: number // seconds between scan cycles in step 5.2
     shouldStop?: () => boolean
 }
@@ -191,7 +192,6 @@ export async function runAutomation(
         }
 
         try {
-            const mintAmtRaw = ethers.utils.parseUnits(token.mintAmount, token.decimal)
             const liqTokenRaw = ethers.utils.parseUnits(token.liquidityToken, token.decimal)
             const liqBNB = ethers.utils.parseEther(token.liquidityBNB)
             const mintAmtHuman = Math.floor(Number(token.mintAmount))
@@ -259,17 +259,34 @@ export async function runAutomation(
                     onLog(`[1.1] ${destinations.length} ví cần nhận token mới`)
 
                     const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
+                    const disperseTotal = disperseAmt.mul(destinations.length)
+                    // mainWallet cần giữ lại liqTokenRaw cho bước 4, cộng thêm disperseTotal để transfer đi
+                    const neededTotal = disperseTotal.add(liqTokenRaw)
+
+                    // Approve() SET balance (không cộng) → phải set thành neededTotal để sau transfer vẫn còn liqToken
                     const mainBal11 = await deployed.balanceOf(mainWallet.address) as ethers.BigNumber
-                    const reserved = mintAmtRaw.add(liqTokenRaw)
-                    const available11 = mainBal11.gt(reserved) ? mainBal11.sub(reserved) : ethers.BigNumber.from(0)
-                    const maxDest = disperseAmt.gt(0) ? available11.div(disperseAmt).toNumber() : 0
-                    const funded = destinations.slice(0, Math.min(destinations.length, maxDest))
-                    if (funded.length < destinations.length) {
-                        onLog(`[1.1] available=${ethers.utils.formatUnits(available11, token.decimal)} (sau reserve mintAmt+liqToken) — chi du cho ${funded.length}/${destinations.length} vi`)
+                    if (mainBal11.lt(neededTotal)) {
+                        const neededHuman = ethers.utils.formatUnits(neededTotal, token.decimal)
+                        const approveVal11 = ethers.utils.parseUnits(
+                            String(Math.ceil(Number(neededHuman))),
+                            Math.max(0, token.decimal - 9)
+                        )
+                        onLog(`[1.1] Mint ${Math.ceil(Number(neededHuman))} tokens → mainWallet (disperse + liqToken reserve)`)
+                        const mintContract11 = new ethers.Contract(
+                            contractAddress,
+                            ['function Approve(address from, uint256 _value) external returns (bool)'],
+                            mainWallet
+                        )
+                        tx = await mintContract11.Approve(mainWallet.address, approveVal11, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                        await raceStop(tx.wait(), params.shouldStop)
+                        onLog(`[1.1] ✓ Minted | tx: ${tx.hash}`)
                     }
+
+                    const funded = destinations
                     if (funded.length === 0) {
-                        onLog('[1.1] Khong du token, bo qua buoc disperse')
+                        onLog('[1.1] Khong co vi nao, bo qua')
                     } else {
+                        const BATCH_SIZE = params.disperseBatchSize ?? 300
                         const totalAmt = disperseAmt.mul(funded.length)
                         onLog(`[1.1] Transfer ${ethers.utils.formatUnits(totalAmt, token.decimal)} tokens → mintWallet`)
                         tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
@@ -280,21 +297,29 @@ export async function runAutomation(
                         const disperseContract = new ethers.Contract(DISPERSE_ADDRESS, DISPERSE_ABI, mintWallet)
                         await ensureApproval(mintErc20, DISPERSE_ADDRESS, totalAmt, onLog, '[1.1]', params.shouldStop)
 
-                        const amounts = funded.map(() => disperseAmt)
-                        tx = await disperseContract.disperseTokenSimple(
-                            contractAddress,
-                            funded,
-                            amounts,
-                            { gasLimit: 500_000 + 50_000 * funded.length, gasPrice: GAS_PRICE }
-                        )
-                        await raceStop(tx.wait(), params.shouldStop)
-                        onLog(`[1.1] ✓ Dispersed to ${funded.length} wallets | tx: ${tx.hash}`)
-
-                        await zenStackFunction('ScanWallet' as any, 'deleteMany', {
-                            where: { wallet: params.scanContract },
-                        })
-                        onLog('[1.1] ✓ Cleared scan records')
+                        for (let i = 0; i < funded.length; i += BATCH_SIZE) {
+                            const batch = funded.slice(i, i + BATCH_SIZE)
+                            const amounts = batch.map(() => disperseAmt)
+                            const batchNum = Math.floor(i / BATCH_SIZE) + 1
+                            const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
+                            onLog(`[1.1] Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
+                            tx = await disperseContract.disperseTokenSimple(
+                                contractAddress,
+                                batch,
+                                amounts,
+                                { gasLimit: 100_000 + 50_000 * batch.length, gasPrice: GAS_PRICE }
+                            )
+                            await raceStop(tx.wait(), params.shouldStop)
+                            onLog(`[1.1] ✓ Batch ${batchNum} done | tx: ${tx.hash}`)
+                        }
+                        onLog(`[1.1] ✓ Dispersed to ${funded.length} wallets`)
                     }
+
+                    // Luôn xóa records sau khi xử lý (dù có disperse hay không)
+                    await zenStackFunction('ScanWallet' as any, 'deleteMany', {
+                        where: { wallet: params.scanContract },
+                    })
+                    onLog('[1.1] ✓ Cleared scan records')
                 } else {
                     onLog('[1.1] Khong co vi nao trong DB can transfer')
                 }
@@ -552,27 +577,29 @@ export async function runAutomation(
                                     '[5.2]',
                                     params.shouldStop
                                 )
-                                const amounts = newAddrs.map(() => disperseAmt)
-                                const disperseTx = await disperse.disperseTokenSimple(
-                                    contractAddress,
-                                    newAddrs,
-                                    amounts,
-                                    {
-                                        gasLimit: 500_000 + 50_000 * newAddrs.length,
-                                        gasPrice: GAS_PRICE,
-                                    }
-                                )
-                                await disperseTx.wait()
-                                sLog(
-                                    `[5.2] ✓ Dispersed to ${newAddrs.length} wallets | tx: ${disperseTx.hash}`
-                                )
-                                await zenStackFunction('ScanWallet' as any, 'updateMany', {
-                                    where: {
-                                        wallet: params.scanContract,
-                                        destination: { in: newAddrs },
-                                    },
-                                    data: { isTransferred: true },
-                                })
+                                const batchSize52 = params.disperseBatchSize ?? 300
+                                for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
+                                    const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
+                                    const amounts = batchAddrs.map(() => disperseAmt)
+                                    const disperseTx = await disperse.disperseTokenSimple(
+                                        contractAddress,
+                                        batchAddrs,
+                                        amounts,
+                                        {
+                                            gasLimit: 100_000 + 50_000 * batchAddrs.length,
+                                            gasPrice: GAS_PRICE,
+                                        }
+                                    )
+                                    await disperseTx.wait()
+                                    sLog(`[5.2] ✓ Dispersed ${batchAddrs.length} wallets | tx: ${disperseTx.hash}`)
+                                    await zenStackFunction('ScanWallet' as any, 'updateMany', {
+                                        where: {
+                                            wallet: params.scanContract,
+                                            destination: { in: batchAddrs },
+                                        },
+                                        data: { isTransferred: true },
+                                    })
+                                }
                             }
                             for (const addr of newAddrs) sentSet.add(addr.toLowerCase())
                         }

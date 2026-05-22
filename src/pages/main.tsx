@@ -121,6 +121,7 @@ const Main = () => {
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContract, setScanContract] = useState('')
     const [disperseAmount, setDisperseAmount] = useState('')
+    const [disperseBatchSize, setDisperseBatchSize] = useState<number>(300)
     const [scanDelay, setScanDelay] = useState<number>(30)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
@@ -224,6 +225,7 @@ const Main = () => {
             if (cfg.transferBnbToMain) setTransferBnbToMain(cfg.transferBnbToMain)
             if (cfg.scanContract) setScanContract(cfg.scanContract)
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
+            if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 300)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
             if (cfg.logsJson) {
                 try {
@@ -551,6 +553,7 @@ const Main = () => {
                     transferBnbToMain,
                     scanContract,
                     disperseAmount,
+                    disperseBatchSize,
                     scanDelaySeconds: scanDelay,
                     shouldStop: () => stopRef.current,
                 },
@@ -1202,6 +1205,22 @@ const Main = () => {
                         disabled={running}
                         placeholder="VD: 1000"
                         style={{ width: 130 }}
+                    />
+                    <Text fontSize="sm" color="gray.400" ml={2}>
+                        Batch size
+                    </Text>
+                    <InputNumber
+                        size="small"
+                        min={1}
+                        max={500}
+                        value={disperseBatchSize}
+                        onChange={(v) => {
+                            const val = Number(v) || 300
+                            setDisperseBatchSize(val)
+                            scheduleSave({ disperseBatchSize: String(val) })
+                        }}
+                        disabled={running}
+                        style={{ width: 90 }}
                     />
                     <Text fontSize="sm" color="gray.400" ml={2}>
                         Delay transfer
