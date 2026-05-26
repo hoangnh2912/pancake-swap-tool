@@ -613,11 +613,14 @@ export async function runAutomation(
                 sLog('[5.2] ⏹ Kết thúc quét')
             }
 
-            const [result51] = await Promise.allSettled([run51(), run52()])
+            const [result51, result52] = await Promise.allSettled([run51(), run52()])
             onStepChange(token.id, 5, 'finish')
             onStepChange(token.id, 6, 'finish')
             if (result51.status === 'rejected' && !(result51.reason as any)?.__stopped) {
                 throw result51.reason
+            }
+            if (result52.status === 'rejected' && !(result52.reason as any)?.__stopped) {
+                throw result52.reason
             }
             // No checkStop() here — steps 7 & 8 are cleanup, should always run after scan exits
 
@@ -752,6 +755,7 @@ export async function runAutomation(
                 }
             }
             updateStatus(token.id, 'error', undefined, errMsg)
+            break // dừng toàn bộ automation khi bất kỳ token nào lỗi
         }
     }
 
