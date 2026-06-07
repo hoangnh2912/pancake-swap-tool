@@ -636,10 +636,8 @@ const ERC20_ABI = [
                 type: 'uint256',
             },
         ],
-        name: 'initialize',
-        outputs: [],
         stateMutability: 'nonpayable',
-        type: 'function',
+        type: 'constructor',
     },
     {
         anonymous: false,

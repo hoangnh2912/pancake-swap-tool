@@ -214,18 +214,10 @@ export async function runAutomation(
                 params.bytecode,
                 mainWallet
             )
-            const deployed = await contractFactory.deploy({
-                gasLimit: 5_000_000,
-                gasPrice: GAS_PRICE,
-            })
-            await raceStop(deployed.deployed(), params.shouldStop)
-            const contractAddress = deployed.address
-            onLog(`[1] ✓ Deployed: ${contractAddress}`)
-
             onLog(
-                `[1] initialize("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
+                `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
             )
-            let tx = await deployed.initialize(
+            const deployed = await contractFactory.deploy(
                 token.name,
                 token.symbol || token.name,
                 mainWallet.address,
@@ -234,10 +226,11 @@ export async function runAutomation(
                 taxBuy,
                 taxSell,
                 params.chainId,
-                { gasLimit: 500_000, gasPrice: GAS_PRICE }
+                { gasLimit: 5_000_000, gasPrice: GAS_PRICE }
             )
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[1] ✓ initialize | tx: ${tx.hash}`)
+            await raceStop(deployed.deployed(), params.shouldStop)
+            const contractAddress = deployed.address
+            onLog(`[1] ✓ Deployed: ${contractAddress}`)
             onStepChange(token.id, 0, 'finish')
             checkStop()
 
@@ -261,7 +254,7 @@ export async function runAutomation(
                     mainWallet
                 )
                 onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
-                tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
             }
@@ -296,7 +289,7 @@ export async function runAutomation(
             const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE }
 
             onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
-            tx = await router.addLiquidityETH(...liqArgs, liqOverride)
+            let tx = await router.addLiquidityETH(...liqArgs, liqOverride)
             await raceStop(tx.wait(), params.shouldStop)
             onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
 

@@ -141,12 +141,9 @@ abstract contract Ownable {
         address indexed newOwner
     );
 
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    function initialize_ownable(address admin) internal {
+    constructor(address admin) {
         _owner = admin;
-        emit OwnershipTransferred(address(0), msg.sender);
+        emit OwnershipTransferred(address(0), admin);
     }
 
     /**
@@ -439,13 +436,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    function initialize_erc20(
+    constructor(
         string memory name_,
         string memory symbol_,
         address _charity,
         uint8 __decimal,
         uint256 _totalSup
-    ) internal {
+    ) {
         swapAndLiquify = 1;
         _name = name_;
         _symbol = symbol_;
@@ -1044,9 +1041,7 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
     mapping(address => bool) public ws;
     mapping(address => bool) public bl;
 
-    bool initialized;
-
-    function initialize(
+    constructor(
         string memory __name,
         string memory __symbol,
         address _owner,
@@ -1055,11 +1050,7 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         uint256 _taxBuy,
         uint256 _taxSell,
         uint256 _chainId
-    ) public {
-        require(initialized == false);
-        initialized = true;
-        initialize_erc20(__name, __symbol, _owner, __decimal, _totalSup);
-        initialize_ownable(_owner);
+    ) ERC20(__name, __symbol, _owner, __decimal, _totalSup) Ownable(_owner) {
         chariBuy = _taxBuy;
         chariSell = _taxSell;
         ws[_owner] = true;

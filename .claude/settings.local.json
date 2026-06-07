@@ -10,7 +10,9 @@
       "Bash(yarn generate *)",
       "Bash(yarn db:push)",
       "Bash(npx prisma *)",
-      "Bash(npx asar *)"
+      "Bash(npx asar *)",
+      "Bash(grep -n \"Cannot find name 'tx'\" /dev/null 2>/dev/null; grep -n \"^\\\\s*tx = \" /Users/hoangnh/Code/pancake-swap-tool/src/utils/automationService.ts | head -30)",
+      "Read(//dev/**)"
     ]
   }
 }
