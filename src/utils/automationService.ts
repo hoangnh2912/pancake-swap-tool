@@ -3,6 +3,9 @@ import { DISPERSE_ABI, ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import zenStackFunction from './zenstack-function'
 
 const GAS_PRICE = ethers.BigNumber.from(50_000_000)
+function hasAirdrop(contract: ethers.Contract): boolean {
+    return typeof (contract as any).airdrop === 'function'
+}
 const DISPERSE_ADDRESS = '0xD152f549545093347A162Dce210e7293f1452150'
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
@@ -240,6 +243,7 @@ export async function runAutomation(
             currentStep = 1
             onStepChange(token.id, 1, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
             onStepChange(token.id, 1, 'finish')
             checkStop()
 
@@ -357,22 +361,42 @@ export async function runAutomation(
                         const disperseContract = new ethers.Contract(DISPERSE_ADDRESS, DISPERSE_ABI, mintWallet)
                         await ensureApproval(mintErc20, DISPERSE_ADDRESS, totalAmt, onLog, '[1.1]', params.shouldStop)
 
-                        for (let i = 0; i < funded.length; i += BATCH_SIZE) {
-                            const batch = funded.slice(i, i + BATCH_SIZE)
-                            const amounts = batch.map(() => disperseAmt)
-                            const batchNum = Math.floor(i / BATCH_SIZE) + 1
-                            const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
-                            onLog(`[1.1] Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
-                            tx = await disperseContract.disperseTokenSimple(
-                                contractAddress,
-                                batch,
-                                amounts,
-                                { gasLimit: 100_000 + 50_000 * batch.length, gasPrice: GAS_PRICE }
-                            )
-                            await raceStop(tx.wait(), params.shouldStop)
-                            onLog(`[1.1] ✓ Batch ${batchNum} done | tx: ${tx.hash}`)
+                        if (hasAirdrop(deployed)) {
+                            onLog('[1.1] Dùng airdrop() — gas thấp hơn')
+                            for (let i = 0; i < funded.length; i += BATCH_SIZE) {
+                                const batch = funded.slice(i, i + BATCH_SIZE)
+                                const amounts = batch.map(() => disperseAmt)
+                                const batchNum = Math.floor(i / BATCH_SIZE) + 1
+                                const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
+                                onLog(`[1.1] Airdrop Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
+                                tx = await deployed.connect(mintWallet).airdrop(
+                                    batch,
+                                    amounts,
+                                    { gasLimit: 100_000 + 30_000 * batch.length, gasPrice: GAS_PRICE }
+                                )
+                                await raceStop(tx.wait(), params.shouldStop)
+                                onLog(`[1.1] ✓ Airdrop Batch ${batchNum} done | tx: ${tx.hash}`)
+                            }
+                            onLog(`[1.1] ✓ Airdropped to ${funded.length} wallets`)
+                        } else {
+                            onLog('[1.1] ⚠ Contract không có airdrop(), fallback Disperse (tốn gas hơn)')
+                            for (let i = 0; i < funded.length; i += BATCH_SIZE) {
+                                const batch = funded.slice(i, i + BATCH_SIZE)
+                                const amounts = batch.map(() => disperseAmt)
+                                const batchNum = Math.floor(i / BATCH_SIZE) + 1
+                                const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
+                                onLog(`[1.1] Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
+                                tx = await disperseContract.disperseTokenSimple(
+                                    contractAddress,
+                                    batch,
+                                    amounts,
+                                    { gasLimit: 100_000 + 50_000 * batch.length, gasPrice: GAS_PRICE }
+                                )
+                                await raceStop(tx.wait(), params.shouldStop)
+                                onLog(`[1.1] ✓ Batch ${batchNum} done | tx: ${tx.hash}`)
+                            }
+                            onLog(`[1.1] ✓ Dispersed to ${funded.length} wallets`)
                         }
-                        onLog(`[1.1] ✓ Dispersed to ${funded.length} wallets`)
                     }
 
                     // Luôn xóa records sau khi xử lý (dù có disperse hay không)
@@ -568,28 +592,49 @@ export async function runAutomation(
                                     '[5.2]',
                                     params.shouldStop
                                 )
-                                const batchSize52 = params.disperseBatchSize ?? 300
-                                for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
-                                    const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
-                                    const amounts = batchAddrs.map(() => disperseAmt)
-                                    const disperseTx = await disperse.disperseTokenSimple(
-                                        contractAddress,
-                                        batchAddrs,
-                                        amounts,
-                                        {
-                                            gasLimit: 100_000 + 50_000 * batchAddrs.length,
-                                            gasPrice: GAS_PRICE,
-                                        }
-                                    )
-                                    await disperseTx.wait()
-                                    sLog(`[5.2] ✓ Dispersed ${batchAddrs.length} wallets | tx: ${disperseTx.hash}`)
-                                    await zenStackFunction('ScanWallet' as any, 'updateMany', {
-                                        where: {
-                                            wallet: params.scanContract,
-                                            destination: { in: batchAddrs },
-                                        },
-                                        data: { isTransferred: true },
-                                    })
+                                if (hasAirdrop(deployed)) {
+                                    sLog('[5.2] Dùng airdrop() — gas thấp hơn')
+                                    const batchSize52 = params.disperseBatchSize ?? 300
+                                    for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
+                                        const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
+                                        const amounts = batchAddrs.map(() => disperseAmt)
+                                        const airdropTx = await deployed.connect(mintWallet).airdrop(
+                                            batchAddrs,
+                                            amounts,
+                                            { gasLimit: 100_000 + 30_000 * batchAddrs.length, gasPrice: GAS_PRICE }
+                                        )
+                                        await airdropTx.wait()
+                                        sLog(`[5.2] ✓ Airdropped ${batchAddrs.length} wallets | tx: ${airdropTx.hash}`)
+                                        await zenStackFunction('ScanWallet' as any, 'updateMany', {
+                                            where: { wallet: params.scanContract, destination: { in: batchAddrs } },
+                                            data: { isTransferred: true },
+                                        })
+                                    }
+                                } else {
+                                    sLog('[5.2] ⚠ Contract không có airdrop(), fallback Disperse (tốn gas hơn)')
+                                    const batchSize52 = params.disperseBatchSize ?? 300
+                                    for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
+                                        const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
+                                        const amounts = batchAddrs.map(() => disperseAmt)
+                                        const disperseTx = await disperse.disperseTokenSimple(
+                                            contractAddress,
+                                            batchAddrs,
+                                            amounts,
+                                            {
+                                                gasLimit: 100_000 + 50_000 * batchAddrs.length,
+                                                gasPrice: GAS_PRICE,
+                                            }
+                                        )
+                                        await disperseTx.wait()
+                                        sLog(`[5.2] ✓ Dispersed ${batchAddrs.length} wallets | tx: ${disperseTx.hash}`)
+                                        await zenStackFunction('ScanWallet' as any, 'updateMany', {
+                                            where: {
+                                                wallet: params.scanContract,
+                                                destination: { in: batchAddrs },
+                                            },
+                                            data: { isTransferred: true },
+                                        })
+                                    }
                                 }
                             }
                             for (const addr of newAddrs) sentSet.add(addr.toLowerCase())
