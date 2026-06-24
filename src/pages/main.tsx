@@ -1175,7 +1175,7 @@ const Main = () => {
                         marginBottom: 12,
                     }}
                 >
-                    Cài đặt quét & disperse (step 5.2 / 1.1)
+                    Cài đặt quét & airdrop (step 5.2 / 1.1)
                 </AntText>
                 <Flex align="center" gap={3} wrap="wrap">
                     <Text fontSize="sm" color="gray.400">
@@ -1421,7 +1421,7 @@ const Main = () => {
                                                 status: statuses[4],
                                             },
                                             { title: '5.1 Chạy lệnh swap', status: statuses[5] },
-                                            { title: '5.2 Quét & Disperse', status: statuses[6] },
+                                            { title: '5.2 Quét & Airdrop', status: statuses[6] },
                                             {
                                                 title: '6. Mint thêm & Bán 90%',
                                                 status: statuses[7],
