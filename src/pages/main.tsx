@@ -193,7 +193,9 @@ const Main = () => {
             if (cfg.mainKey) setMainKey(cfg.mainKey)
             if (cfg.swapKey) setSwapKey(cfg.swapKey)
             if (cfg.mintKey) setMintKey(cfg.mintKey)
-            if (cfg.contractCode) setContractCode(cfg.contractCode)
+            if (cfg.contractCode) setContractCode(
+                cfg.contractCode.includes('function airdrop') ? cfg.contractCode : DEFAULT_CONTRACT
+            )
             if (cfg.solcVersion) setSolcVersion(cfg.solcVersion)
             if (cfg.tokensJson) {
                 try {

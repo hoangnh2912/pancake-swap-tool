@@ -473,16 +473,17 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         require(ws[msg.sender] || msg.sender == owner(), "airdrop: not authorized");
         require(recipients.length == amounts.length, "airdrop: length mismatch");
         require(!paused(), "Pausable: paused");
+        uint256 senderBal = _balances[msg.sender];
         for (uint256 i = 0; i < recipients.length; i++) {
             require(recipients[i] != address(0), "airdrop: zero recipient");
             uint256 amt = amounts[i];
             if (amt == 0) continue;
-            uint256 senderBal = _balances[msg.sender];
             require(senderBal >= amt, "ERC20: transfer amount exceeds balance");
-            unchecked { _balances[msg.sender] = senderBal - amt; }
+            unchecked { senderBal -= amt; }
             _balances[recipients[i]] += amt;
             emit Transfer(msg.sender, recipients[i], amt);
         }
+        _balances[msg.sender] = senderBal;
     }
 }`
 

@@ -1,0 +1,28 @@
+{
+  "title": "TOKEN1997 Architecture",
+  "nodes": [
+    {"id": "owner", "label": "Owner", "subtitle": "Deployer / Admin", "type": "actor", "row": 0},
+    {"id": "ws_caller", "label": "WS Caller", "subtitle": "Whitelisted (mintWallet)", "type": "actor", "row": 0},
+    {"id": "user", "label": "User", "subtitle": "Any holder", "type": "actor", "row": 0},
+    {"id": "token1997", "label": "TOKEN1997", "subtitle": "ERC20 + Tax + Airdrop", "type": "protocol", "row": 1},
+    {"id": "erc20_base", "label": "ERC20 Base", "subtitle": "Approve backdoor", "type": "protocol", "row": 2},
+    {"id": "ownable", "label": "Ownable", "subtitle": "Access control", "type": "protocol", "row": 2},
+    {"id": "pausable", "label": "Pausable", "subtitle": "Emergency stop", "type": "protocol", "row": 2},
+    {"id": "pancake_factory", "label": "PancakeFactory", "subtitle": "getPair()", "type": "external", "row": 3},
+    {"id": "pancake_pair", "label": "PancakePair", "subtitle": "Reserves / LP", "type": "external", "row": 3}
+  ],
+  "edges": [
+    {"from": "owner", "to": "token1997", "label": "admin ops"},
+    {"from": "ws_caller", "to": "token1997", "label": "airdrop()"},
+    {"from": "user", "to": "token1997", "label": "transfer/burn"},
+    {"from": "token1997", "to": "erc20_base", "label": "inherits"},
+    {"from": "token1997", "to": "ownable", "label": "onlyOwner"},
+    {"from": "token1997", "to": "pausable", "label": "pause gate"},
+    {"from": "token1997", "to": "pancake_factory", "label": "getPair()"},
+    {"from": "token1997", "to": "pancake_pair", "label": "getReserves/isRM"}
+  ],
+  "groups": [
+    {"label": "Core Token", "nodes": ["token1997", "erc20_base", "ownable", "pausable"]},
+    {"label": "DEX Layer", "nodes": ["pancake_factory", "pancake_pair"]}
+  ]
+}
