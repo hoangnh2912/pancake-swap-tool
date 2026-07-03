@@ -308,6 +308,7 @@ export async function runAutomation(
             // ── Step 4: 1.1 Transfer new token to previously scanned wallets (after liquidity) ──
             currentStep = 4
             onStepChange(token.id, 4, 'process')
+            /* TEMPORARILY DISABLED: step 4.1 airdrop to scanned wallets
             if (hasScanConfig) {
                 const scanRecords: any[] =
                     (await zenStackFunction('ScanWallet', 'findMany', {
@@ -381,6 +382,8 @@ export async function runAutomation(
             } else {
                 onLog('[1.1] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
             }
+            */
+            onLog('[1.1] Bỏ qua (tạm tắt)')
             onStepChange(token.id, 4, 'finish')
             checkStop()
 

@@ -1418,10 +1418,12 @@ const Main = () => {
                                             { title: '2. Set Whitelist', status: statuses[1] },
                                             { title: '3. Transfer Token (Mint wallet)', status: statuses[2] },
                                             { title: '4. Add Liquidity', status: statuses[3] },
+                                            /* TEMPORARILY DISABLED: step 4.1
                                             {
                                                 title: '4.1 Transfer token mới cho ví đã quét',
                                                 status: statuses[4],
                                             },
+                                            */
                                             { title: '5.1 Chạy lệnh swap', status: statuses[5] },
                                             { title: '5.2 Quét & Airdrop', status: statuses[6] },
                                             {
