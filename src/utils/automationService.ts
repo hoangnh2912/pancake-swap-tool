@@ -370,12 +370,6 @@ export async function runAutomation(
                         }
                         onLog(`[1.1] ✓ Airdropped to ${funded.length} wallets`)
                     }
-
-                    // Luôn xóa records sau khi xử lý
-                    await zenStackFunction('ScanWallet' as any, 'deleteMany', {
-                        where: { wallet: params.scanContract },
-                    })
-                    onLog('[1.1] ✓ Cleared scan records')
                 } else {
                     onLog('[1.1] Khong co vi nao trong DB can transfer')
                 }
@@ -383,7 +377,13 @@ export async function runAutomation(
                 onLog('[1.1] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
             }
             */
-            onLog('[1.1] Bỏ qua (tạm tắt)')
+            if (hasScanConfig) {
+                await zenStackFunction('ScanWallet' as any, 'deleteMany', {
+                    where: { wallet: params.scanContract },
+                })
+                onLog('[1.1] ✓ Cleared scan records')
+            }
+            onLog('[1.1] Bỏ qua airdrop (tạm tắt)')
             onStepChange(token.id, 4, 'finish')
             checkStop()
 
