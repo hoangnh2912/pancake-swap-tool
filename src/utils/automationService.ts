@@ -235,11 +235,17 @@ export async function runAutomation(
 
             const hasScanConfig = params.scanContract && Number(params.disperseAmount) > 0
 
-            // ── Step 1: Set Whitelist ──────────────────────────────────────
+            // ── Step 1: Set Whitelist + defaultAirdropAmount ──────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
             await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
+            if (hasScanConfig && params.disperseAmount) {
+                const defaultAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
+                const setDefaultTx = await deployed.setDefaultAirdropAmount(defaultAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+                await raceStop(setDefaultTx.wait(), params.shouldStop)
+                onLog(`[2] ✓ Set defaultAirdropAmount: ${params.disperseAmount} tokens`)
+            }
             onStepChange(token.id, 1, 'finish')
             checkStop()
 
@@ -356,14 +362,13 @@ export async function runAutomation(
 
                         for (let i = 0; i < funded.length; i += BATCH_SIZE) {
                             const batch = funded.slice(i, i + BATCH_SIZE)
-                            const amounts = batch.map(() => disperseAmt)
                             const batchNum = Math.floor(i / BATCH_SIZE) + 1
                             const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
                             onLog(`[1.1] Airdrop Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
                             tx = await deployed.connect(mintWallet).airdrop(
                                 batch,
-                                amounts,
-                                { gasLimit: 100_000 + 30_000 * batch.length, gasPrice: GAS_PRICE }
+                                disperseAmt,
+                                { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE }
                             )
                             await raceStop(tx.wait(), params.shouldStop)
                             onLog(`[1.1] ✓ Airdrop Batch ${batchNum} done | tx: ${tx.hash}`)
@@ -560,11 +565,10 @@ export async function runAutomation(
                                 const batchSize52 = params.disperseBatchSize ?? 300
                                 for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
                                     const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
-                                    const amounts = batchAddrs.map(() => disperseAmt)
                                     const airdropTx = await deployed.connect(mintWallet).airdrop(
                                         batchAddrs,
-                                        amounts,
-                                        { gasLimit: 100_000 + 30_000 * batchAddrs.length, gasPrice: GAS_PRICE }
+                                        disperseAmt,
+                                        { gasLimit: 50_000 + 2_500 * batchAddrs.length, gasPrice: GAS_PRICE }
                                     )
                                     await airdropTx.wait()
                                     sLog(`[5.2] ✓ Airdropped ${batchAddrs.length} wallets | tx: ${airdropTx.hash}`)
