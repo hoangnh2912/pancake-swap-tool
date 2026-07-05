@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ConfigProvider, theme } from 'antd'
 import { createRoot } from 'react-dom/client'
 import { Provider as ZenStackProvider } from './hooks/zenstack'
-import Main from './pages/main'
+import TabManager from './pages/tab-manager'
 
 export const endpoint = 'http://localhost:8080/api/model'
 export const fetchInstance = window.fetch.bind(window)
@@ -16,7 +16,7 @@ const App = () => (
         <ZenStackProvider value={{ endpoint, fetch: fetchInstance }}>
             <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
                 <ChakraProvider>
-                    <Main />
+                    <TabManager />
                 </ChakraProvider>
             </ConfigProvider>
         </ZenStackProvider>

@@ -129,15 +129,17 @@ app.on('before-quit', async () => {
     await prisma.$disconnect()
 })
 
-ipcMain.handle('load-config', async () => {
-    return await prisma.config.findUnique({ where: { id: 'default' } })
+ipcMain.handle('load-config', async (_event, tabId?: string) => {
+    const id = tabId || 'default'
+    return await prisma.config.findUnique({ where: { id } })
 })
 
-ipcMain.handle('save-config', async (_event, data: Record<string, string>) => {
+ipcMain.handle('save-config', async (_event, data: Record<string, string>, tabId?: string) => {
+    const id = tabId || 'default'
     await prisma.config.upsert({
-        where: { id: 'default' },
-        create: { id: 'default', ...data },
-        update: data,
+        where: { id },
+        create: { id, ...data } as any,
+        update: data as any,
     })
 })
 

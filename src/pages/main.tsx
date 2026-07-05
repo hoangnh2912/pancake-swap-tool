@@ -24,8 +24,17 @@ import {
 } from 'antd'
 import { ethers } from 'ethers'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AutomationToken, StepStatus, SwapCommand } from '../utils/automationService'
+
+export interface TabStatus {
+    running: boolean
+    hasError: boolean
+    done: boolean
+    successCount: number
+    tokenTotal: number
+}
+import type { AutomationToken, ScanContractConfig, StepStatus, SwapCommand } from '../utils/automationService'
 import { runAutomation } from '../utils/automationService'
+import { buildProvider, parseRpcList } from '../utils/buildProvider'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
 import * as XLSX from 'xlsx'
 import {
@@ -96,10 +105,16 @@ const statusLabel: Record<RowStatus, string> = {
 
 const LABEL_W = '130px'
 
-const electron = (window as any).electron
+const getElectron = () => (window as any).electron
 
-const Main = () => {
-    const [rpc, setRpc] = useState('https://bsc.drpc.org')
+const Main = ({
+    tabId = 'default',
+    onStatusChange,
+}: {
+    tabId?: string
+    onStatusChange?: (status: TabStatus) => void
+}) => {
+    const [rpcList, setRpcList] = useState('https://bsc.drpc.org')
     const [chainId, setChainId] = useState('56')
     const [mainKey, setMainKey] = useState('')
     const [swapKey, setSwapKey] = useState('')
@@ -119,32 +134,44 @@ const Main = () => {
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
-    const [scanContract, setScanContract] = useState('')
+    const [scanContracts, setScanContracts] = useState<ScanContractConfig[]>([])
     const [disperseAmount, setDisperseAmount] = useState('')
-    const [disperseBatchSize, setDisperseBatchSize] = useState<number>(300)
+    const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
 
+    useEffect(() => {
+        onStatusChange?.({
+            running,
+            hasError: tokens.some((t) => t.status === 'error'),
+            done: !running && tokens.some((t) => t.status === 'success'),
+            successCount: tokens.filter((t) => t.status === 'success').length,
+            tokenTotal: tokens.length,
+        })
+    }, [running, tokens, onStatusChange])
+
     const [scanPage, setScanPage] = useState(1)
     const SCAN_PAGE_SIZE = 20
 
+    const scanContractAddresses = scanContracts.map((c) => c.address).filter(Boolean)
+    const hasScanContracts = scanContractAddresses.length > 0
     const { data: totalCount = 0 } = useCountScanWallet(
-        { where: { wallet: scanContract } },
-        { enabled: !!scanContract, refetchInterval: 5000 }
+        { where: { wallet: { in: scanContractAddresses } } },
+        { enabled: hasScanContracts, refetchInterval: 5000 }
     )
     const { data: transferredCount = 0 } = useCountScanWallet(
-        { where: { wallet: scanContract, isTransferred: true } },
-        { enabled: !!scanContract, refetchInterval: 5000 }
+        { where: { wallet: { in: scanContractAddresses }, isTransferred: true } },
+        { enabled: hasScanContracts, refetchInterval: 5000 }
     )
     const { data: scanRows = [] } = useFindManyScanWallet(
         {
-            where: { wallet: scanContract },
+            where: { wallet: { in: scanContractAddresses } },
             orderBy: { createdAt: 'desc' },
             skip: (scanPage - 1) * SCAN_PAGE_SIZE,
             take: SCAN_PAGE_SIZE,
         },
-        { enabled: !!scanContract, refetchInterval: 5000 }
+        { enabled: hasScanContracts, refetchInterval: 5000 }
     )
     const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
 
@@ -157,8 +184,9 @@ const Main = () => {
     const [mintBal, setMintBal] = useState('')
 
     useEffect(() => {
-        if (!rpc) return
-        const provider = new ethers.providers.JsonRpcProvider(rpc)
+        const urls = parseRpcList(rpcList)
+        if (urls.length === 0) return
+        const provider = buildProvider(urls)
         const fetchBal = (addr: string, set: (v: string) => void) => {
             if (!addr) {
                 set('')
@@ -179,16 +207,18 @@ const Main = () => {
         poll()
         const id = setInterval(poll, 5000)
         return () => clearInterval(id)
-    }, [mainAddr, swapAddr, mintAddr, rpc])
+    }, [mainAddr, swapAddr, mintAddr, rpcList])
 
     // Load config + version list on mount
     useEffect(() => {
-        electron.getSolcVersions().then((opts: { value: string; label: string }[]) => {
+        const el = getElectron()
+        if (!el) return
+        el.getSolcVersions().then((opts: { value: string; label: string }[]) => {
             setSolcVersionOptions(opts)
         })
-        electron.loadConfig().then((cfg: any) => {
+        el.loadConfig(tabId).then((cfg: any) => {
             if (!cfg) return
-            if (cfg.rpc) setRpc(cfg.rpc)
+            if (cfg.rpc) setRpcList(cfg.rpc)
             if (cfg.chainId) setChainId(cfg.chainId)
             if (cfg.mainKey) setMainKey(cfg.mainKey)
             if (cfg.swapKey) setSwapKey(cfg.swapKey)
@@ -225,9 +255,16 @@ const Main = () => {
             }
             if (cfg.swapDelay) setSwapDelay(Number(cfg.swapDelay) || 0)
             if (cfg.transferBnbToMain) setTransferBnbToMain(cfg.transferBnbToMain)
-            if (cfg.scanContract) setScanContract(cfg.scanContract)
+            if (cfg.scanContractsJson) {
+                try {
+                    const saved = JSON.parse(cfg.scanContractsJson) as ScanContractConfig[]
+                    if (Array.isArray(saved)) setScanContracts(saved)
+                } catch {}
+            } else if (cfg.scanContract) {
+                setScanContracts([{ address: cfg.scanContract, privateKey: '' }])
+            }
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
-            if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 300)
+            if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
             if (cfg.logsJson) {
                 try {
@@ -251,9 +288,9 @@ const Main = () => {
     const scheduleSave = useCallback((patch: Record<string, string>) => {
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => {
-            electron.saveConfig(patch)
+            getElectron()?.saveConfig(patch, tabId)
         }, 800)
-    }, [])
+    }, [tabId])
 
     const logIdRef = useRef(0)
     const swapIdRef = useRef(1)
@@ -265,7 +302,7 @@ const Main = () => {
             const trimmed = next.slice(-500)
             if (logSaveTimer.current) clearTimeout(logSaveTimer.current)
             logSaveTimer.current = setTimeout(() => {
-                electron.saveConfig({ logsJson: JSON.stringify(trimmed) })
+                getElectron()?.saveConfig({ logsJson: JSON.stringify(trimmed) }, tabId)
             }, 1500)
             return trimmed
         })
@@ -378,11 +415,11 @@ const Main = () => {
     }
 
     const exportScanWallets = async () => {
-        if (!scanContract) return
+        if (scanContractAddresses.length === 0) return
         try {
             const data: any[] =
                 (await zenStackFunction('ScanWallet' as any, 'findMany', {
-                    where: { wallet: scanContract },
+                    where: { wallet: { in: scanContractAddresses } },
                 })) ?? []
             const rows = data
                 .filter((r: any) => r.destination)
@@ -429,9 +466,10 @@ const Main = () => {
                     message.error('Không tìm thấy địa chỉ hợp lệ')
                     return
                 }
+                const importTarget = scanContractAddresses[0] ?? 'imported'
                 await createManyScanWallet({
                     data: valid.map((addr) => ({
-                        wallet: scanContract,
+                        wallet: importTarget,
                         tx: 'imported',
                         destination: addr,
                         isTransferred: false,
@@ -482,7 +520,8 @@ const Main = () => {
             message.error('Vui lòng nhập đủ 3 private key')
             return
         }
-        if (!rpc) {
+        const rpcUrls = parseRpcList(rpcList)
+        if (rpcUrls.length === 0) {
             message.error('Vui lòng nhập RPC URL')
             return
         }
@@ -525,14 +564,14 @@ const Main = () => {
                 const statuses = [...curr.statuses] as StepStatus[]
                 statuses[step] = status
                 const next = { ...prev, [tokenId]: { ...curr, statuses } }
-                electron.saveConfig({ stepStatesJson: JSON.stringify(next) })
+                getElectron()?.saveConfig({ stepStatesJson: JSON.stringify(next) }, tabId)
                 return next
             })
         }
 
         try {
             addLog(`Đang compile contract (solc v${solcVersion})...`)
-            const compileResult = await electron.compileContract(contractCode, solcVersion)
+            const compileResult = await getElectron()?.compileContract(contractCode, solcVersion)
             addLog(
                 `Compile thành công: contract "${compileResult.contractName}" [solc ${solcVersion}]`
             )
@@ -542,7 +581,7 @@ const Main = () => {
 
             await runAutomation(
                 {
-                    rpc,
+                    rpcList: rpcUrls,
                     chainId: Number(chainId) || 56,
                     mainPrivateKey: normalizeKey(mainKey),
                     swapPrivateKey: normalizeKey(swapKey),
@@ -553,7 +592,12 @@ const Main = () => {
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
                     transferBnbToMain,
-                    scanContract,
+                    scanContracts: scanContracts
+                        .filter((c) => c.address && c.privateKey)
+                        .map((c) => ({
+                            address: c.address.trim(),
+                            privateKey: c.privateKey.trim(),
+                        })),
                     disperseAmount,
                     disperseBatchSize,
                     scanDelaySeconds: scanDelay,
@@ -821,18 +865,19 @@ const Main = () => {
                     Cấu hình kết nối &amp; ví
                 </AntText>
                 <Stack spacing={3} mt={3}>
-                    <Flex align="center" gap={3}>
-                        <Text fontSize="sm" color="gray.400" minW={LABEL_W}>
-                            RPC URL
+                    <Flex align="start" gap={3}>
+                        <Text fontSize="sm" color="gray.400" minW={LABEL_W} pt={1}>
+                            RPC URLs
                         </Text>
-                        <Input
-                            value={rpc}
+                        <Input.TextArea
+                            value={rpcList}
                             onChange={(e) => {
-                                setRpc(e.target.value)
+                                setRpcList(e.target.value)
                                 scheduleSave({ rpc: e.target.value })
                             }}
-                            placeholder="https://bsc.drpc.org"
-                            style={{ flex: 1 }}
+                            placeholder={'https://bsc.drpc.org\nhttps://bsc-rpc.publicnode.com'}
+                            autoSize={{ minRows: 2, maxRows: 6 }}
+                            style={{ flex: 1, fontFamily: 'monospace', fontSize: 12 }}
                         />
                         <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right">
                             Chain ID
@@ -1167,35 +1212,33 @@ const Main = () => {
 
             {/* Scan Settings (Step 5.2) */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText
-                    style={{
-                        color: '#666',
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        letterSpacing: 1,
-                        display: 'block',
-                        marginBottom: 12,
-                    }}
-                >
-                    Cài đặt quét & airdrop (step 5.2 / 1.1)
-                </AntText>
-                <Flex align="center" gap={3} wrap="wrap">
-                    <Text fontSize="sm" color="gray.400">
-                        Contract quét
-                    </Text>
-                    <Input
+                <Flex align="center" justify="space-between" mb={3}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
+                        Cài đặt quét & airdrop (step 5.2 / 1.1)
+                    </AntText>
+                    <Button
                         size="small"
-                        value={scanContract}
-                        onChange={(e) => {
-                            setScanContract(e.target.value)
-                            scheduleSave({ scanContract: e.target.value })
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            const next = [...scanContracts, { address: '', privateKey: '' }]
+                            setScanContracts(next)
+                            scheduleSave({ scanContractsJson: JSON.stringify(next) })
                         }}
                         disabled={running}
-                        placeholder="0x..."
-                        style={{ width: 360 }}
-                    />
-                    <Text fontSize="sm" color="gray.400" ml={2}>
-                        Amount transfer
+                    >
+                        Thêm contract
+                    </Button>
+                </Flex>
+                <Flex align="center" gap={3} wrap="wrap" mb={3}>
+                    <Text fontSize="sm" color="gray.400">
+                        Amount/ví
                     </Text>
                     <Input
                         size="small"
@@ -1209,15 +1252,15 @@ const Main = () => {
                         style={{ width: 130 }}
                     />
                     <Text fontSize="sm" color="gray.400" ml={2}>
-                        Batch size
+                        Batch
                     </Text>
                     <InputNumber
                         size="small"
                         min={1}
-                        max={500}
+                        max={50000}
                         value={disperseBatchSize}
                         onChange={(v) => {
-                            const val = Number(v) || 300
+                            const val = Number(v) || 10000
                             setDisperseBatchSize(val)
                             scheduleSave({ disperseBatchSize: String(val) })
                         }}
@@ -1225,7 +1268,7 @@ const Main = () => {
                         style={{ width: 90 }}
                     />
                     <Text fontSize="sm" color="gray.400" ml={2}>
-                        Delay transfer
+                        Delay
                     </Text>
                     <InputNumber
                         size="small"
@@ -1241,6 +1284,60 @@ const Main = () => {
                         addonAfter="s"
                     />
                 </Flex>
+                {scanContracts.length === 0 ? (
+                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                        Chưa cấu hình contract quét — nhấn "Thêm contract"
+                    </AntText>
+                ) : (
+                    <Stack spacing={2}>
+                        {scanContracts.map((cfg, i) => (
+                            <Flex key={i} align="center" gap={2}>
+                                <Text fontSize="sm" color="gray.500" minW="20px">
+                                    {i + 1}.
+                                </Text>
+                                <Input
+                                    size="small"
+                                    value={cfg.address}
+                                    onChange={(e) => {
+                                        const next = scanContracts.map((c, j) =>
+                                            j === i ? { ...c, address: e.target.value } : c
+                                        )
+                                        setScanContracts(next)
+                                        scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                    }}
+                                    disabled={running}
+                                    placeholder="Contract 0x..."
+                                    style={{ flex: 2 }}
+                                />
+                                <Input.Password
+                                    size="small"
+                                    value={cfg.privateKey}
+                                    onChange={(e) => {
+                                        const next = scanContracts.map((c, j) =>
+                                            j === i ? { ...c, privateKey: e.target.value } : c
+                                        )
+                                        setScanContracts(next)
+                                        scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                    }}
+                                    disabled={running}
+                                    placeholder="Private key ví mint"
+                                    style={{ flex: 2 }}
+                                />
+                                <Button
+                                    size="small"
+                                    danger
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => {
+                                        const next = scanContracts.filter((_, j) => j !== i)
+                                        setScanContracts(next)
+                                        scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                    }}
+                                    disabled={running}
+                                />
+                            </Flex>
+                        ))}
+                    </Stack>
+                )}
             </Box>
 
             {/* Scan Dashboard */}
@@ -1261,7 +1358,7 @@ const Main = () => {
                             size="small"
                             icon={<DownloadOutlined />}
                             onClick={exportScanWallets}
-                            disabled={!scanContract}
+                            disabled={!hasScanContracts}
                         >
                             Xuất ví ra file
                         </Button>
@@ -1278,7 +1375,7 @@ const Main = () => {
                             <Button
                                 size="small"
                                 icon={<UploadOutlined />}
-                                disabled={!scanContract || running}
+                                disabled={!hasScanContracts || running}
                                 onClick={(e) =>
                                     (
                                         e.currentTarget.previousElementSibling as HTMLInputElement
@@ -1486,7 +1583,15 @@ const Main = () => {
                     >
                         Log
                     </AntText>
-                    <Button size="small" onClick={() => setLogs([])} disabled={logs.length === 0}>
+                    <Button
+                        size="small"
+                        disabled={logs.length === 0}
+                        onClick={() => {
+                            if (logSaveTimer.current) clearTimeout(logSaveTimer.current)
+                            setLogs([])
+                            getElectron()?.saveConfig({ logsJson: '[]' }, tabId)
+                        }}
+                    >
                         Clear
                     </Button>
                 </Flex>

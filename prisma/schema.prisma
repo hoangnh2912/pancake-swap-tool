@@ -42,6 +42,8 @@ model Config {
   transferBnbToMain String @default("")
   scanContract      String @default("")
   disperseAmount    String @default("")
+  disperseBatchSize String @default("300")
+  scanContractsJson String @default("[]")
   scanDelay         String @default("30")
   logsJson          String @default("[]")
   stepStatesJson    String @default("{}")

@@ -67,6 +67,7 @@
     "googleapis": "^157.0.0",
     "hono": "^4.11.7",
     "jquery": "^3.7.1",
+    "lucide-react": "^1.23.0",
     "monaco-editor": "^0.55.1",
     "prisma": "6",
     "react": "^18.2.0",

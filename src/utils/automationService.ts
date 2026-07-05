@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
+import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
 
 const GAS_PRICE = ethers.BigNumber.from(50_000_000)
@@ -51,8 +52,13 @@ export interface AutomationToken {
     totalSupply: string // if empty, auto-compute as mintAmount + liquidityToken
 }
 
+export interface ScanContractConfig {
+    address: string
+    privateKey: string
+}
+
 export interface AutomationParams {
-    rpc: string
+    rpcList: string[]
     mainPrivateKey: string
     swapPrivateKey: string
     mintPrivateKey: string
@@ -63,10 +69,10 @@ export interface AutomationParams {
     swapCommands: SwapCommand[]
     swapDelayMs: number
     transferBnbToMain: string
-    scanContract: string // contract address to scan for wallet interactions
-    disperseAmount: string // tokens per wallet for Airdrop (steps 1.1 and 5.2)
-    disperseBatchSize?: number // wallets per airdrop batch, default 300
-    scanDelaySeconds: number // seconds between scan cycles in step 5.2
+    scanContracts: ScanContractConfig[]
+    disperseAmount: string
+    disperseBatchSize?: number
+    scanDelaySeconds: number
     shouldStop?: () => boolean
 }
 
@@ -156,7 +162,7 @@ export async function runAutomation(
     const PANCAKE_FACTORY = chainCfg.factory
     const WBNB = chainCfg.wbnb
 
-    const provider = new ethers.providers.JsonRpcProvider(params.rpc)
+    const provider = buildProvider(params.rpcList)
     const mainWallet = new ethers.Wallet(params.mainPrivateKey, provider)
     const swapWallet = new ethers.Wallet(params.swapPrivateKey, provider)
     const mintWallet = new ethers.Wallet(params.mintPrivateKey, provider)
@@ -233,13 +239,19 @@ export async function runAutomation(
             onStepChange(token.id, 0, 'finish')
             checkStop()
 
-            const hasScanConfig = params.scanContract && Number(params.disperseAmount) > 0
+            const hasScanConfig = params.scanContracts.length > 0 && Number(params.disperseAmount) > 0
 
             // ── Step 1: Set Whitelist + defaultAirdropAmount ──────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
             await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
+            for (const cfg of params.scanContracts) {
+                if (!cfg.privateKey) continue
+                const pk = cfg.privateKey.trim().startsWith('0x') ? cfg.privateKey.trim() : `0x${cfg.privateKey.trim()}`
+                const scanSignerAddr = new ethers.Wallet(pk).address
+                await ensureWhitelisted(deployed, scanSignerAddr, onLog, '[2]', params.shouldStop)
+            }
             if (hasScanConfig && params.disperseAmount) {
                 const defaultAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const setDefaultTx = await deployed.setDefaultAirdropAmount(defaultAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
@@ -353,7 +365,7 @@ export async function runAutomation(
                     if (funded.length === 0) {
                         onLog('[1.1] Khong co vi nao, bo qua')
                     } else {
-                        const BATCH_SIZE = params.disperseBatchSize ?? 300
+                        const BATCH_SIZE = params.disperseBatchSize ?? 10000
                         const totalAmt = disperseAmt.mul(funded.length)
                         onLog(`[1.1] Transfer ${ethers.utils.formatUnits(totalAmt, token.decimal)} tokens → mintWallet`)
                         tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
@@ -383,8 +395,9 @@ export async function runAutomation(
             }
             */
             if (hasScanConfig) {
+                const scanAddrs = params.scanContracts.map((c) => c.address).filter(Boolean)
                 await zenStackFunction('ScanWallet' as any, 'deleteMany', {
-                    where: { wallet: params.scanContract },
+                    where: { wallet: { in: scanAddrs } },
                 })
                 onLog('[1.1] ✓ Cleared scan records')
             }
@@ -494,41 +507,38 @@ export async function runAutomation(
                 }
             }
 
-            const run52 = async () => {
-                if (!hasScanConfig) {
-                    onLog('[5.2] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
-                    return
-                }
+            const runScanContract = async (cfg: ScanContractConfig) => {
+                const label = `[5.2|${cfg.address.slice(0, 8)}…]`
                 const sLog = (msg: string) => {
                     onLog(msg)
                     onScanLog?.(msg)
                 }
                 const stop52 = () => !!(params.shouldStop?.() || step51Done)
-                const mintErc20 = new ethers.Contract(contractAddress, ERC20_ABI, mintWallet)
+                const pk = cfg.privateKey.trim().startsWith('0x') ? cfg.privateKey.trim() : `0x${cfg.privateKey.trim()}`
+                const scanSigner = new ethers.Wallet(pk, provider)
+                const scanErc20 = new ethers.Contract(contractAddress, ERC20_ABI, scanSigner)
                 const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const sentSet = new Set<string>()
 
                 const existing: any[] =
                     (await zenStackFunction('ScanWallet' as any, 'findMany', {
-                        where: { wallet: params.scanContract },
+                        where: { wallet: cfg.address },
                     })) ?? []
                 for (const r of existing) {
                     if (r.destination) sentSet.add((r.destination as string).toLowerCase())
                 }
-                sLog(`[5.2] Pre-loaded ${existing.length} ví đã transfer từ DB`)
+                sLog(`${label} Pre-loaded ${existing.length} ví đã transfer từ DB`)
 
                 let scanFrom = await provider.getBlockNumber()
-                sLog(`[5.2] Quét contract: ${params.scanContract}`)
-                sLog(
-                    `[5.2] Delay: ${params.scanDelaySeconds}s | Amount: ${params.disperseAmount} token/ví`
-                )
-                sLog('[5.2] Tự dừng khi 5.1 kết thúc, hoặc nhấn Dừng để thoát sớm')
+                sLog(`${label} Quét contract: ${cfg.address}`)
+                sLog(`${label} Delay: ${params.scanDelaySeconds}s | Amount: ${params.disperseAmount} token/ví`)
+                sLog(`${label} Tự dừng khi 5.1 kết thúc, hoặc nhấn Dừng để thoát sớm`)
 
                 while (!stop52()) {
                     const latest = await provider.getBlockNumber()
                     if (latest >= scanFrom) {
                         const toBlock = Math.min(latest, scanFrom + SCAN_CHUNK - 1)
-                        const scanTarget = params.scanContract.toLowerCase()
+                        const scanTarget = cfg.address.toLowerCase()
                         const interactors: string[] = []
 
                         for (let bn = scanFrom; bn <= toBlock; bn++) {
@@ -544,36 +554,34 @@ export async function runAutomation(
 
                         const newAddrs = [...new Set(interactors)]
                         if (newAddrs.length > 0) {
-                            sLog(`[5.2] Block ${scanFrom}–${toBlock}: ${newAddrs.length} ví mới`)
+                            sLog(`${label} Block ${scanFrom}–${toBlock}: ${newAddrs.length} ví mới`)
                             await zenStackFunction('ScanWallet' as any, 'createMany', {
                                 data: newAddrs.map((addr) => ({
-                                    wallet: params.scanContract,
+                                    wallet: cfg.address,
                                     tx: '0x',
-                                    token: params.scanContract,
+                                    token: cfg.address,
                                     destination: addr,
                                     amount: params.disperseAmount,
                                     isTransferred: false,
                                 })),
                             })
                             const totalAmt = disperseAmt.mul(newAddrs.length)
-                            const mintBalance = (await mintErc20.balanceOf(
-                                mintWallet.address
-                            )) as ethers.BigNumber
+                            const mintBalance = (await scanErc20.balanceOf(scanSigner.address)) as ethers.BigNumber
                             if (mintBalance.lt(totalAmt)) {
-                                sLog('[5.2] ⚠ Mint wallet khong du token cho airdrop')
+                                sLog(`${label} ⚠ Mint wallet khong du token cho airdrop`)
                             } else {
-                                const batchSize52 = params.disperseBatchSize ?? 300
+                                const batchSize52 = params.disperseBatchSize ?? 10000
                                 for (let bi = 0; bi < newAddrs.length; bi += batchSize52) {
                                     const batchAddrs = newAddrs.slice(bi, bi + batchSize52)
-                                    const airdropTx = await deployed.connect(mintWallet).airdrop(
+                                    const airdropTx = await deployed.connect(scanSigner).airdrop(
                                         batchAddrs,
                                         disperseAmt,
                                         { gasLimit: 50_000 + 2_500 * batchAddrs.length, gasPrice: GAS_PRICE }
                                     )
                                     await airdropTx.wait()
-                                    sLog(`[5.2] ✓ Airdropped ${batchAddrs.length} wallets | tx: ${airdropTx.hash}`)
+                                    sLog(`${label} ✓ Airdropped ${batchAddrs.length} wallets | tx: ${airdropTx.hash}`)
                                     await zenStackFunction('ScanWallet' as any, 'updateMany', {
-                                        where: { wallet: params.scanContract, destination: { in: batchAddrs } },
+                                        where: { wallet: cfg.address, destination: { in: batchAddrs } },
                                         data: { isTransferred: true },
                                     })
                                 }
@@ -586,10 +594,18 @@ export async function runAutomation(
                     }
 
                     if (stop52()) break
-                    sLog(`[5.2] Chờ ${params.scanDelaySeconds}s...`)
+                    sLog(`${label} Chờ ${params.scanDelaySeconds}s...`)
                     await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
                 }
-                sLog('[5.2] ⏹ Kết thúc quét')
+                sLog(`${label} ⏹ Kết thúc quét`)
+            }
+
+            const run52 = async () => {
+                if (!hasScanConfig) {
+                    onLog('[5.2] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
+                    return
+                }
+                await Promise.all(params.scanContracts.map((cfg) => runScanContract(cfg)))
             }
 
             const [result51, result52] = await Promise.allSettled([run51(), run52()])
