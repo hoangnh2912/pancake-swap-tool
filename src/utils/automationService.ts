@@ -3,7 +3,7 @@ import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
 
-const GAS_PRICE = ethers.BigNumber.from(50_000_000)
+const GAS_PRICE = ethers.utils.parseUnits('3', 'gwei')
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
     56: {
