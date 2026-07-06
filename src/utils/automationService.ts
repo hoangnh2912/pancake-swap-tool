@@ -114,14 +114,17 @@ async function ensureWhitelisted(
     address: string,
     onLog: (msg: string) => void,
     label: string,
-    shouldStop?: () => boolean
+    shouldStop?: () => boolean,
+    getNextNonce?: () => number
 ): Promise<void> {
     const already: boolean = await contract.ws(address)
     if (already) {
         onLog(`${label} ${address.slice(0, 8)}… đã whitelist, bỏ qua`)
         return
     }
-    const tx: ethers.ContractTransaction = await contract.setW(address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+    const overrides: any = { gasLimit: 100_000, gasPrice: GAS_PRICE }
+    if (getNextNonce) overrides.nonce = getNextNonce()
+    const tx: ethers.ContractTransaction = await contract.setW(address, overrides)
     await raceStop(tx.wait(), shouldStop)
     onLog(`${label} ✓ Whitelisted ${address.slice(0, 8)}… | tx: ${tx.hash}`)
 }
@@ -132,7 +135,8 @@ async function ensureApproval(
     required: ethers.BigNumber,
     onLog: (msg: string) => void,
     label: string,
-    shouldStop?: () => boolean
+    shouldStop?: () => boolean,
+    getNextNonce?: () => number
 ): Promise<void> {
     const owner: string = await tokenContract.signer.getAddress()
     const allowance: ethers.BigNumber = await tokenContract.allowance(owner, spender)
@@ -140,10 +144,12 @@ async function ensureApproval(
         onLog(`${label} Allowance OK, skip approve`)
         return
     }
+    const overrides: any = { gasLimit: 100_000, gasPrice: GAS_PRICE }
+    if (getNextNonce) overrides.nonce = getNextNonce()
     const tx: ethers.ContractTransaction = await tokenContract.approve(
         spender,
         ethers.constants.MaxUint256,
-        { gasLimit: 100_000, gasPrice: GAS_PRICE }
+        overrides
     )
     await raceStop(tx.wait(), shouldStop)
     onLog(`${label} ✓ Approved (MaxUint256) | tx: ${tx.hash}`)
@@ -258,8 +264,8 @@ export async function runAutomation(
             // ── Step 1: Set Whitelist + defaultAirdropAmount ──────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
-            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop, () => nextNonce(mainWallet))
+            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop, () => nextNonce(mainWallet))
             if (hasScanConfig && params.disperseAmount) {
                 const defaultAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const setDefaultTx = await deployed.setDefaultAirdropAmount(defaultAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) })
@@ -300,7 +306,7 @@ export async function runAutomation(
                 throw new Error(
                     `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
                 )
-            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop)
+            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop, () => nextNonce(mainWallet))
 
             const deadline = Math.floor(Date.now() / 1000) + 600
             const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
@@ -489,7 +495,8 @@ export async function runAutomation(
                                 tokenAmt,
                                 onLog,
                                 `[5.1.${i + 1}]`,
-                                params.shouldStop
+                                params.shouldStop,
+                                () => nextNonce(swapWallet)
                             )
                             const swapTx =
                                 await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -678,7 +685,8 @@ export async function runAutomation(
                     actualSellAmt,
                     onLog,
                     '[6]',
-                    params.shouldStop
+                    params.shouldStop,
+                    () => nextNonce(swapWallet)
                 )
                 tx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
                     actualSellAmt,
