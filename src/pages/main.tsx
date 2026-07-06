@@ -17,6 +17,7 @@ import {
     Select,
     Steps,
     Table,
+    Tabs,
     Tag,
     Tooltip,
     Typography,
@@ -107,6 +108,110 @@ const LABEL_W = '130px'
 
 const getElectron = () => (window as any).electron
 
+const SCAN_PAGE_SIZE = 20
+
+const ScanContractPanel = ({ contractAddress }: { contractAddress: string }) => {
+    const [page, setPage] = useState(1)
+
+    const { data: total = 0 } = useCountScanWallet(
+        { where: { wallet: contractAddress } },
+        { refetchInterval: 5000 }
+    )
+    const { data: transferred = 0 } = useCountScanWallet(
+        { where: { wallet: contractAddress, isTransferred: true } },
+        { refetchInterval: 5000 }
+    )
+    const { data: rows = [] } = useFindManyScanWallet(
+        {
+            where: { wallet: contractAddress },
+            orderBy: { createdAt: 'desc' },
+            skip: (page - 1) * SCAN_PAGE_SIZE,
+            take: SCAN_PAGE_SIZE,
+        },
+        { refetchInterval: 5000 }
+    )
+
+    const shortAddr = `${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)}`
+
+    return (
+        <>
+            <Flex gap={8} mb={3}>
+                <Box>
+                    <Text fontSize="xs" color="gray.500" mb={1}>
+                        Tổng ví quét được
+                    </Text>
+                    <Text fontSize="2xl" color="blue.400" fontWeight="bold" fontFamily="mono">
+                        {total as number}
+                    </Text>
+                </Box>
+                <Box>
+                    <Text fontSize="xs" color="gray.500" mb={1}>
+                        Đã transfer
+                    </Text>
+                    <Text fontSize="2xl" color="green.400" fontWeight="bold" fontFamily="mono">
+                        {transferred as number}
+                    </Text>
+                </Box>
+                <Box>
+                    <Text fontSize="xs" color="gray.500" mb={1}>
+                        Chưa transfer
+                    </Text>
+                    <Text fontSize="2xl" color="yellow.300" fontWeight="bold" fontFamily="mono">
+                        {(total as number) - (transferred as number)}
+                    </Text>
+                </Box>
+            </Flex>
+            <Table
+                size="small"
+                dataSource={rows as any[]}
+                rowKey="id"
+                pagination={{
+                    current: page,
+                    pageSize: SCAN_PAGE_SIZE,
+                    total: total as number,
+                    onChange: setPage,
+                    showSizeChanger: false,
+                    showTotal: (t) => `${t} ví`,
+                }}
+                columns={[
+                    {
+                        title: 'STT',
+                        width: 60,
+                        render: (_: any, __: any, i: number) =>
+                            (page - 1) * SCAN_PAGE_SIZE + i + 1,
+                    },
+                    {
+                        title: 'Ví nhận',
+                        dataIndex: 'destination',
+                        render: (v: string) => (
+                            <AntText code style={{ fontSize: 11 }}>
+                                {v}
+                            </AntText>
+                        ),
+                    },
+                    {
+                        title: 'Số lượng',
+                        dataIndex: 'amount',
+                        width: 120,
+                    },
+                    {
+                        title: 'Trạng thái',
+                        dataIndex: 'isTransferred',
+                        width: 110,
+                        render: (v: boolean) => (
+                            <Tag color={v ? 'success' : 'warning'}>
+                                {v ? 'Đã transfer' : 'Chưa'}
+                            </Tag>
+                        ),
+                    },
+                ]}
+                scroll={{ y: 300 }}
+                style={{ marginTop: 8 }}
+            />
+        </>
+    )
+}
+
 const Main = ({
     tabId = 'default',
     onStatusChange,
@@ -151,28 +256,9 @@ const Main = ({
         })
     }, [running, tokens, onStatusChange])
 
-    const [scanPage, setScanPage] = useState(1)
-    const SCAN_PAGE_SIZE = 20
-
     const scanContractAddresses = scanContracts.map((c) => c.address).filter(Boolean)
     const hasScanContracts = scanContractAddresses.length > 0
-    const { data: totalCount = 0 } = useCountScanWallet(
-        { where: { wallet: { in: scanContractAddresses } } },
-        { enabled: hasScanContracts, refetchInterval: 5000 }
-    )
-    const { data: transferredCount = 0 } = useCountScanWallet(
-        { where: { wallet: { in: scanContractAddresses }, isTransferred: true } },
-        { enabled: hasScanContracts, refetchInterval: 5000 }
-    )
-    const { data: scanRows = [] } = useFindManyScanWallet(
-        {
-            where: { wallet: { in: scanContractAddresses } },
-            orderBy: { createdAt: 'desc' },
-            skip: (scanPage - 1) * SCAN_PAGE_SIZE,
-            take: SCAN_PAGE_SIZE,
-        },
-        { enabled: hasScanContracts, refetchInterval: 5000 }
-    )
+    const [scanTabKey, setScanTabKey] = useState<string>('')
     const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
 
     const mainAddr = deriveAddress(mainKey)
@@ -467,7 +553,7 @@ const Main = ({
                     message.error('Không tìm thấy địa chỉ hợp lệ')
                     return
                 }
-                const importTarget = scanContractAddresses[0] ?? 'imported'
+                const importTarget = scanTabKey || scanContractAddresses[0] || 'imported'
                 await createManyScanWallet({
                     data: valid.map((addr) => ({
                         wallet: importTarget,
@@ -1371,79 +1457,23 @@ const Main = ({
                         </label>
                     </Flex>
                 </Flex>
-                <Flex gap={8} mb={3}>
-                    <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>
-                            Tổng ví quét được
-                        </Text>
-                        <Text fontSize="2xl" color="blue.400" fontWeight="bold" fontFamily="mono">
-                            {totalCount as number}
-                        </Text>
-                    </Box>
-                    <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>
-                            Đã transfer
-                        </Text>
-                        <Text fontSize="2xl" color="green.400" fontWeight="bold" fontFamily="mono">
-                            {transferredCount as number}
-                        </Text>
-                    </Box>
-                    <Box>
-                        <Text fontSize="xs" color="gray.500" mb={1}>
-                            Chưa transfer
-                        </Text>
-                        <Text fontSize="2xl" color="yellow.300" fontWeight="bold" fontFamily="mono">
-                            {(totalCount as number) - (transferredCount as number)}
-                        </Text>
-                    </Box>
-                </Flex>
-                <Table
-                    size="small"
-                    dataSource={scanRows as any[]}
-                    rowKey="id"
-                    pagination={{
-                        current: scanPage,
-                        pageSize: SCAN_PAGE_SIZE,
-                        total: totalCount as number,
-                        onChange: setScanPage,
-                        showSizeChanger: false,
-                        showTotal: (t) => `${t} ví`,
-                    }}
-                    columns={[
-                        {
-                            title: 'STT',
-                            width: 60,
-                            render: (_: any, __: any, i: number) =>
-                                (scanPage - 1) * SCAN_PAGE_SIZE + i + 1,
-                        },
-                        {
-                            title: 'Ví nhận',
-                            dataIndex: 'destination',
-                            render: (v: string) => (
-                                <AntText code style={{ fontSize: 11 }}>
-                                    {v}
-                                </AntText>
-                            ),
-                        },
-                        {
-                            title: 'Số lượng',
-                            dataIndex: 'amount',
-                            width: 120,
-                        },
-                        {
-                            title: 'Trạng thái',
-                            dataIndex: 'isTransferred',
-                            width: 110,
-                            render: (v: boolean) => (
-                                <Tag color={v ? 'success' : 'warning'}>
-                                    {v ? 'Đã transfer' : 'Chưa'}
-                                </Tag>
-                            ),
-                        },
-                    ]}
-                    scroll={{ y: 300 }}
-                    style={{ marginTop: 8 }}
-                />
+                {scanContracts.length === 0 ? (
+                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                        Chưa cấu hình contract quét — thêm contract ở trên
+                    </AntText>
+                ) : (
+                    <Tabs
+                        size="small"
+                        activeKey={scanTabKey || scanContracts[0]?.address}
+                        onChange={setScanTabKey}
+                        items={scanContracts.map((cfg) => ({
+                            key: cfg.address,
+                            label: `${cfg.address.slice(0, 8)}...${cfg.address.slice(-6)}`,
+                            children: <ScanContractPanel contractAddress={cfg.address} />,
+                        }))}
+                        style={{ marginTop: -8 }}
+                    />
+                )}
             </Box>
 
             {/* Step Progress */}
