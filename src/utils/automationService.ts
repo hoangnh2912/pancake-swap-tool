@@ -54,7 +54,6 @@ export interface AutomationToken {
 
 export interface ScanContractConfig {
     address: string
-    privateKey: string
 }
 
 export interface AutomationParams {
@@ -246,12 +245,6 @@ export async function runAutomation(
             onStepChange(token.id, 1, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
             await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
-            for (const cfg of params.scanContracts) {
-                if (!cfg.privateKey) continue
-                const pk = cfg.privateKey.trim().startsWith('0x') ? cfg.privateKey.trim() : `0x${cfg.privateKey.trim()}`
-                const scanSignerAddr = new ethers.Wallet(pk).address
-                await ensureWhitelisted(deployed, scanSignerAddr, onLog, '[2]', params.shouldStop)
-            }
             if (hasScanConfig && params.disperseAmount) {
                 const defaultAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const setDefaultTx = await deployed.setDefaultAirdropAmount(defaultAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
@@ -514,8 +507,7 @@ export async function runAutomation(
                     onScanLog?.(msg)
                 }
                 const stop52 = () => !!(params.shouldStop?.() || step51Done)
-                const pk = cfg.privateKey.trim().startsWith('0x') ? cfg.privateKey.trim() : `0x${cfg.privateKey.trim()}`
-                const scanSigner = new ethers.Wallet(pk, provider)
+                const scanSigner = mintWallet
                 const scanErc20 = new ethers.Contract(contractAddress, ERC20_ABI, scanSigner)
                 const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const sentSet = new Set<string>()

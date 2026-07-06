@@ -258,10 +258,11 @@ const Main = ({
             if (cfg.scanContractsJson) {
                 try {
                     const saved = JSON.parse(cfg.scanContractsJson) as ScanContractConfig[]
-                    if (Array.isArray(saved)) setScanContracts(saved)
+                    if (Array.isArray(saved))
+                        setScanContracts(saved.map((c) => ({ address: c.address })))
                 } catch {}
             } else if (cfg.scanContract) {
-                setScanContracts([{ address: cfg.scanContract, privateKey: '' }])
+                setScanContracts([{ address: cfg.scanContract }])
             }
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
@@ -593,11 +594,8 @@ const Main = ({
                     swapDelayMs: swapDelay * 1000,
                     transferBnbToMain,
                     scanContracts: scanContracts
-                        .filter((c) => c.address && c.privateKey)
-                        .map((c) => ({
-                            address: c.address.trim(),
-                            privateKey: c.privateKey.trim(),
-                        })),
+                        .filter((c) => c.address)
+                        .map((c) => ({ address: c.address.trim() })),
                     disperseAmount,
                     disperseBatchSize,
                     scanDelaySeconds: scanDelay,
@@ -1227,7 +1225,7 @@ const Main = ({
                         size="small"
                         icon={<PlusOutlined />}
                         onClick={() => {
-                            const next = [...scanContracts, { address: '', privateKey: '' }]
+                            const next = [...scanContracts, { address: '' }]
                             setScanContracts(next)
                             scheduleSave({ scanContractsJson: JSON.stringify(next) })
                         }}
@@ -1306,22 +1304,8 @@ const Main = ({
                                         scheduleSave({ scanContractsJson: JSON.stringify(next) })
                                     }}
                                     disabled={running}
-                                    placeholder="Contract 0x..."
-                                    style={{ flex: 2 }}
-                                />
-                                <Input.Password
-                                    size="small"
-                                    value={cfg.privateKey}
-                                    onChange={(e) => {
-                                        const next = scanContracts.map((c, j) =>
-                                            j === i ? { ...c, privateKey: e.target.value } : c
-                                        )
-                                        setScanContracts(next)
-                                        scheduleSave({ scanContractsJson: JSON.stringify(next) })
-                                    }}
-                                    disabled={running}
-                                    placeholder="Private key ví mint"
-                                    style={{ flex: 2 }}
+                                    placeholder="Contract address 0x..."
+                                    style={{ flex: 1 }}
                                 />
                                 <Button
                                     size="small"
