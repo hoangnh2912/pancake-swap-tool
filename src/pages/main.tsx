@@ -240,11 +240,26 @@ const Main = ({
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContracts, setScanContracts] = useState<ScanContractConfig[]>([])
+    const [scanContractErrors, setScanContractErrors] = useState<Record<number, string>>({})
     const [disperseAmount, setDisperseAmount] = useState('')
     const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
+
+    const validateScanContractAddress = useCallback(
+        (addr: string, ignoreIndex: number): string | null => {
+            const v = addr.trim()
+            if (!v) return null // empty is OK, not an error
+            if (!ethers.utils.isAddress(v)) return 'Địa chỉ không hợp lệ'
+            const dup = scanContracts.find(
+                (c, j) => j !== ignoreIndex && c.address.trim().toLowerCase() === v.toLowerCase()
+            )
+            if (dup) return 'Địa chỉ bị trùng'
+            return null
+        },
+        [scanContracts]
+    )
 
     useEffect(() => {
         onStatusChange?.({
@@ -255,6 +270,16 @@ const Main = ({
             tokenTotal: tokens.length,
         })
     }, [running, tokens, onStatusChange])
+
+    // Re-validate scan contracts on any change (covers load + edits)
+    useEffect(() => {
+        const errors: Record<number, string> = {}
+        scanContracts.forEach((c, i) => {
+            const err = validateScanContractAddress(c.address, i)
+            if (err) errors[i] = err
+        })
+        setScanContractErrors(errors)
+    }, [scanContracts, validateScanContractAddress])
 
     const scanContractAddresses = scanContracts.map((c) => c.address).filter(Boolean)
     const hasScanContracts = scanContractAddresses.length > 0
@@ -1382,12 +1407,21 @@ const Main = ({
                                 <Input
                                     size="small"
                                     value={cfg.address}
+                                    status={scanContractErrors[i] ? 'error' : undefined}
                                     onChange={(e) => {
+                                        const val = e.target.value
                                         const next = scanContracts.map((c, j) =>
-                                            j === i ? { ...c, address: e.target.value } : c
+                                            j === i ? { ...c, address: val } : c
                                         )
                                         setScanContracts(next)
                                         scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                        const err = validateScanContractAddress(val, i)
+                                        setScanContractErrors((prev) => {
+                                            const copy = { ...prev }
+                                            if (err) copy[i] = err
+                                            else delete copy[i]
+                                            return copy
+                                        })
                                     }}
                                     disabled={running}
                                     placeholder="Contract address 0x..."
@@ -1401,6 +1435,17 @@ const Main = ({
                                         const next = scanContracts.filter((_, j) => j !== i)
                                         setScanContracts(next)
                                         scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                        setScanContractErrors((prev) => {
+                                            const copy = { ...prev }
+                                            delete copy[i]
+                                            // reindex keys after removal
+                                            const reindexed: Record<number, string> = {}
+                                            Object.entries(copy).forEach(([k, v]) => {
+                                                const idx = Number(k)
+                                                reindexed[idx > i ? idx - 1 : idx] = v
+                                            })
+                                            return reindexed
+                                        })
                                     }}
                                     disabled={running}
                                 />
