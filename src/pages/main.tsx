@@ -251,7 +251,7 @@ const Main = ({
         (addr: string, ignoreIndex: number): string | null => {
             const v = addr.trim()
             if (!v) return null // empty is OK, not an error
-            if (!ethers.utils.isAddress(v)) return 'Địa chỉ không hợp lệ'
+            if (!/^0x[0-9a-fA-F]{40}$/.test(v)) return 'Địa chỉ không hợp lệ'
             const dup = scanContracts.find(
                 (c, j) => j !== ignoreIndex && c.address.trim().toLowerCase() === v.toLowerCase()
             )
