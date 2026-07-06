@@ -431,11 +431,8 @@ export async function runAutomation(
             )
             const swapErc20 = new ethers.Contract(contractAddress, ERC20_ABI, swapWallet)
 
-            let step51Done = false
-
             const run51 = async () => {
-                try {
-                    for (let i = 0; i < params.swapCommands.length; i++) {
+                for (let i = 0; i < params.swapCommands.length; i++) {
                         if (params.shouldStop?.()) {
                             onLog('[5.1] ⏹ Dừng swap.')
                             break
@@ -516,11 +513,8 @@ export async function runAutomation(
                             await new Promise((r) => setTimeout(r, params.swapDelayMs))
                         }
                     }
-                    onLog('[5.1] ✓ Kết thúc swap commands')
-                } finally {
-                    step51Done = true
-                }
-            }
+                onLog('[5.1] ✓ Kết thúc swap commands')
+        }
 
             const runScanContract = async (cfg: ScanContractConfig) => {
                 const label = `[5.2|${cfg.address.slice(0, 8)}…]`
@@ -528,7 +522,7 @@ export async function runAutomation(
                     onLog(msg)
                     onScanLog?.(msg)
                 }
-                const stop52 = () => !!(params.shouldStop?.() || step51Done)
+                const stop52 = () => !!params.shouldStop?.()
                 const scanSigner = mintWallet
                 const scanErc20 = new ethers.Contract(contractAddress, ERC20_ABI, scanSigner)
                 const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
