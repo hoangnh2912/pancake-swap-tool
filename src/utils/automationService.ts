@@ -607,7 +607,7 @@ export async function runAutomation(
                 let scanFrom = await provider.getBlockNumber()
                 sLog(`${label} Quét contract: ${cfg.address}`)
                 sLog(`${label} Delay: ${params.scanDelaySeconds}s | Amount: ${params.disperseAmount} token/ví`)
-                sLog(`${label} Tự dừng khi 5.1 kết thúc, hoặc nhấn Dừng để thoát sớm`)
+                sLog(`${label} Chạy liên tục đến khi nhấn Dừng`)
 
                 while (!stop52()) {
                     const latest = await provider.getBlockNumber()
