@@ -1,6 +1,7 @@
 import './setup'
 
 import { BrowserWindow, app, ipcMain } from 'electron'
+import { ethers } from 'ethers'
 import path from 'node:path'
 import { PrismaClient } from '../prisma/client'
 import './server'
@@ -154,11 +155,12 @@ ipcMain.handle('get-solc-versions', () => {
 // ── Global Nonce Manager ────────────────────────────────────────────────────────
 const nonceCounters = new Map<string, number>()
 
-ipcMain.handle('get-next-nonce', async (_event, walletAddress: string) => {
+ipcMain.handle('get-next-nonce', async (_event, walletAddress: string, rpcUrl?: string) => {
     const key = walletAddress.toLowerCase()
     if (!nonceCounters.has(key)) {
         // Init from chain (pending count — includes unconfirmed txs from all tabs)
-        const provider = new ethers.providers.JsonRpcProvider('https://bsc.drpc.org')
+        const rpc = rpcUrl || 'https://bsc.drpc.org'
+        const provider = new ethers.providers.JsonRpcProvider(rpc)
         const count = await provider.getTransactionCount(walletAddress, 'pending')
         nonceCounters.set(key, count)
     }
