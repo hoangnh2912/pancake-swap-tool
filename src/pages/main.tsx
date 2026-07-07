@@ -244,6 +244,7 @@ const Main = ({
     const [disperseAmount, setDisperseAmount] = useState('')
     const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
+    const [implAddress, setImplAddress] = useState<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
 
@@ -378,6 +379,7 @@ const Main = ({
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
+            if (cfg.implAddress) setImplAddress(cfg.implAddress)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -622,10 +624,16 @@ const Main = ({
         status: RowStatus,
         contractAddress?: string,
         errorMsg?: string
-    ) =>
+    ) => {
         setTokens((prev) =>
             prev.map((r) => (r.id === id ? { ...r, status, contractAddress, errorMsg } : r))
         )
+        // Save implementation address when first token deploys successfully
+        if (status === 'success' && contractAddress && !implAddress) {
+            setImplAddress(contractAddress)
+            getElectron()?.saveConfig({ implAddress: contractAddress }, tabId)
+        }
+    }
 
     const handleStart = async () => {
         if (!mainKey || !swapKey || !mintKey) {
@@ -710,6 +718,7 @@ const Main = ({
                     disperseAmount,
                     disperseBatchSize,
                     scanDelaySeconds: scanDelay,
+                    existingImplementationAddress: implAddress,
                     shouldStop: () => stopRef.current,
                 },
                 addLog,
@@ -941,6 +950,34 @@ const Main = ({
                         <Text fontSize="xs" color="gray.500" mt={1}>
                             Version khác 0.8.35 sẽ download lần đầu dùng (cần internet)
                         </Text>
+                    </Box>
+                    <Box>
+                        <Text fontSize="sm" color="gray.400" mb={2}>
+                            Proxy Implementation Cache
+                        </Text>
+                        {implAddress ? (
+                            <>
+                                <AntText code style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
+                                    {implAddress}
+                                </AntText>
+                                <Button
+                                    size="small"
+                                    danger
+                                    onClick={() => {
+                                        setImplAddress(null)
+                                        getElectron()?.saveConfig({ implAddress: '' }, tabId)
+                                        message.info('Đã xoá implementation cache')
+                                    }}
+                                    disabled={running}
+                                >
+                                    Reset Implementation
+                                </Button>
+                            </>
+                        ) : (
+                            <Text fontSize="xs" color="gray.500">
+                                Chưa có — token đầu tiên sẽ deploy implementation
+                            </Text>
+                        )}
                     </Box>
                 </Stack>
             </Modal>

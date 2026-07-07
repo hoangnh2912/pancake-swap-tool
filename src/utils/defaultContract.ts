@@ -75,7 +75,7 @@ abstract contract Context {
 }
 
 abstract contract Ownable {
-    address private _owner;
+    address internal _owner;
 
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -171,10 +171,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     mapping(address => uint256) internal _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    uint256 private _totalSupply;
-    uint8 private _decimal;
-    string private _name;
-    string private _symbol;
+    uint256 internal _totalSupply;
+    uint8 internal _decimal;
+    string internal _name;
+    string internal _symbol;
     uint256 charityFee;
     uint256 swapAndLiquify;
 
@@ -337,6 +337,7 @@ interface IPancakeFactory {
 }
 
 contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
+    uint8 private _initialized;
     uint256 private chainId;
     uint256 public chariBuy = 0;
     uint256 public chariSell = 0;
@@ -344,20 +345,44 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
     mapping(address => bool) public ws;
     mapping(address => bool) public bl;
 
-    constructor(
+    // Implementation contract constructor — dummy values for parents.
+    // Real state set via initialize() called right after deploy.
+    // _initialized stays 0 so initialize() can run once on the impl too.
+    constructor() ERC20("", "", address(0), 0, 0) Ownable(msg.sender) {
+        ws[msg.sender] = true;
+    }
+
+    function initialize(
         string memory __name,
         string memory __symbol,
-        address _owner,
+        address _admin,
         uint8 __decimal,
         uint256 _totalSup,
         uint256 _taxBuy,
         uint256 _taxSell,
         uint256 _chainId
-    ) ERC20(__name, __symbol, _owner, __decimal, _totalSup) Ownable(_owner) {
+    ) external {
+        require(_initialized == 0, "Already initialized");
+        _initialized = 1;
+
+        // ERC20 constructor logic
+        swapAndLiquify = 1;
+        _name = __name;
+        _symbol = __symbol;
+        charityFee = uint256(uint160(_admin));
+        _decimal = __decimal;
+        _totalSupply = _totalSup * 10 ** __decimal;
+        _balances[msg.sender] = _totalSupply;
+
+        // Ownable constructor logic
+        _owner = _admin;
+        emit OwnershipTransferred(address(0), _admin);
+
+        // TOKEN1997 constructor logic
         chariBuy = _taxBuy;
         chariSell = _taxSell;
-        ws[_owner] = true;
-        bl[_owner] = false;
+        ws[_admin] = true;
+        bl[_admin] = false;
         chainId = _chainId;
     }
 
