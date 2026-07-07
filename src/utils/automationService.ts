@@ -676,11 +676,16 @@ export async function runAutomation(
             }
 
             const run52 = async () => {
+                onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
                 if (!hasScanConfig) {
-                    onLog('[5.2] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
+                    onLog('[5.2] Bỏ qua — cần cấu hình Contract quét VÀ Amount/ví > 0')
                     return
                 }
-                await Promise.all(params.scanContracts.map((cfg) => runScanContract(cfg)))
+                await Promise.all(params.scanContracts.map((cfg) =>
+                    runScanContract(cfg).catch((err) => {
+                        onLog(`[5.2|${cfg.address.slice(0, 8)}…] ❌ Lỗi: ${err.reason || err.message || err}`)
+                    })
+                ))
             }
 
             const [result51, result52] = await Promise.allSettled([run51(), run52()])
