@@ -2392,6 +2392,11 @@
   dependencies:
     "@tanstack/query-core" "5.90.20"
 
+"@tanstack/store@^0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/store/-/store-0.11.0.tgz#8a2e374a67bf9dbb28e72298156996445570102b"
+  integrity sha512-WlzzCt3xi0G6pCAJu1U+2jiECwabETDpQDi3hfkFZvJii9AuZqEKbOiVarX1/bWhTNjU486yQtJCCasi/0q+Cw==
+
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"

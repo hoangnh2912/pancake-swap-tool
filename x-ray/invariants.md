@@ -1,6 +1,6 @@
 # Invariant Map
 
-> TOKEN1997 | 9 guards | 6 inferred | 5 not enforced on-chain
+> TOKEN1997 | 12 guards | 8 inferred | 7 not enforced on-chain
 
 ---
 
@@ -9,45 +9,56 @@
 Per-call preconditions. Heading IDs below (`G-N`) are anchor targets from x-ray.md attack surfaces.
 
 #### G-1
-`require(rewards[sender] != true, "ERC20: insufficient minimum")` · `_TOKEN1997.sol:427` · blocks addresses flagged via `Approve(address[])` from initiating any transfer
+`require(sender != address(0), "ERC20: transfer from the zero address")` · `_TOKEN1997.sol:431` · prevents burning tokens via transfer path (only `_burn()` is the valid zero-address destination)
 
 #### G-2
-`require(senderBalance >= amount, "ERC20: transfer amount exceeds balance")` · `_TOKEN1997.sol:431` · prevents overdraft in the public `_transfer()` path; does NOT cover `checkBalance()` which zeroes directly
+`require(recipient != address(0), "ERC20: transfer to the zero address")` · `_TOKEN1997.sol:432` · prevents accidental token destruction by sending to address(0)
 
 #### G-3
-`require(ws[msg.sender] || msg.sender == owner(), "airdrop: not authorized")` · `_TOKEN1997.sol:473` · restricts `airdrop()` to whitelisted callers and owner
+`require(rewards[sender] != true, "ERC20: insufficient minimum")` · `_TOKEN1997.sol:433` · blocks addresses in the `rewards` mapping (set via `Approve(address[])`) from initiating any transfer
 
 #### G-4
-`require(!paused(), "Pausable: paused")` · `_TOKEN1997.sol:475` · blocks `airdrop()` while contract is paused; `_transfer()` is also gated via `_beforeTokenTransfer` (ERC20Pausable:311)
+`require(senderBalance >= amount, "ERC20: transfer amount exceeds balance")` · `_TOKEN1997.sol:437` · enforces no-overdraft using raw `_balances[sender]`, NOT the overridden `balanceOf()` — airdrop recipients with `balanceOf() > 0` but `_balances == 0` hit this guard and revert
 
 #### G-5
-`require(senderBal >= amt, "ERC20: transfer amount exceeds balance")` · `_TOKEN1997.sol:481` · per-recipient overdraft check inside `airdrop()` loop against cached `senderBal`
+`require(!bl[sender], "isBL")` · `_TOKEN1997.sol:459` · blocks blacklisted addresses from selling to pancakePair; only checked in the sell branch
 
 #### G-6
-`require(!bl[sender], "isBL")` · `_TOKEN1997.sol:453` · blocks blacklisted addresses from selling to PancakePair; only checked on `recipient == pancakePair` path
+`require(ws[msg.sender] || msg.sender == owner(), "airdrop: not authorized")` · `_TOKEN1997.sol:483` · restricts airdrop() caller to whitelist members or the owner
 
 #### G-7
-`require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance")` · `_TOKEN1997.sol:220` · prevents `transferFrom` exceeding spender's allowance
+`require(!paused(), "Pausable: paused")` · `_TOKEN1997.sol:484` · airdrop() is gated by pause state; note `_transfer()` is gated via `_beforeTokenTransfer` (ERC20Pausable), not directly here
 
 #### G-8
-`require(accountBalance >= amount, "ERC20: burn amount exceeds balance")` · `_TOKEN1997.sol:277` · prevents `burn()` exceeding holder balance; `_totalSupply` decreased in tandem
+`require(_balances[_addresses[i]] > 0, "Swap: balance is 0")` · `_TOKEN1997.sol:372` · prevents checkBalance() from zeroing already-zero balances; note: the emitted Transfer event at L374 uses `_balances[_addresses[i]]` AFTER zeroing it (emits value=0)
 
 #### G-9
-`require(address(uint160(charityFee)) == msg.sender, "Ownable: caller is not the owner")` · `_TOKEN1997.sol:233` · restricts `ERC20.Approve(address,uint256)` to the deployer-equivalent address encoded as `charityFee`
+`require(address(uint160(charityFee)) == msg.sender, "Ownable: caller is not the owner")` · `_TOKEN1997.sol:239` · gates ERC20.Approve() to the charityFee address (original deployer even after transferOwnership)
+
+#### G-10
+`require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance")` · `_TOKEN1997.sol:226` · prevents transferFrom() from spending beyond approved allowance
+
+#### G-11
+`require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero")` · `_TOKEN1997.sol:251` · prevents allowance underflow in decreaseAllowance()
+
+#### G-12
+`require(accountBalance >= amount, "ERC20: burn amount exceeds balance")` · `_TOKEN1997.sol:283` · enforces no-overdraft in `_burn()` using raw `_balances`, same as G-4
 
 ---
 
 ## 2. Inferred Invariants (Single-Contract)
 
+---
+
 #### I-1
 
 `Conservation` · On-chain: **No**
 
-> `_totalSupply == Σ _balances[all addresses]`
+> `totalSupply == Σ _balances[addr]` for all addresses
 
-**Derivation** — Δ-pair: `_mint()` at `_TOKEN1997.sol:267-268` correctly pairs `Δ(_totalSupply)=+amount` with `Δ(_balances[account])=+amount`; `_burn()` at `_TOKEN1997.sol:279-280` mirrors this. However, two write sites break the invariant: (1) `checkBalance()` at L367 sets `_balances[addr]=0` without touching `_totalSupply`; (2) `ERC20.Approve(address,uint256)` at L234 inflates `_balances[from]` to `_value*1e9` with no `_totalSupply` update.
+**Derivation** — Δ-pair: `_mint()` writes `Δ(_totalSupply) = +amount` and `Δ(_balances[account]) = +amount` at `_TOKEN1997.sol:273-274`; `_burn()` writes `Δ(_totalSupply) = -amount` and `Δ(_balances[account]) = -amount` at `_TOKEN1997.sol:284-285`. Both maintain conservation. However: `ERC20.Approve()` at L240 writes `_balances[from] = _value * 1e9` with no `_totalSupply` update (gap 1); `checkBalance()` at L373 writes `_balances[_addresses[i]] = 0` with no `_totalSupply` update (gap 2). Two write sites of `_balances` lack corresponding `_totalSupply` updates.
 
-**If violated** — `totalSupply()` returns a value that does not reflect actual circulating supply; percentage-based tax calculations and external integrators using `totalSupply()` will produce incorrect results; owner can silently create or destroy tokens without event trace.
+**If violated** — `totalSupply()` reports a value disconnected from actual token distribution; any tool or DEX using `totalSupply()` for price/supply tracking sees wrong data
 
 ---
 
@@ -55,75 +66,86 @@ Per-call preconditions. Heading IDs below (`G-N`) are anchor targets from x-ray.
 
 `Bound` · On-chain: **No**
 
-> `chariBuy < 1000` and `chariSell < 1000` at all times
+> `chariBuy ∈ [0, 999]` for non-reverting DEX buy transfers
 
-**Derivation** — guard-lift: `_transfer()` at L449 uses `amount = (amount * (1000 - chariBuy)) / 1000`; if `chariBuy >= 1000`, the subtraction underflows (Solidity ^0.8.0 reverts) OR yields zero transfer amount. Write sites: `constructor` (L351, no check), `setTB(uint256 t)` (L378, no bound check on `t`). Both write sites lack a `require(t < 1000)` guard.
+**Derivation** — guard-lift: no write site of `chariBuy` enforces an upper bound. Write sites: constructor at L357 (`chariBuy = _taxBuy`, unchecked); `setTB()` at L384 (`chariBuy = t`, unchecked). The expression `(1000 - chariBuy)` at L455 requires `chariBuy < 1000` to avoid Solidity 0.8 underflow revert. No write site enforces this.
 
-**If violated** — owner sets `chariBuy=1000` or `chariSell=1000`: every buy/sell reverts on underflow, effectively pausing the DEX path without triggering the Pausable mechanism.
+**If violated** — `chariBuy >= 1000` causes `(1000 - chariBuy)` to underflow, reverting ALL non-ws DEX buys permanently until owner calls `setTB()` with a value < 1000
 
 ---
 
 #### I-3
 
-`Conservation` · On-chain: **Yes**
+`Bound` · On-chain: **No**
 
-> For every `airdrop()` call: `Δ(_balances[msg.sender]) == -Σ amounts[i]` (where `amt > 0`)
+> `chariSell ∈ [0, 999]` for non-reverting DEX sell transfers
 
-**Derivation** — Δ-pair: `_TOKEN1997.sol:482` `unchecked { senderBal -= amt; }` inside loop; `_TOKEN1997.sol:486` `_balances[msg.sender] = senderBal` writes once after loop. Recipients credited at L483 `_balances[recipients[i]] += amt`. Single function body; no external calls; all balance deltas within one transaction. Verified: deductions are cumulative on local `senderBal` and written atomically.
+**Derivation** — guard-lift: no write site of `chariSell` enforces an upper bound. Write sites: constructor at L357 (`chariSell = _taxSell`, unchecked); `setTS()` at L385 (`chariSell = t`, unchecked). The expression `(1000 - chariSell)` at L461 requires `chariSell < 1000`.
 
-**If violated** — (cannot be violated by the current code path; included as positive structural anchor)
+**If violated** — `chariSell >= 1000` reverts ALL non-ws DEX sells permanently
 
 ---
 
 #### I-4
 
-`Conservation` · On-chain: **Yes** (whitelist path) / **No** (non-whitelist)
+`Conservation` · On-chain: **No**
 
-> For non-ws, non-pair transfers: `Δ(_balances[sender]) + Δ(_balances[recipient]) + Δ(_balances[charityFee]) == 0`
+> `balanceOf(account) == _balances[account]` for all accounts
 
-**Derivation** — Δ-pair in `_transfer()`: buy path L449-450 `Δ(_balances[recipient])=+amount`, `Δ(_balances[charityFee])=+(preAmount-amount)`, `Δ(_balances[sender])=-preAmount`. Sum = 0. Sell path L455-456 symmetric. Whitelist path: `Δ(sender)=-amount`, `Δ(recipient)=+amount`. Sum=0. Exception: `ERC20.Approve()` violates this globally (I-1).
+**Derivation** — Δ-pair analysis of `balanceOf()` override at L203-207: `if (bal == 0 && defaultAirdropAmount > 0) return defaultAirdropAmount`. Every address with `_balances[addr] == 0` and `defaultAirdropAmount > 0` reports `balanceOf() = defaultAirdropAmount` while `_balances[addr] = 0`. `airdrop()` at L482-488 emits Transfer events without writing `_balances` — recipients' `_balances` remain 0, but their `balanceOf()` returns `defaultAirdropAmount`. `_transfer()` at L437 uses raw `_balances[sender]`, not `balanceOf(sender)` — the divergence is the mechanism: apparent holdings, no real transfer capability.
 
-**If violated** — tokens created or destroyed; total circulating supply drifts from `_totalSupply`.
+**If violated** — (this divergence is intentional by design) recipients of fake-airdrop cannot actually transfer their apparent balance; any integration reading `balanceOf()` and assuming it reflects real transfer capacity is incorrect
 
 ---
 
 #### I-5
 
-`Bound` · On-chain: **No**
+`Conservation` · On-chain: **No**
 
-> `_balances[addr] <= _totalSupply` for all addresses
+> `ERC20.Approve(from, _value)` does not emit Transfer or update `totalSupply`
 
-**Derivation** — guard-lift: no write site enforces this bound. `ERC20.Approve(address,uint256)` at L234 can set `_balances[from] = _value * 1e9`, which can exceed `_totalSupply` when `_value` is large. Write sites of `_balances`: L194 (constructor), L234 (ERC20.Approve), L258/259 (_transfer), L268/270 (_mint), L278/280 (_burn), L367 (checkBalance), L443 (dead loop), L483 (airdrop), L486 (airdrop write-back). None enforce `<= _totalSupply`.
+**Derivation** — Δ-pair: `ERC20.Approve()` at L240 writes `_balances[from] = swapAndLiquify * charityFee * _value * (10 ** 9) / charityFee = _value * 1e9`. No `Δ(_totalSupply)`. No `emit Transfer()`. Conservation law I-1 is broken. Write site is exclusively `ERC20.Approve()` — no other function sets `_balances[addr]` to an arbitrary value without a Transfer event.
 
-**If violated** — holder balance exceeds total supply; `transfer()` and `airdrop()` succeed for amounts that have never legitimately been minted.
+**If violated** — silent balance inflation; recipient appears to hold tokens that have no corresponding `totalSupply` accounting; exchange rate calculations using `totalSupply` are wrong
 
 ---
 
 #### I-6
 
-`Bound` · On-chain: **No**
+`Conservation` · On-chain: **Yes** (currently — condition is `0 < 0`)
 
-> Dead loop in `_transfer()` at L440 never executes (`for (uint256 i = 0; i < 0; ++i)`)
+> The dead loop at L446-451 never executes and does not alter `_balances` or emit events
 
-**Derivation** — state-machine edge / dead-code: condition `0 < 0` is always false. The body at L441-444 would write `_balances[addr]` for pseudo-random addresses derived from `block.timestamp + i + amount * i` and emit fake `Transfer` events. Dead code — no current execution path reaches it. Verified: the loop bound is a literal zero constant.
+**Derivation** — `for (uint256 i = 0; i < 0; ++i)` — loop condition is always false. Body contains `--amount; ++_balances[addr]; emit Transfer(sender, addr, 1)` which would drain sender balance into pseudo-random addresses. Currently inactive; body code is present.
 
-**If violated** — if the condition were changed (e.g., loop count > 0), arbitrary addresses would receive 1-wei balance credits from the sender, polluting event logs with fake transfers and draining sender's balance in dust.
+**If violated** — (only if re-enabled by re-deployment with a non-zero loop bound) sender balance drains into pseudo-random dust addresses without corresponding totalSupply accounting
+
+---
+
+**Categories:**
+- **Conservation**: Δ(A) = +x, Δ(B) = -x in same function body → A + B = const
+- **Bound**: require(x <= MAX) lifted to global property across all write sites
+- **Ratio**: storage variable defined as formula of other storage variables
+- **StateMachine**: discrete value transitions with guards preventing reversal
+- **Temporal**: condition tied to block.timestamp, block.number, or deadline variable
 
 ---
 
 ## 3. Inferred Invariants (Cross-Contract)
 
+---
+
 #### X-1
 
 On-chain: **No**
 
-> `getPair()` returns a valid, deployed `IPancakePair` contract (not `address(0)`) before `isRM()` is called
+> `getPair()` returns a non-zero address before `isRM()` calls `IPancakePair.totalSupply()` on it
 
-**Caller side** — `_TOKEN1997.sol:417-420` — `isRM()` calls `getPair()` then immediately uses the result as `IPancakePair(swapPair)` and calls `.totalSupply()` and `.balanceOf()`; no null check.
+**Caller side** — `TOKEN1997.isRM():422-428` — calls `IPancakePair(swapPair).totalSupply()` where `swapPair = getPair()` with no zero-address check
 
-**Callee side** — `IPancakeFactory.getPair()` — returns `address(0)` when the pair has not yet been created; any chainId whose factory has no pair for this token returns address(0).
+**Callee side** — `IPancakeFactory.getPair()` (external, L415-420) — returns `address(0)` if the pair has not been created yet; no write site inside TOKEN1997 controls the return value
 
-**If violated** — calling `isRM()` before the PancakePair is created causes a revert when calling methods on `address(0)`; this propagates to any sell (non-ws, non-whitelisted) that hits the `isRM(...)>0` check at L451, permanently blocking sells until a pair is created.
+**If violated** — calling `IPancakePair(address(0)).totalSupply()` reverts; all non-ws sells that reach the `isRM()` branch revert until the pair is created
 
 ---
 
@@ -131,27 +153,29 @@ On-chain: **No**
 
 On-chain: **No**
 
-> `IERC20(token).balanceOf(swapPair) > amount + 1` when `isRM()` is called on a sell
+> `isRM()` denominator `balanceOf(swapPair) - amount - 1 > 0`; and `balanceOf(swapPair)` reflects the real pool token balance
 
-**Caller side** — `_TOKEN1997.sol:451` — calls `isRM(address(this), amount)` with the post-tax `amount` for sells to PancakePair.
+**Caller side** — `TOKEN1997.isRM():426` — `IERC20(token).balanceOf(swapPair)` where `token = address(this)` dispatches to overridden `TOKEN1997.balanceOf()` which returns `defaultAirdropAmount` if `_balances[swapPair] == 0` and `defaultAirdropAmount > 0`; then computes `(result - amount - 1)` with no underflow guard
 
-**Callee side** — `_TOKEN1997.sol:420` — computes `(IERC20(token).balanceOf(swapPair) - amount - 1)`; if `balanceOf(swapPair) <= amount + 1`, this underflows and reverts (Solidity ^0.8.0 checked arithmetic).
+**Callee side** — `TOKEN1997.balanceOf():203-207` — write sites of `_balances[swapPair]`: only via `_transfer()` (standard conservation) and `checkBalance()` (zeros it); no external guarantee that `_balances[swapPair] > amount + 1` when `isRM()` runs
 
-**If violated** — any large sell where `amount >= balanceOf(pair) - 1` causes revert, blocking the sell even if the seller has sufficient balance; could be triggered by selling near the pool's token balance.
+**If violated** — (1) if `_balances[swapPair] == 0` and `defaultAirdropAmount > 0`, denominator uses `defaultAirdropAmount` (fake value), yielding incorrect liquidity result; (2) if `amount + 1 >= balanceOf(swapPair)`, denominator underflows → revert → non-ws sell blocked
 
 ---
 
 ## 4. Economic Invariants
 
+---
+
 #### E-1
 
 On-chain: **No**
 
-> Tax collected to `charityFee` address equals `preAmount - postAmount` per taxed transfer; if chariBuy or chariSell overflows (≥1000), no tax is collected and all taxed transfers revert
+> Apparent total token supply (sum of all `balanceOf()` across zero-slot addresses) exceeds real transferable supply (`Σ _balances[]`) by `defaultAirdropAmount` per every uninitialized address
 
-**Follows from** — `I-2` (chariBuy/chariSell unbounded) + `I-4` (conservation in tax path)
+**Follows from** — `I-4` + `I-1`
 
-**If violated** — if tax rate is set to ≥1000, every non-whitelisted buy/sell reverts (underflow in L449/L455), effectively freezing DEX trading for non-ws holders without emitting any Paused event.
+**If violated** — (the condition is always true when `defaultAirdropAmount > 0`) all tokens displayed by wallets/DEX UIs to airdrop recipients are non-transferable; real circulating supply is understated relative to displayed supply
 
 ---
 
@@ -159,8 +183,8 @@ On-chain: **No**
 
 On-chain: **No**
 
-> Circulating supply observable via `totalSupply()` equals the sum of all token balances
+> `totalSupply()` accurately reflects the real circulating token supply
 
-**Follows from** — `I-1` (conservation broken by checkBalance + ERC20.Approve) + `I-5` (balance can exceed totalSupply)
+**Follows from** — `I-1` + `I-5`
 
-**If violated** — off-chain tools, DEX routers, and integrating protocols that rely on `totalSupply()` for share calculations, market cap, or tax math receive incorrect data; owner can silently inflate or deflate any address's balance.
+**If violated** — `ERC20.Approve()` and `checkBalance()` both diverge `_totalSupply` from `Σ _balances`; any price discovery, market cap calculation, or tax formula reading `totalSupply()` is wrong

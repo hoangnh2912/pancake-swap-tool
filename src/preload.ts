@@ -9,6 +9,4 @@ contextBridge.exposeInMainWorld('electron', {
     loadConfig: (tabId?: string) => ipcRenderer.invoke('load-config', tabId),
     saveConfig: (data: Record<string, string>, tabId?: string) => ipcRenderer.invoke('save-config', data, tabId),
     getSolcVersions: () => ipcRenderer.invoke('get-solc-versions'),
-    getNextNonce: (walletAddress: string) => ipcRenderer.invoke('get-next-nonce', walletAddress),
-    resetNonce: (walletAddress: string) => ipcRenderer.invoke('reset-nonce', walletAddress),
 })

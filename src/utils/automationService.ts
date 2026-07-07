@@ -2,8 +2,7 @@ import { ethers } from 'ethers'
 import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
-
-const electron = () => (window as any).electron
+import { nonceStore, getNextNonce as getGlobalNonce, setBaseNonce } from './nonceStore'
 
 const GAS_PRICE = ethers.BigNumber.from(50_000_000)
 
@@ -178,24 +177,16 @@ export async function runAutomation(
     const swapWallet = new ethers.Wallet(params.swapPrivateKey, provider)
     const mintWallet = new ethers.Wallet(params.mintPrivateKey, provider)
 
-    // Global nonce via IPC (shared across tabs) + local cache for speed
-    const _nonces = new Map<string, number>()
+    // Global nonce via @tanstack/store (shared across all tabs)
     const initNonce = async (w: ethers.Wallet) => {
         const k = w.address.toLowerCase()
-        if (_nonces.has(k)) return
-        // Get next nonce from global main-process counter (or chain as fallback)
-        const el = electron()
-        const n = el?.getNextNonce
-            ? await el.getNextNonce(w.address)
-            : await w.getTransactionCount('pending')
-        _nonces.set(k, n)
+        const current = nonceStore.state[k]
+        if (current !== undefined) return
+        // Init from chain (pending count — includes unconfirmed txs from all tabs)
+        const base = await w.getTransactionCount('pending')
+        setBaseNonce(w.address, base)
     }
-    const nextNonce = (w: ethers.Wallet) => {
-        const k = w.address.toLowerCase()
-        const n = _nonces.get(k)!
-        _nonces.set(k, n + 1)
-        return n
-    }
+    const nextNonce = (w: ethers.Wallet) => getGlobalNonce(w.address)
     await Promise.all([initNonce(mainWallet), initNonce(swapWallet), initNonce(mintWallet)])
 
 
