@@ -3,7 +3,7 @@ import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
 
-const GAS_PRICE = ethers.utils.parseUnits('3', 'gwei')
+const GAS_PRICE = ethers.utils.parseUnits('1', 'gwei')
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
     56: {
@@ -251,7 +251,7 @@ export async function runAutomation(
                 taxBuy,
                 taxSell,
                 params.chainId,
-                { gasLimit: 5_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                { gasLimit: 3_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
             await raceStop(deployed.deployed(), params.shouldStop)
             const contractAddress = deployed.address
