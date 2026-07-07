@@ -251,7 +251,7 @@ export async function runAutomation(
                 taxBuy,
                 taxSell,
                 params.chainId,
-                { gasLimit: 3_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                { gasLimit: 5_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
             await raceStop(deployed.deployed(), params.shouldStop)
             const contractAddress = deployed.address
