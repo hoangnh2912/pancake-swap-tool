@@ -151,6 +151,27 @@ ipcMain.handle('get-solc-versions', () => {
     }))
 })
 
+// ── Global Nonce Manager ────────────────────────────────────────────────────────
+const nonceCounters = new Map<string, number>()
+
+ipcMain.handle('get-next-nonce', async (_event, walletAddress: string) => {
+    const key = walletAddress.toLowerCase()
+    if (!nonceCounters.has(key)) {
+        // Init from chain (pending count — includes unconfirmed txs from all tabs)
+        const provider = new ethers.providers.JsonRpcProvider('https://bsc.drpc.org')
+        const count = await provider.getTransactionCount(walletAddress, 'pending')
+        nonceCounters.set(key, count)
+    }
+    const n = nonceCounters.get(key)!
+    nonceCounters.set(key, n + 1)
+    return n
+})
+
+// Allow resetting nonce counter (e.g., after network reset)
+ipcMain.handle('reset-nonce', async (_event, walletAddress: string) => {
+    nonceCounters.delete(walletAddress.toLowerCase())
+})
+
 // ── Window ────────────────────────────────────────────────────────────────────
 if (require('electron-squirrel-startup')) {
     app.quit()

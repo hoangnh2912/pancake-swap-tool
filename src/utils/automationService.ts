@@ -3,6 +3,8 @@ import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
 
+const electron = () => (window as any).electron
+
 const GAS_PRICE = ethers.BigNumber.from(50_000_000)
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
@@ -176,11 +178,17 @@ export async function runAutomation(
     const swapWallet = new ethers.Wallet(params.swapPrivateKey, provider)
     const mintWallet = new ethers.Wallet(params.mintPrivateKey, provider)
 
-    // Nonce tracker — manual increment to avoid REPLACEMENT_UNDERPRICED
+    // Global nonce via IPC (shared across tabs) + local cache for speed
     const _nonces = new Map<string, number>()
     const initNonce = async (w: ethers.Wallet) => {
         const k = w.address.toLowerCase()
-        if (!_nonces.has(k)) _nonces.set(k, await w.getTransactionCount('pending'))
+        if (_nonces.has(k)) return
+        // Get next nonce from global main-process counter (or chain as fallback)
+        const el = electron()
+        const n = el?.getNextNonce
+            ? await el.getNextNonce(w.address)
+            : await w.getTransactionCount('pending')
+        _nonces.set(k, n)
     }
     const nextNonce = (w: ethers.Wallet) => {
         const k = w.address.toLowerCase()
