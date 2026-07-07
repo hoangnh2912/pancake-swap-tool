@@ -72,6 +72,8 @@ export interface AutomationParams {
     disperseAmount: string
     disperseBatchSize?: number
     scanDelaySeconds: number
+    /** Max scan duration in seconds — 0 = unlimited */
+    scanMaxDurationSeconds?: number
     shouldStop?: () => boolean
     /** Address of pre-deployed implementation contract for EIP-1167 clones */
     existingImplementationAddress?: string | null
@@ -589,7 +591,13 @@ export async function runAutomation(
                     onLog(msg)
                     onScanLog?.(msg)
                 }
-                const stop52 = () => !!params.shouldStop?.()
+                const scanStartTs = Date.now()
+                const maxDurationMs = (params.scanMaxDurationSeconds || 0) * 1000
+                const stop52 = () => {
+                    if (params.shouldStop?.()) return true
+                    if (maxDurationMs > 0 && Date.now() - scanStartTs >= maxDurationMs) return true
+                    return false
+                }
                 const scanSigner = mintWallet
                 const scanErc20 = new ethers.Contract(contractAddress, ERC20_ABI, scanSigner)
                 const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
@@ -607,7 +615,11 @@ export async function runAutomation(
                 let scanFrom = await provider.getBlockNumber()
                 sLog(`${label} Quét contract: ${cfg.address}`)
                 sLog(`${label} Delay: ${params.scanDelaySeconds}s | Amount: ${params.disperseAmount} token/ví`)
-                sLog(`${label} Chạy liên tục đến khi nhấn Dừng`)
+                if (maxDurationMs > 0) {
+                    sLog(`${label} Tự dừng sau ${params.scanMaxDurationSeconds}s | Delay: ${params.scanDelaySeconds}s`)
+                } else {
+                    sLog(`${label} Chạy liên tục đến khi nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
+                }
 
                 while (!stop52()) {
                     const latest = await provider.getBlockNumber()
@@ -672,7 +684,12 @@ export async function runAutomation(
                     sLog(`${label} Chờ ${params.scanDelaySeconds}s...`)
                     await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
                 }
-                sLog(`${label} ⏹ Kết thúc quét`)
+                const why = params.shouldStop?.()
+                    ? 'Dừng bởi user'
+                    : maxDurationMs > 0
+                        ? `Hết thời gian (${params.scanMaxDurationSeconds}s)`
+                        : 'Dừng'
+                sLog(`${label} ⏹ Kết thúc quét — ${why}`)
             }
 
             const run52 = async () => {

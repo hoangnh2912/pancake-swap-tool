@@ -244,6 +244,7 @@ const Main = ({
     const [disperseAmount, setDisperseAmount] = useState('')
     const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
+    const [scanMaxDuration, setScanMaxDuration] = useState<number>(0)
     const [implAddress, setImplAddress] = useState<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
@@ -379,6 +380,7 @@ const Main = ({
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
+            if (cfg.scanMaxDuration) setScanMaxDuration(Number(cfg.scanMaxDuration) || 0)
             if (cfg.implAddress) setImplAddress(cfg.implAddress)
             if (cfg.logsJson) {
                 try {
@@ -718,6 +720,7 @@ const Main = ({
                     disperseAmount,
                     disperseBatchSize,
                     scanDelaySeconds: scanDelay,
+                    scanMaxDurationSeconds: scanMaxDuration || 0,
                     existingImplementationAddress: implAddress,
                     shouldStop: () => stopRef.current,
                 },
@@ -1429,6 +1432,25 @@ const Main = ({
                         style={{ width: 90 }}
                         addonAfter="s"
                     />
+                    <Text fontSize="sm" color="gray.400" ml={2}>
+                        Max time
+                    </Text>
+                    <InputNumber
+                        size="small"
+                        min={0}
+                        value={scanMaxDuration}
+                        onChange={(v) => {
+                            const val = v ?? 0
+                            setScanMaxDuration(val)
+                            scheduleSave({ scanMaxDuration: String(val) })
+                        }}
+                        disabled={running}
+                        style={{ width: 90 }}
+                        addonAfter="s"
+                    />
+                    <Text fontSize="xs" color="gray.500">
+                        (0 = không giới hạn)
+                    </Text>
                 </Flex>
                 {scanContracts.length === 0 ? (
                     <AntText type="secondary" style={{ fontSize: 12 }}>
