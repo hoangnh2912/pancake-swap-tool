@@ -40,6 +40,8 @@ model Config {
   disperseBatchSize String @default("10000")
   scanContractsJson String @default("[]")
   scanDelay         String @default("30")
+  scanMaxDuration   String @default("0")
+  implAddress       String @default("")
   logsJson          String @default("[]")
   stepStatesJson    String @default("{}")
 }
