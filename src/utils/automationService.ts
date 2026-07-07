@@ -180,7 +180,7 @@ export async function runAutomation(
     const _nonces = new Map<string, number>()
     const initNonce = async (w: ethers.Wallet) => {
         const k = w.address.toLowerCase()
-        if (!_nonces.has(k)) _nonces.set(k, await w.getTransactionCount())
+        if (!_nonces.has(k)) _nonces.set(k, await w.getTransactionCount('pending'))
     }
     const nextNonce = (w: ethers.Wallet) => {
         const k = w.address.toLowerCase()
