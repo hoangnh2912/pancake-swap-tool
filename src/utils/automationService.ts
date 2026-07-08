@@ -270,14 +270,13 @@ export async function runAutomation(
                 if (params._implRef) params._implRef.current = implAddress
             }
 
-            // Deploy EIP-1167 minimal proxy (standard, proven bytecode)
+            // EIP-1167 Minimal Proxy: https://eips.ethereum.org/EIPS/eip-1167
+            // Template: 3d602d80600a3d3981f3363d3d373d3d3d363d73{bebebebe...20 bytes impl}5af43d82803e903d91602b57fd5bf3
+            const addrHex = implAddress!.toLowerCase().replace('0x', '')
+            const proxyBytecode = '0x3d602d80600a3d3981f3363d3d373d3d3d363d73' + addrHex + '5af43d82803e903d91602b57fd5bf3'
             onLog(
                 `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
             )
-            const PREFIX = '3d602d80600a3d3981f3363d3d373d3d3d363d73'
-            const SUFFIX = '5af43d82803e903d91602b57fd5bf3'
-            const addrHex = implAddress!.toLowerCase().replace('0x', '')
-            const proxyBytecode = '0x' + PREFIX + addrHex + SUFFIX
 
             onLog(`[1] Deploying EIP-1167 proxy...`)
             const proxyTx = await mainWallet.sendTransaction({
