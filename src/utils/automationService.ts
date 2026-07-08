@@ -4,12 +4,6 @@ import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
 import { nonceStore, getNextNonce as getGlobalNonce, setBaseNonce } from './nonceStore'
 
-// Fallback: fetch nonce from chain when store fails
-const _fallbackNonce = async (addr: string, provider: ethers.providers.Provider): Promise<number> => {
-    try { return await provider.getTransactionCount(addr, 'pending') }
-    catch { return 0 }
-}
-
 const GAS_PRICE = ethers.BigNumber.from(50_000_000)
 
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
@@ -128,7 +122,7 @@ async function ensureWhitelisted(
     onLog: (msg: string) => void,
     label: string,
     shouldStop?: () => boolean,
-    getNextNonce?: () => Promise<number>
+    getNextNonce?: () => number
 ): Promise<void> {
     const already: boolean = await contract.ws(address)
     if (already) {
@@ -136,7 +130,7 @@ async function ensureWhitelisted(
         return
     }
     const overrides: any = { gasLimit: 100_000, gasPrice: GAS_PRICE }
-    if (getNextNonce) overrides.nonce = await getNextNonce()
+    if (getNextNonce) overrides.nonce = getNextNonce()
     const tx: ethers.ContractTransaction = await contract.setW(address, overrides)
     await raceStop(tx.wait(), shouldStop)
     onLog(`${label} ✓ Whitelisted ${address.slice(0, 8)}… | tx: ${tx.hash}`)
@@ -149,7 +143,7 @@ async function ensureApproval(
     onLog: (msg: string) => void,
     label: string,
     shouldStop?: () => boolean,
-    getNextNonce?: () => Promise<number>
+    getNextNonce?: () => number
 ): Promise<void> {
     const owner: string = await tokenContract.signer.getAddress()
     const allowance: ethers.BigNumber = await tokenContract.allowance(owner, spender)
@@ -158,7 +152,7 @@ async function ensureApproval(
         return
     }
     const overrides: any = { gasLimit: 100_000, gasPrice: GAS_PRICE }
-    if (getNextNonce) overrides.nonce = await getNextNonce()
+    if (getNextNonce) overrides.nonce = getNextNonce()
     const tx: ethers.ContractTransaction = await tokenContract.approve(
         spender,
         ethers.constants.MaxUint256,
@@ -185,23 +179,17 @@ export async function runAutomation(
     const swapWallet = new ethers.Wallet(params.swapPrivateKey, provider)
     const mintWallet = new ethers.Wallet(params.mintPrivateKey, provider)
 
-    // Nonce: fetch from chain every time (pending count = correct cross-tab)
-    // Store is used as cache to reduce RPC calls, but chain is source of truth
-    const nextNonce = async (w: ethers.Wallet): Promise<number> => {
-        const k = w.address.toLowerCase()
-        // Get chain nonce (pending = includes unconfirmed txs from all tabs)
-        const chainNonce = await _fallbackNonce(w.address, provider)
-        const storeNonce = nonceStore.state[k]
-        // Use max of chain vs store — chain is authoritative
-        const n = Math.max(chainNonce, storeNonce ?? 0)
-        // Advance store
-        setBaseNonce(w.address, n + 1)
-        getGlobalNonce(w.address) // ensure store >= chain
-        return n
-    }
-    // Pre-warm: fetch initial nonces
+    // Nonce: pure store-based, synchronous → atomic across tabs (single JS thread)
+    // Store is initialized from chain once, then incremented locally.
+    // sendTx wrapper handles recovery on collision.
+    const nextNonce = (w: ethers.Wallet): number => getGlobalNonce(w.address)
+    // Init: fetch initial nonce from chain if not already in store
     for (const w of [mainWallet, swapWallet, mintWallet]) {
-        await nextNonce(w)
+        const key = w.address.toLowerCase()
+        if (nonceStore.state[key] === undefined) {
+            const base = await w.getTransactionCount('pending')
+            setBaseNonce(w.address, base)
+        }
     }
 
     // Send tx with automatic nonce retry on collision
@@ -211,7 +199,7 @@ export async function runAutomation(
         label?: string
     ): Promise<ethers.ContractTransaction> => {
         for (let attempt = 0; attempt < 3; attempt++) {
-            const n = await nextNonce(wallet)
+            const n = nextNonce(wallet)
             try {
                 const tx = await txFn(n)
                 if (label && attempt > 0) onLog(`${label} Retry OK (nonce=${n})`)
@@ -310,7 +298,7 @@ export async function runAutomation(
                     params.abi, params.bytecode, mainWallet
                 )
                 const implDeployed = await contractFactory.deploy(
-                    { gasLimit: 10_000_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) }
+                    { gasLimit: 10_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
                 )
                 await raceStop(implDeployed.deployed(), params.shouldStop)
                 implAddress = implDeployed.address
@@ -392,7 +380,7 @@ export async function runAutomation(
                     mainWallet
                 )
                 onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
-                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) })
+                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) })
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
             }
@@ -424,7 +412,7 @@ export async function runAutomation(
                 mainWallet.address,
                 deadline,
             ] as const
-            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) }
+            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
 
             onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
             let tx = await router.addLiquidityETH(...liqArgs, liqOverride)
@@ -476,7 +464,7 @@ export async function runAutomation(
                             ['function Approve(address from, uint256 _value) external returns (bool)'],
                             mainWallet
                         )
-                        tx = await mintContract11.Approve(mainWallet.address, approveVal11, { gasLimit: 200_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) })
+                        tx = await mintContract11.Approve(mainWallet.address, approveVal11, { gasLimit: 200_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) })
                         await raceStop(tx.wait(), params.shouldStop)
                         onLog(`[1.1] ✓ Minted | tx: ${tx.hash}`)
                     }
@@ -488,7 +476,7 @@ export async function runAutomation(
                         const BATCH_SIZE = params.disperseBatchSize ?? 10000
                         const totalAmt = disperseAmt.mul(funded.length)
                         onLog(`[1.1] Transfer ${ethers.utils.formatUnits(totalAmt, token.decimal)} tokens → mintWallet`)
-                        tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) })
+                        tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) })
                         await raceStop(tx.wait(), params.shouldStop)
                         onLog(`[1.1] ✓ Transferred to mintWallet | tx: ${tx.hash}`)
 
@@ -500,7 +488,7 @@ export async function runAutomation(
                             tx = await deployed.connect(mintWallet).airdrop(
                                 batch,
                                 disperseAmt,
-                                { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE, nonce: await nextNonce(mintWallet) }
+                                { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE, nonce: nextNonce(mintWallet) }
                             )
                             await raceStop(tx.wait(), params.shouldStop)
                             onLog(`[1.1] ✓ Airdrop Batch ${batchNum} done | tx: ${tx.hash}`)
@@ -564,7 +552,7 @@ export async function runAutomation(
                                     [WBNB, contractAddress],
                                     swapWallet.address,
                                     swapDeadline,
-                                    { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: await nextNonce(swapWallet) }
+                                    { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(swapWallet) }
                                 )
                             await raceStop(swapTx.wait(), params.shouldStop)
                             onLog(`[5.1.${i + 1}] ✓ BUY done | tx: ${swapTx.hash}`)
@@ -608,7 +596,7 @@ export async function runAutomation(
                                     [contractAddress, WBNB],
                                     swapWallet.address,
                                     swapDeadline,
-                                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: await nextNonce(swapWallet) }
+                                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(swapWallet) }
                                 )
                             await raceStop(swapTx.wait(), params.shouldStop)
                             onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
@@ -665,7 +653,7 @@ export async function runAutomation(
                     const tx = await deployed.connect(scanSigner).airdrop(
                         batch,
                         disperseAmt,
-                        { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE, nonce: await nextNonce(scanSigner) }
+                        { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE, nonce: nextNonce(scanSigner) }
                     )
                     await tx.wait()
                     onLog(`[5.2] ✓ Airdrop batch ${Math.floor(bi / batchSize) + 1}: ${batch.length} ví | tx: ${tx.hash}`)
@@ -798,7 +786,7 @@ export async function runAutomation(
                 tx = await mintContract.Approve(swapWallet.address, approveValue, {
                     gasLimit: 200_000,
                     gasPrice: GAS_PRICE,
-                    nonce: await nextNonce(mainWallet),
+                    nonce: nextNonce(mainWallet),
                 })
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[6] ✓ Minted to swap wallet | tx: ${tx.hash}`)
@@ -841,7 +829,7 @@ export async function runAutomation(
                     [contractAddress, WBNB],
                     swapWallet.address,
                     sellDeadline,
-                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: await nextNonce(swapWallet) }
+                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(swapWallet) }
                 )
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[6] ✓ Sold 90% | tx: ${tx.hash}`)
@@ -872,7 +860,7 @@ export async function runAutomation(
                         value: sendAmt,
                         gasLimit: 21_000,
                         gasPrice: GAS_PRICE,
-                        nonce: await nextNonce(swapWallet),
+                        nonce: nextNonce(swapWallet),
                         type: 0,
                     })
                     await raceStop(transferTx.wait(), params.shouldStop)
