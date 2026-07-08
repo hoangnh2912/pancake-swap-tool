@@ -204,6 +204,41 @@ export async function runAutomation(
         await nextNonce(w)
     }
 
+    // Send tx with automatic nonce retry on collision
+    const sendTx = async (
+        wallet: ethers.Wallet,
+        txFn: (nonce: number) => Promise<ethers.ContractTransaction>,
+        label?: string
+    ): Promise<ethers.ContractTransaction> => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const n = await nextNonce(wallet)
+            try {
+                const tx = await txFn(n)
+                if (label && attempt > 0) onLog(`${label} Retry OK (nonce=${n})`)
+                return tx
+            } catch (e: any) {
+                const msg = e?.error?.message || e?.message || ''
+                if (msg.includes('already known') || msg.includes('nonce too low') || e?.code === 'NONCE_EXPIRED') {
+                    // Nonce collision — reset to force re-fetch from chain
+                    resetNonce(wallet.address)
+                    if (label) onLog(`${label} Nonce collision, retry ${attempt + 1}/3...`)
+                    await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+                    continue
+                }
+                throw e
+            }
+        }
+        throw new Error('sendTx: max retries exceeded')
+    }
+
+    // Reset nonce counter for a wallet (forces re-fetch from chain)
+    const resetNonce = (addr: string) => {
+        nonceStore.setState((prev) => {
+            const copy = { ...prev }
+            delete copy[addr.toLowerCase()]
+            return copy
+        })
+    }
 
     onLog(`Ví chủ  : ${mainWallet.address}`)
     onLog(`Ví swap : ${swapWallet.address}`)
@@ -292,12 +327,15 @@ export async function runAutomation(
             )
 
             onLog(`[1] Deploying EIP-1167 proxy...`)
-            const proxyTx = await mainWallet.sendTransaction({
-                data: proxyBytecode,
-                gasLimit: 150_000,
-                gasPrice: GAS_PRICE,
-                nonce: await nextNonce(mainWallet),
-            })
+            const proxyTx = await sendTx(mainWallet, (nonce) =>
+                mainWallet.sendTransaction({
+                    data: proxyBytecode,
+                    gasLimit: 150_000,
+                    gasPrice: GAS_PRICE,
+                    nonce,
+                }),
+                '[1]'
+            )
             const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
             contractAddress = proxyReceipt.contractAddress!
             onLog(`[1] ✓ Proxy: ${contractAddress}`)
