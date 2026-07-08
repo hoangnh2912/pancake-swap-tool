@@ -687,6 +687,9 @@ const Main = ({
             })
         }
 
+        const implRef = { current: null as string | null }
+        const factoryRef = { current: null as string | null }
+
         try {
             addLog(`Đang compile contract (solc v${solcVersion})...`)
             const compileResult = await getElectron()?.compileContract(contractCode, solcVersion)
@@ -696,9 +699,6 @@ const Main = ({
 
             const normalizeKey = (k: string) =>
                 k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`
-
-            const implRef = { current: null as string | null }
-            const factoryRef = { current: null as string | null }
 
             await runAutomation(
                 {
