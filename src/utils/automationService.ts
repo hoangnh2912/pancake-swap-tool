@@ -342,6 +342,21 @@ export async function runAutomation(
             deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
             onLog(`[1] ✓ Token: ${contractAddress} (tx: ${deployTx.hash})`)
 
+            // Verify proxy is functional
+            try {
+                const name = await deployed.name()
+                const owner = await deployed.owner()
+                onLog(`[1] ✓ Verified: name="${name}", owner=${owner}`)
+            } catch (e: any) {
+                onLog(`[1] ❌ Proxy verification failed: ${e.message}`)
+                // Check impl code too
+                try {
+                    const implCode = await provider.getCode(implAddress!)
+                    onLog(`[1] Impl code at ${implAddress}: ${implCode?.length || 0} bytes`)
+                } catch {}
+                throw e
+            }
+
             onStepChange(token.id, 0, 'finish')
             checkStop()
 
