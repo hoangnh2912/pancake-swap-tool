@@ -42,6 +42,7 @@ model Config {
   scanDelay         String @default("30")
   scanMaxDuration   String @default("0")
   implAddress       String @default("")
+  factoryAddress    String @default("")
   logsJson          String @default("[]")
   stepStatesJson    String @default("{}")
 }

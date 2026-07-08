@@ -2014,6 +2014,7 @@ export namespace Prisma {
     scanDelay: string | null
     scanMaxDuration: string | null
     implAddress: string | null
+    factoryAddress: string | null
     logsJson: string | null
     stepStatesJson: string | null
   }
@@ -2038,6 +2039,7 @@ export namespace Prisma {
     scanDelay: string | null
     scanMaxDuration: string | null
     implAddress: string | null
+    factoryAddress: string | null
     logsJson: string | null
     stepStatesJson: string | null
   }
@@ -2062,6 +2064,7 @@ export namespace Prisma {
     scanDelay: number
     scanMaxDuration: number
     implAddress: number
+    factoryAddress: number
     logsJson: number
     stepStatesJson: number
     _all: number
@@ -2088,6 +2091,7 @@ export namespace Prisma {
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
+    factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
   }
@@ -2112,6 +2116,7 @@ export namespace Prisma {
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
+    factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
   }
@@ -2136,6 +2141,7 @@ export namespace Prisma {
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
+    factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
     _all?: true
@@ -2233,6 +2239,7 @@ export namespace Prisma {
     scanDelay: string
     scanMaxDuration: string
     implAddress: string
+    factoryAddress: string
     logsJson: string
     stepStatesJson: string
     _count: ConfigCountAggregateOutputType | null
@@ -2274,6 +2281,7 @@ export namespace Prisma {
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
+    factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2298,6 +2306,7 @@ export namespace Prisma {
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
+    factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2322,6 +2331,7 @@ export namespace Prisma {
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
+    factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2346,11 +2356,12 @@ export namespace Prisma {
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
+    factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanDelay" | "scanMaxDuration" | "implAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2375,6 +2386,7 @@ export namespace Prisma {
       scanDelay: string
       scanMaxDuration: string
       implAddress: string
+      factoryAddress: string
       logsJson: string
       stepStatesJson: string
     }, ExtArgs["result"]["config"]>
@@ -2819,6 +2831,7 @@ export namespace Prisma {
     readonly scanDelay: FieldRef<"Config", 'String'>
     readonly scanMaxDuration: FieldRef<"Config", 'String'>
     readonly implAddress: FieldRef<"Config", 'String'>
+    readonly factoryAddress: FieldRef<"Config", 'String'>
     readonly logsJson: FieldRef<"Config", 'String'>
     readonly stepStatesJson: FieldRef<"Config", 'String'>
   }
@@ -3230,6 +3243,7 @@ export namespace Prisma {
     scanDelay: 'scanDelay',
     scanMaxDuration: 'scanMaxDuration',
     implAddress: 'implAddress',
+    factoryAddress: 'factoryAddress',
     logsJson: 'logsJson',
     stepStatesJson: 'stepStatesJson'
   };
@@ -3379,6 +3393,7 @@ export namespace Prisma {
     scanDelay?: StringFilter<"Config"> | string
     scanMaxDuration?: StringFilter<"Config"> | string
     implAddress?: StringFilter<"Config"> | string
+    factoryAddress?: StringFilter<"Config"> | string
     logsJson?: StringFilter<"Config"> | string
     stepStatesJson?: StringFilter<"Config"> | string
   }
@@ -3403,6 +3418,7 @@ export namespace Prisma {
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
+    factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
   }
@@ -3430,6 +3446,7 @@ export namespace Prisma {
     scanDelay?: StringFilter<"Config"> | string
     scanMaxDuration?: StringFilter<"Config"> | string
     implAddress?: StringFilter<"Config"> | string
+    factoryAddress?: StringFilter<"Config"> | string
     logsJson?: StringFilter<"Config"> | string
     stepStatesJson?: StringFilter<"Config"> | string
   }, "id">
@@ -3454,6 +3471,7 @@ export namespace Prisma {
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
+    factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
@@ -3484,6 +3502,7 @@ export namespace Prisma {
     scanDelay?: StringWithAggregatesFilter<"Config"> | string
     scanMaxDuration?: StringWithAggregatesFilter<"Config"> | string
     implAddress?: StringWithAggregatesFilter<"Config"> | string
+    factoryAddress?: StringWithAggregatesFilter<"Config"> | string
     logsJson?: StringWithAggregatesFilter<"Config"> | string
     stepStatesJson?: StringWithAggregatesFilter<"Config"> | string
   }
@@ -3585,6 +3604,7 @@ export namespace Prisma {
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
+    factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
   }
@@ -3609,6 +3629,7 @@ export namespace Prisma {
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
+    factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
   }
@@ -3633,6 +3654,7 @@ export namespace Prisma {
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
+    factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3657,6 +3679,7 @@ export namespace Prisma {
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
+    factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3681,6 +3704,7 @@ export namespace Prisma {
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
+    factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
   }
@@ -3705,6 +3729,7 @@ export namespace Prisma {
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
+    factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3729,6 +3754,7 @@ export namespace Prisma {
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
+    factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3891,6 +3917,7 @@ export namespace Prisma {
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
+    factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
   }
@@ -3915,6 +3942,7 @@ export namespace Prisma {
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
+    factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
   }
@@ -3939,6 +3967,7 @@ export namespace Prisma {
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
+    factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
   }

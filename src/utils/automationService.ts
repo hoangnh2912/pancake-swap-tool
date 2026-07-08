@@ -78,6 +78,10 @@ export interface AutomationParams {
     shouldStop?: () => boolean
     /** Address of pre-deployed implementation contract for EIP-1167 clones */
     existingImplementationAddress?: string | null
+    /** Address of pre-deployed ProxyFactory */
+    existingFactoryAddress?: string | null
+    /** Map of all compiled contracts (main + helpers like ProxyFactory) */
+    allContracts?: Record<string, { abi: any[]; bytecode: string }>
 }
 
 export type StepStatus = 'wait' | 'process' | 'finish' | 'error'
@@ -251,45 +255,62 @@ export async function runAutomation(
             }
 
             if (implAddress) {
-                // ── Clone path (2nd+ token) ──
-                onLog(`[1] Using implementation: ${implAddress}`)
-                onLog(`[1] Deploying EIP-1167 minimal proxy...`)
+                // ── Clone path (2nd+ token): atomic deploy+init via ProxyFactory ──
+                const factoryAddress = params.existingFactoryAddress
+                const factoryInfo = params.allContracts?.['ProxyFactory']
 
-                // EIP-1167: 3d602d80600a3d3981f3363d3d373d3d3d363d73{addr}5af43d82803e903d91602b57fd5bf3
-                const PREFIX = '3d602d80600a3d3981f3363d3d373d3d3d363d73'
-                const SUFFIX = '5af43d82803e903d91602b57fd5bf3'
-                const addrHex = implAddress.toLowerCase().replace('0x', '')
-                const proxyBytecode = '0x' + PREFIX + addrHex + SUFFIX
-
-                const proxyTx = await mainWallet.sendTransaction({
-                    data: proxyBytecode,
-                    gasLimit: 150_000,
-                    gasPrice: GAS_PRICE,
-                    nonce: nextNonce(mainWallet),
-                })
-                const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
-                contractAddress = proxyReceipt.contractAddress!
-                onLog(`[1] ✓ Proxy deployed: ${contractAddress}`)
+                if (factoryAddress && factoryInfo) {
+                    // Atomic: clone + init in ONE tx → no front-run window
+                    const factory = new ethers.Contract(factoryAddress, factoryInfo.abi, mainWallet)
+                    onLog(`[1] Atomic clone+init via factory ${factoryAddress}...`)
+                    onLog(
+                        `[1] TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
+                    )
+                    const deployTx = await factory.deploy(
+                        implAddress,
+                        token.name,
+                        token.symbol || token.name,
+                        mainWallet.address,
+                        token.decimal,
+                        totalSupHuman,
+                        taxBuy,
+                        taxSell,
+                        params.chainId,
+                        { gasLimit: 1_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                    )
+                    const deployReceipt = await raceStop(deployTx.wait(), params.shouldStop)
+                    // Extract proxy address from TokenDeployed event
+                    const event = deployReceipt.events?.find(
+                        (e: any) => e.event === 'TokenDeployed'
+                    )
+                    contractAddress = event?.args?.proxy || ''
+                    onLog(`[1] ✓ Token deployed: ${contractAddress} (tx: ${deployTx.hash})`)
+                } else {
+                    // Fallback: manual proxy + init (two txs)
+                    onLog(`[1] ⚠ No factory cached, using manual proxy+init...`)
+                    const PREFIX = '3d602d80600a3d3981f3363d3d373d3d3d363d73'
+                    const SUFFIX = '5af43d82803e903d91602b57fd5bf3'
+                    const addrHex = implAddress.toLowerCase().replace('0x', '')
+                    const proxyBytecode = '0x' + PREFIX + addrHex + SUFFIX
+                    const proxyTx = await mainWallet.sendTransaction({
+                        data: proxyBytecode,
+                        gasLimit: 150_000,
+                        gasPrice: GAS_PRICE,
+                        nonce: nextNonce(mainWallet),
+                    })
+                    const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
+                    contractAddress = proxyReceipt.contractAddress!
+                    const tempDeployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
+                    const initTx = await tempDeployed.initialize(
+                        token.name, token.symbol || token.name, mainWallet.address,
+                        token.decimal, totalSupHuman, taxBuy, taxSell, params.chainId,
+                        { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                    )
+                    await raceStop(initTx.wait(), params.shouldStop)
+                    onLog(`[1] ✓ Proxy deployed+initialized: ${contractAddress}`)
+                }
 
                 deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
-
-                // Initialize clone with real token params
-                onLog(
-                    `[1] Initializing token("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
-                )
-                const initTx = await deployed.initialize(
-                    token.name,
-                    token.symbol || token.name,
-                    mainWallet.address,
-                    token.decimal,
-                    totalSupHuman,
-                    taxBuy,
-                    taxSell,
-                    params.chainId,
-                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
-                )
-                await raceStop(initTx.wait(), params.shouldStop)
-                onLog(`[1] ✓ Proxy initialized | tx: ${initTx.hash}`)
             } else {
                 // ── Full deploy path (first token = implementation) ──
                 onLog(`[1] Deploying implementation contract (full)...`)

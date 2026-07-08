@@ -246,6 +246,7 @@ const Main = ({
     const [scanDelay, setScanDelay] = useState<number>(30)
     const [scanMaxDuration, setScanMaxDuration] = useState<number>(0)
     const [implAddress, setImplAddress] = useState<string | null>(null)
+    const [factoryAddress, setFactoryAddress] = useState<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
 
@@ -382,6 +383,7 @@ const Main = ({
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
             if (cfg.scanMaxDuration) setScanMaxDuration(Number(cfg.scanMaxDuration) || 0)
             if (cfg.implAddress) setImplAddress(cfg.implAddress)
+            if (cfg.factoryAddress) setFactoryAddress(cfg.factoryAddress)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -701,6 +703,28 @@ const Main = ({
             const normalizeKey = (k: string) =>
                 k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`
 
+            // Deploy ProxyFactory once if needed (for atomic clone+init)
+            let currentFactoryAddr = factoryAddress
+            if (implAddress && !currentFactoryAddr && compileResult.allContracts?.['ProxyFactory']) {
+                const provider = buildProvider(rpcUrls)
+                const mainWallet = new ethers.Wallet(normalizeKey(mainKey), provider)
+                const factoryInfo = compileResult.allContracts['ProxyFactory']
+                addLog('Deploying ProxyFactory (one-time)...')
+                const factoryFactory = new ethers.ContractFactory(
+                    factoryInfo.abi,
+                    factoryInfo.bytecode,
+                    mainWallet
+                )
+                const factoryDeployed = await factoryFactory.deploy(
+                    { gasLimit: 500_000 }
+                )
+                await factoryDeployed.deployed()
+                currentFactoryAddr = factoryDeployed.address
+                setFactoryAddress(currentFactoryAddr)
+                getElectron()?.saveConfig({ factoryAddress: currentFactoryAddr }, tabId)
+                addLog(`ProxyFactory deployed: ${currentFactoryAddr}`)
+            }
+
             await runAutomation(
                 {
                     rpcList: rpcUrls,
@@ -710,6 +734,7 @@ const Main = ({
                     mintPrivateKey: normalizeKey(mintKey),
                     abi: compileResult.abi,
                     bytecode: compileResult.bytecode,
+                    allContracts: compileResult.allContracts,
                     tokens: valid as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
@@ -722,6 +747,7 @@ const Main = ({
                     scanDelaySeconds: scanDelay,
                     scanMaxDurationSeconds: scanMaxDuration || 0,
                     existingImplementationAddress: implAddress,
+                    existingFactoryAddress: factoryAddress,
                     shouldStop: () => stopRef.current,
                 },
                 addLog,

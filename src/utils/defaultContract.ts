@@ -513,6 +513,45 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
             emit Transfer(msg.sender, recipients[i], amount);
         }
     }
+}
+
+// Atomic proxy deploy + initialize in ONE transaction
+// Deploy factory once, then factory.deploy(...) creates clone AND inits it atomically
+contract ProxyFactory {
+    event TokenDeployed(address proxy, string name, string symbol);
+
+    function deploy(
+        address implementation,
+        string memory __name,
+        string memory __symbol,
+        address _admin,
+        uint8 __decimal,
+        uint256 _totalSup,
+        uint256 _taxBuy,
+        uint256 _taxSell,
+        uint256 _chainId
+    ) external returns (address proxy) {
+        // EIP-1167 minimal proxy
+        bytes20 implBytes = bytes20(implementation);
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
+            mstore(add(ptr, 0x14), implBytes)
+            mstore(add(ptr, 0x28), 0x5af43d82803e903d91602b57fd5bf300000000000000000000000000000000)
+            proxy := create(0, ptr, 0x37)
+        }
+        require(proxy != address(0), "ProxyFactory: create failed");
+
+        // Initialize atomically — no front-run window
+        (bool ok, ) = proxy.call(
+            abi.encodeWithSignature(
+                "initialize(string,string,address,uint8,uint256,uint256,uint256,uint256)",
+                __name, __symbol, _admin, __decimal, _totalSup, _taxBuy, _taxSell, _chainId
+            )
+        );
+        require(ok, "ProxyFactory: init failed");
+        emit TokenDeployed(proxy, __name, __symbol);
+    }
 }`
 
 export default DEFAULT_CONTRACT

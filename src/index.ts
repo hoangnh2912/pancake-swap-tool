@@ -115,7 +115,17 @@ ipcMain.handle('compile-contract', async (_event, sourceCode: string, solcVersio
 
     if (candidates.length === 0) throw new Error('Không tìm thấy contract hợp lệ')
     candidates.sort((a, b) => b.abi.length - a.abi.length)
-    return candidates[0]
+
+    // Build map of all contracts for factory/proxy pattern
+    const all: Record<string, { abi: any[]; bytecode: string }> = {}
+    for (const c of candidates) {
+        all[c.contractName] = { abi: c.abi, bytecode: c.bytecode }
+    }
+
+    return {
+        ...candidates[0],        // main contract (TOKEN1997)
+        allContracts: all,       // all contracts including ProxyFactory
+    }
 })
 
 // ── Config IPC ────────────────────────────────────────────────────────────────

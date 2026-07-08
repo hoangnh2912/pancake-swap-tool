@@ -149,6 +149,7 @@ exports.Prisma.ConfigScalarFieldEnum = {
   scanDelay: 'scanDelay',
   scanMaxDuration: 'scanMaxDuration',
   implAddress: 'implAddress',
+  factoryAddress: 'factoryAddress',
   logsJson: 'logsJson',
   stepStatesJson: 'stepStatesJson'
 };
