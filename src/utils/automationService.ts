@@ -78,13 +78,8 @@ export interface AutomationParams {
     shouldStop?: () => boolean
     /** Address of pre-deployed implementation contract for EIP-1167 clones */
     existingImplementationAddress?: string | null
-    /** Address of pre-deployed ProxyFactory */
-    existingFactoryAddress?: string | null
-    /** Map of all compiled contracts (main + helpers like ProxyFactory) */
-    allContracts?: Record<string, { abi: any[]; bytecode: string }>
-    /** Mutable refs for newly deployed infra addresses */
+    /** Mutable ref for newly deployed impl address */
     _implRef?: { current: string | null }
-    _factoryRef?: { current: string | null }
 }
 
 export type StepStatus = 'wait' | 'process' | 'finish' | 'error'
@@ -241,14 +236,12 @@ export async function runAutomation(
                 `[pre] mintAmount=${mintAmtHuman} | liqToken=${liqTokenHuman} | sellMint=${sellMintHuman} | totalSup=${totalSupHuman}`
             )
 
-            // ── Step 0: Deploy Token (always via ProxyFactory) ──────────────────
+            // ── Step 0: Deploy Token (EIP-1167 proxy + init) ──────────────────
             onStepChange(token.id, 0, 'process')
 
             let deployed: ethers.Contract
             let contractAddress: string
             let implAddress = params.existingImplementationAddress || null
-            let factoryAddress = params.existingFactoryAddress || null
-            const factoryInfo = params.allContracts?.['ProxyFactory']
 
             // Ensure implementation exists on-chain
             if (implAddress) {
@@ -277,44 +270,34 @@ export async function runAutomation(
                 if (params._implRef) params._implRef.current = implAddress
             }
 
-            // Ensure factory exists on-chain
-            if (factoryAddress) {
-                onLog(`[init] Checking cached factory: ${factoryAddress}`)
-                const factoryCode = await provider.getCode(factoryAddress)
-                if (!factoryCode || factoryCode === '0x' || factoryCode === '0x0') {
-                    onLog(`[init] ⚠ Factory not found on-chain, will deploy fresh`)
-                    factoryAddress = null
-                } else {
-                    onLog(`[init] ✓ Factory OK (${factoryCode.length} bytes)`)
-                }
-            } else {
-                onLog(`[init] No cached factory — will deploy fresh`)
-            }
-            if (!factoryAddress && factoryInfo) {
-                onLog(`[1] Deploying ProxyFactory (one-time)...`)
-                const factoryFactory = new ethers.ContractFactory(
-                    factoryInfo.abi, factoryInfo.bytecode, mainWallet
-                )
-                const factoryDeployed = await factoryFactory.deploy(
-                    { gasLimit: 1_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
-                )
-                await raceStop(factoryDeployed.deployed(), params.shouldStop)
-                factoryAddress = factoryDeployed.address
-                onLog(`[1] ✓ ProxyFactory: ${factoryAddress}`)
-                if (params._factoryRef) params._factoryRef.current = factoryAddress
-            }
-
-            // All tokens: atomic clone+init via factory (no front-run window)
-            const factory = new ethers.Contract(factoryAddress!, factoryInfo!.abi, mainWallet)
+            // Deploy EIP-1167 minimal proxy (standard, proven bytecode)
             onLog(
                 `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
             )
+            const PREFIX = '3d602d80600a3d3981f3363d3d373d3d3d363d73'
+            const SUFFIX = '5af43d82803e903d91602b57fd5bf3'
+            const addrHex = implAddress!.toLowerCase().replace('0x', '')
+            const proxyBytecode = '0x' + PREFIX + addrHex + SUFFIX
+
+            onLog(`[1] Deploying EIP-1167 proxy...`)
+            const proxyTx = await mainWallet.sendTransaction({
+                data: proxyBytecode,
+                gasLimit: 150_000,
+                gasPrice: GAS_PRICE,
+                nonce: nextNonce(mainWallet),
+            })
+            const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
+            contractAddress = proxyReceipt.contractAddress!
+            onLog(`[1] ✓ Proxy: ${contractAddress}`)
+
+            // Initialize proxy (separate tx — 2-3 sec window, negligible risk)
             const defaultAirdropAmt = ethers.utils.parseUnits(
                 params.disperseAmount || '0',
                 token.decimal
             )
-            const deployTx = await factory.deploy(
-                implAddress!,
+            const tempContract = new ethers.Contract(contractAddress, params.abi, mainWallet)
+            onLog(`[1] Initializing...`)
+            const initTx = await tempContract.initialize(
                 token.name,
                 token.symbol || token.name,
                 mainWallet.address,
@@ -324,48 +307,13 @@ export async function runAutomation(
                 taxSell,
                 params.chainId,
                 defaultAirdropAmt,
-                { gasLimit: 2_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
-            const deployReceipt = await raceStop(deployTx.wait(), params.shouldStop)
-            // Extract proxy address from TokenDeployed event
-            const tdEvent = deployReceipt.events?.find((e: any) => e.event === 'TokenDeployed')
-            contractAddress = tdEvent?.args?.proxy || ''
-            // Fallback: extract from raw logs
-            if (!contractAddress && deployReceipt.logs?.length) {
-                try {
-                    const iface = new ethers.utils.Interface(factoryInfo!.abi)
-                    for (const log of deployReceipt.logs) {
-                        try {
-                            const parsed = iface.parseLog(log)
-                            if (parsed.name === 'TokenDeployed') {
-                                contractAddress = parsed.args.proxy
-                                break
-                            }
-                        } catch { /* skip unparsed logs */ }
-                    }
-                } catch { /* skip */ }
-            }
-            if (!contractAddress || contractAddress === ethers.constants.AddressZero) {
-                onLog(`[1] ❌ Không tìm thấy proxy address trong receipt! logs=${deployReceipt.logs?.length}`)
-                throw new Error('Proxy address not found in deploy receipt')
-            }
-            deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
-            onLog(`[1] ✓ Token: ${contractAddress} (tx: ${deployTx.hash})`)
+            await raceStop(initTx.wait(), params.shouldStop)
+            onLog(`[1] ✓ Initialized | tx: ${initTx.hash}`)
 
-            // Verify proxy is functional
-            try {
-                const name = await deployed.name()
-                const owner = await deployed.owner()
-                onLog(`[1] ✓ Verified: name="${name}", owner=${owner}`)
-            } catch (e: any) {
-                onLog(`[1] ❌ Proxy verification failed: ${e.message}`)
-                // Check impl code too
-                try {
-                    const implCode = await provider.getCode(implAddress!)
-                    onLog(`[1] Impl code at ${implAddress}: ${implCode?.length || 0} bytes`)
-                } catch {}
-                throw e
-            }
+            deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
+            onLog(`[1] ✓ Token ready: ${contractAddress}`)
 
             onStepChange(token.id, 0, 'finish')
             checkStop()

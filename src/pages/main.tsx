@@ -246,7 +246,6 @@ const Main = ({
     const [scanDelay, setScanDelay] = useState<number>(30)
     const [scanMaxDuration, setScanMaxDuration] = useState<number>(0)
     const [implAddress, setImplAddress] = useState<string | null>(null)
-    const [factoryAddress, setFactoryAddress] = useState<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const stopRef = useRef(false)
 
@@ -383,7 +382,6 @@ const Main = ({
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
             if (cfg.scanMaxDuration) setScanMaxDuration(Number(cfg.scanMaxDuration) || 0)
             if (cfg.implAddress) setImplAddress(cfg.implAddress)
-            if (cfg.factoryAddress) setFactoryAddress(cfg.factoryAddress)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -688,7 +686,6 @@ const Main = ({
         }
 
         const implRef = { current: null as string | null }
-        const factoryRef = { current: null as string | null }
 
         try {
             addLog(`Đang compile contract (solc v${solcVersion})...`)
@@ -709,7 +706,6 @@ const Main = ({
                     mintPrivateKey: normalizeKey(mintKey),
                     abi: compileResult.abi,
                     bytecode: compileResult.bytecode,
-                    allContracts: compileResult.allContracts,
                     tokens: valid as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
@@ -722,9 +718,7 @@ const Main = ({
                     scanDelaySeconds: scanDelay,
                     scanMaxDurationSeconds: scanMaxDuration || 0,
                     existingImplementationAddress: implAddress,
-                    existingFactoryAddress: factoryAddress,
                     _implRef: implRef,
-                    _factoryRef: factoryRef,
                     shouldStop: () => stopRef.current,
                 },
                 addLog,
@@ -741,10 +735,6 @@ const Main = ({
             if (implRef.current) {
                 setImplAddress(implRef.current)
                 getElectron()?.saveConfig({ implAddress: implRef.current }, tabId)
-            }
-            if (factoryRef.current) {
-                setFactoryAddress(factoryRef.current)
-                getElectron()?.saveConfig({ factoryAddress: factoryRef.current }, tabId)
             }
             setRunning(false)
         }
@@ -980,9 +970,8 @@ const Main = ({
                                     danger
                                     onClick={() => {
                                         setImplAddress(null)
-                                        setFactoryAddress(null)
-                                        getElectron()?.saveConfig({ implAddress: '', factoryAddress: '' }, tabId)
-                                        message.info('Đã xoá cache — impl + factory sẽ deploy lại')
+                                        getElectron()?.saveConfig({ implAddress: '' }, tabId)
+                                        message.info('Đã xoá implementation cache')
                                     }}
                                     disabled={running}
                                 >
