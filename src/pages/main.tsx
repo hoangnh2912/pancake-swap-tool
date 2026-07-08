@@ -44,6 +44,7 @@ import {
     useFindManyScanWallet,
 } from '../hooks/zenstack'
 import zenStackFunction from '../utils/zenstack-function'
+import { findWalletConflict, registerRunningWallet, unregisterRunningWallet } from '../utils/walletRegistry'
 
 const { Title, Text: AntText, Link } = Typography
 
@@ -272,6 +273,11 @@ const Main = ({
             tokenTotal: tokens.length,
         })
     }, [running, tokens, onStatusChange])
+
+    // Cleanup: if tab unmounts (closed) while automation is running, release the wallet lock
+    useEffect(() => {
+        return () => unregisterRunningWallet(tabId)
+    }, [tabId])
 
     // Re-validate scan contracts on any change (covers load + edits)
     useEffect(() => {
@@ -641,6 +647,17 @@ const Main = ({
             message.error('Vui lòng nhập đủ 3 private key')
             return
         }
+        if (!mainAddr) {
+            message.error('Private key ví chủ không hợp lệ')
+            return
+        }
+        const conflictTab = findWalletConflict(tabId, mainAddr)
+        if (conflictTab) {
+            message.error(
+                `Ví chủ (${mainAddr.slice(0, 8)}…) đang chạy ở tab khác — mỗi tab phải dùng ví chủ khác nhau`
+            )
+            return
+        }
         const rpcUrls = parseRpcList(rpcList)
         if (rpcUrls.length === 0) {
             message.error('Vui lòng nhập RPC URL')
@@ -656,6 +673,7 @@ const Main = ({
 
         stopRef.current = false
         setRunning(true)
+        registerRunningWallet(tabId, mainAddr)
         setTokens((prev) =>
             prev.map((r) => ({
                 ...r,
@@ -741,6 +759,7 @@ const Main = ({
                 setImplAddress(implRef.current)
                 getElectron()?.saveConfig({ implAddress: implRef.current }, '_global')
             }
+            unregisterRunningWallet(tabId)
             setRunning(false)
         }
     }
