@@ -518,7 +518,6 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
 }
 
 // Atomic proxy deploy + initialize in ONE transaction
-// Deploy factory once, then factory.deploy(...) creates clone AND inits it atomically
 contract ProxyFactory {
     event TokenDeployed(address proxy, string name, string symbol);
 
@@ -534,16 +533,15 @@ contract ProxyFactory {
         uint256 _chainId,
         uint256 _defaultAirdropAmount
     ) external returns (address proxy) {
-        // EIP-1167 minimal proxy
-        bytes20 implBytes = bytes20(implementation);
+        // Build EIP-1167 proxy bytecode with abi.encodePacked (no padding issues)
+        bytes memory code = abi.encodePacked(
+            hex"3d602d80600a3d3981f3",       // init code (10 bytes)
+            hex"363d3d373d3d3d363d73",       // runtime: copy calldata + push impl
+            implementation,                   // 20-byte address (raw, no padding)
+            hex"5af43d82803e903d91602b57fd5bf3" // runtime: delegatecall + return
+        );
         assembly {
-            let ptr := mload(0x40)
-            mstore(ptr, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
-            // bytes20 is right-aligned — must shift left by 12 bytes so
-            // the address lands at bytes 20-39 (not 32-51)
-            mstore(add(ptr, 0x14), shl(96, implBytes))
-            mstore(add(ptr, 0x28), 0x5af43d82803e903d91602b57fd5bf300000000000000000000000000000000)
-            proxy := create(0, ptr, 0x37)
+            proxy := create(0, add(code, 0x20), mload(code))
         }
         require(proxy != address(0), "ProxyFactory: create failed");
 
