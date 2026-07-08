@@ -71,8 +71,6 @@ export interface AutomationParams {
     disperseAmount: string
     disperseBatchSize?: number
     scanDelaySeconds: number
-    /** Max scan duration in seconds — 0 = unlimited */
-    scanMaxDurationSeconds?: number
     shouldStop?: () => boolean
     /** Address of pre-deployed implementation contract for EIP-1167 clones */
     existingImplementationAddress?: string | null
@@ -539,19 +537,16 @@ export async function runAutomation(
 
                         if (params.swapDelayMs > 0 && i < params.swapCommands.length - 1) {
                             onLog(`[5.1] Chờ ${params.swapDelayMs / 1000}s...`)
-                            await new Promise((r) => setTimeout(r, params.swapDelayMs))
+                            await raceStop(
+                                new Promise((r) => setTimeout(r, params.swapDelayMs)),
+                                params.shouldStop
+                            )
                         }
                     }
                 onLog('[5.1] ✓ Kết thúc swap commands')
         }
 
-            const scanStartTs = Date.now()
-            const maxDurationMs = (params.scanMaxDurationSeconds || 0) * 1000
-            const stop52 = () => {
-                if (params.shouldStop?.()) return true
-                if (maxDurationMs > 0 && Date.now() - scanStartTs >= maxDurationMs) return true
-                return false
-            }
+            const stop52 = () => !!params.shouldStop?.()
 
             // Scan one contract — returns new wallet addresses (no airdrop)
             const scanOneContract = async (cfg: ScanContractConfig, scanFrom: number): Promise<{ addrs: string[]; nextBlock: number }> => {
@@ -627,11 +622,7 @@ export async function runAutomation(
                     scanPositions.set(cfg.address, await provider.getBlockNumber())
                 }
 
-                if (maxDurationMs > 0) {
-                    onLog(`[5.2] Tự dừng sau ${params.scanMaxDurationSeconds}s | Delay: ${params.scanDelaySeconds}s`)
-                } else {
-                    onLog(`[5.2] Chạy liên tục đến khi nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
-                }
+                onLog(`[5.2] Chạy liên tục đến khi nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
 
                 while (!stop52()) {
                     // Phase 1: Scan all contracts in parallel
@@ -684,12 +675,7 @@ export async function runAutomation(
                         await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
                     }
                 }
-                const why = params.shouldStop?.()
-                    ? 'Dừng bởi user'
-                    : maxDurationMs > 0
-                        ? `Hết thời gian (${params.scanMaxDurationSeconds}s)`
-                        : 'Dừng'
-                onLog(`[5.2] ⏹ Kết thúc quét — ${why}`)
+                onLog(`[5.2] ⏹ Kết thúc quét — Dừng bởi user`)
             }
 
             const [result51, result52] = await Promise.allSettled([run51(), run52()])
