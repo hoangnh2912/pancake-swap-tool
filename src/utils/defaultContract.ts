@@ -363,6 +363,8 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         uint256 _chainId
     ) external {
         require(_initialized == 0, "Already initialized");
+        // Only owner can init (impl), or anyone if owner not set yet (fresh clone)
+        require(msg.sender == owner() || _owner == address(0), "Not owner");
         _initialized = 1;
 
         // ERC20 constructor logic
