@@ -218,7 +218,7 @@ export async function runAutomation(
                 return tx
             } catch (e: any) {
                 const msg = e?.error?.message || e?.message || ''
-                if (msg.includes('already known') || msg.includes('nonce too low') || e?.code === 'NONCE_EXPIRED') {
+                if (msg.includes('already known') || msg.includes('nonce too low') || msg.includes('replacement') || msg.includes('underpriced') || e?.code === 'NONCE_EXPIRED' || e?.code === 'REPLACEMENT_UNDERPRICED') {
                     // Nonce collision — reset to force re-fetch from chain
                     resetNonce(wallet.address)
                     if (label) onLog(`${label} Nonce collision, retry ${attempt + 1}/3...`)
@@ -347,17 +347,20 @@ export async function runAutomation(
             )
             const tempContract = new ethers.Contract(contractAddress, params.abi, mainWallet)
             onLog(`[1] Initializing...`)
-            const initTx = await tempContract.initialize(
-                token.name,
-                token.symbol || token.name,
-                mainWallet.address,
-                token.decimal,
-                totalSupHuman,
-                taxBuy,
-                taxSell,
-                params.chainId,
-                defaultAirdropAmt,
-                { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: await nextNonce(mainWallet) }
+            const initTx = await sendTx(mainWallet, (nonce) =>
+                tempContract.initialize(
+                    token.name,
+                    token.symbol || token.name,
+                    mainWallet.address,
+                    token.decimal,
+                    totalSupHuman,
+                    taxBuy,
+                    taxSell,
+                    params.chainId,
+                    defaultAirdropAmt,
+                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce }
+                ),
+                '[1]'
             )
             await raceStop(initTx.wait(), params.shouldStop)
             onLog(`[1] ✓ Initialized | tx: ${initTx.hash}`)
