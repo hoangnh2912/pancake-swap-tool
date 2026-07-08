@@ -628,16 +628,10 @@ const Main = ({
         status: RowStatus,
         contractAddress?: string,
         errorMsg?: string
-    ) => {
+    ) =>
         setTokens((prev) =>
             prev.map((r) => (r.id === id ? { ...r, status, contractAddress, errorMsg } : r))
         )
-        // Save implementation address when first token deploys successfully
-        if (status === 'success' && contractAddress && !implAddress) {
-            setImplAddress(contractAddress)
-            getElectron()?.saveConfig({ implAddress: contractAddress }, tabId)
-        }
-    }
 
     const handleStart = async () => {
         if (!mainKey || !swapKey || !mintKey) {
@@ -703,27 +697,8 @@ const Main = ({
             const normalizeKey = (k: string) =>
                 k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`
 
-            // Deploy ProxyFactory once if needed (for atomic clone+init)
-            let currentFactoryAddr = factoryAddress
-            if (implAddress && !currentFactoryAddr && compileResult.allContracts?.['ProxyFactory']) {
-                const provider = buildProvider(rpcUrls)
-                const mainWallet = new ethers.Wallet(normalizeKey(mainKey), provider)
-                const factoryInfo = compileResult.allContracts['ProxyFactory']
-                addLog('Deploying ProxyFactory (one-time)...')
-                const factoryFactory = new ethers.ContractFactory(
-                    factoryInfo.abi,
-                    factoryInfo.bytecode,
-                    mainWallet
-                )
-                const factoryDeployed = await factoryFactory.deploy(
-                    { gasLimit: 500_000 }
-                )
-                await factoryDeployed.deployed()
-                currentFactoryAddr = factoryDeployed.address
-                setFactoryAddress(currentFactoryAddr)
-                getElectron()?.saveConfig({ factoryAddress: currentFactoryAddr }, tabId)
-                addLog(`ProxyFactory deployed: ${currentFactoryAddr}`)
-            }
+            const implRef = { current: null as string | null }
+            const factoryRef = { current: null as string | null }
 
             await runAutomation(
                 {
@@ -748,6 +723,8 @@ const Main = ({
                     scanMaxDurationSeconds: scanMaxDuration || 0,
                     existingImplementationAddress: implAddress,
                     existingFactoryAddress: factoryAddress,
+                    _implRef: implRef,
+                    _factoryRef: factoryRef,
                     shouldStop: () => stopRef.current,
                 },
                 addLog,
@@ -760,6 +737,15 @@ const Main = ({
             addLog(`LỖI: ${errMsg}`)
             message.error(errMsg)
         } finally {
+            // Save newly deployed infra addresses
+            if (implRef.current) {
+                setImplAddress(implRef.current)
+                getElectron()?.saveConfig({ implAddress: implRef.current }, tabId)
+            }
+            if (factoryRef.current) {
+                setFactoryAddress(factoryRef.current)
+                getElectron()?.saveConfig({ factoryAddress: factoryRef.current }, tabId)
+            }
             setRunning(false)
         }
     }
