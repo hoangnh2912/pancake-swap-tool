@@ -264,7 +264,7 @@ export async function runAutomation(
                     params.abi, params.bytecode, mainWallet
                 )
                 const implDeployed = await contractFactory.deploy(
-                    { gasLimit: 5_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                    { gasLimit: 10_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
                 )
                 await raceStop(implDeployed.deployed(), params.shouldStop)
                 implAddress = implDeployed.address
@@ -286,7 +286,7 @@ export async function runAutomation(
                     factoryInfo.abi, factoryInfo.bytecode, mainWallet
                 )
                 const factoryDeployed = await factoryFactory.deploy(
-                    { gasLimit: 500_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                    { gasLimit: 1_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
                 )
                 await raceStop(factoryDeployed.deployed(), params.shouldStop)
                 factoryAddress = factoryDeployed.address
@@ -314,7 +314,7 @@ export async function runAutomation(
                 taxSell,
                 params.chainId,
                 defaultAirdropAmt,
-                { gasLimit: 1_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
+                { gasLimit: 2_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
             const deployReceipt = await raceStop(deployTx.wait(), params.shouldStop)
             const event = deployReceipt.events?.find((e: any) => e.event === 'TokenDeployed')
