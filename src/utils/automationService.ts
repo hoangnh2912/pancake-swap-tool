@@ -461,7 +461,7 @@ export async function runAutomation(
 
             let step51Done = false
 
-            // 5.2 (scan+airdrop) chỉ bắt đầu sau khi lệnh swap thứ 2 (index 1) hoàn thành.
+            // 5.2 (scan+airdrop) bắt đầu ngay khi lệnh swap thứ 2 (index 1) START — không đợi xong.
             // Nếu có ít hơn 2 lệnh, mở khoá ngay khi 5.1 kết thúc (finally bên dưới).
             let markReadyForScan: () => void = () => {}
             const readyForScan = new Promise<void>((resolve) => { markReadyForScan = resolve })
@@ -473,6 +473,11 @@ export async function runAutomation(
                             onLog('[5.1] ⏹ Dừng swap.')
                             break
                         }
+                        if (i === 1) {
+                            onLog('[5.1] Bắt đầu lệnh thứ 2 — mở khoá 5.2 (scan+airdrop)')
+                            markReadyForScan()
+                        }
+
                         const cmd = params.swapCommands[i]
                         const swapDeadline = Math.floor(Date.now() / 1000) + 600
                         const slippagePct = Number(cmd.slippage) || 0
@@ -541,11 +546,6 @@ export async function runAutomation(
                                 )
                             await raceStop(swapTx.wait(), params.shouldStop)
                             onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
-                        }
-
-                        if (i === 1) {
-                            onLog('[5.1] ✓ Lệnh thứ 2 hoàn thành — mở khoá 5.2 (scan+airdrop)')
-                            markReadyForScan()
                         }
 
                         if (params.swapDelayMs > 0 && i < params.swapCommands.length - 1) {
@@ -625,7 +625,7 @@ export async function runAutomation(
                     return
                 }
 
-                onLog('[5.2] Chờ lệnh swap thứ 2 hoàn thành trước khi bắt đầu quét...')
+                onLog('[5.2] Chờ lệnh swap thứ 2 bắt đầu...')
                 await raceStop(readyForScan, params.shouldStop)
 
                 onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
