@@ -539,7 +539,9 @@ contract ProxyFactory {
         assembly {
             let ptr := mload(0x40)
             mstore(ptr, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
-            mstore(add(ptr, 0x14), implBytes)
+            // bytes20 is right-aligned — must shift left by 12 bytes so
+            // the address lands at bytes 20-39 (not 32-51)
+            mstore(add(ptr, 0x14), shl(96, implBytes))
             mstore(add(ptr, 0x28), 0x5af43d82803e903d91602b57fd5bf300000000000000000000000000000000)
             proxy := create(0, ptr, 0x37)
         }
