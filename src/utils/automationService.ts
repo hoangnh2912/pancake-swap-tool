@@ -459,7 +459,10 @@ export async function runAutomation(
             )
             const swapErc20 = new ethers.Contract(contractAddress, ERC20_ABI, swapWallet)
 
+            let step51Done = false
+
             const run51 = async () => {
+              try {
                 for (let i = 0; i < params.swapCommands.length; i++) {
                         if (params.shouldStop?.()) {
                             onLog('[5.1] ⏹ Dừng swap.')
@@ -544,9 +547,13 @@ export async function runAutomation(
                         }
                     }
                 onLog('[5.1] ✓ Kết thúc swap commands')
+              } finally {
+                step51Done = true
+              }
         }
 
-            const stop52 = () => !!params.shouldStop?.()
+            // Scan (5.2) chỉ chạy nếu có swap commands — dừng khi 5.1 xong hoặc user bấm Dừng
+            const stop52 = () => !!(params.shouldStop?.() || step51Done)
 
             // Scan one contract — returns new wallet addresses (no airdrop)
             const scanOneContract = async (cfg: ScanContractConfig, scanFrom: number): Promise<{ addrs: string[]; nextBlock: number }> => {
@@ -598,6 +605,10 @@ export async function runAutomation(
             const scanContractAddrs = params.scanContracts.map((c) => c.address)
 
             const run52 = async () => {
+                if (params.swapCommands.length === 0) {
+                    onLog('[5.2] Bỏ qua — không có swap commands nên không có mốc để tự dừng quét')
+                    return
+                }
                 onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
                 if (!hasScanConfig) {
                     onLog('[5.2] Bỏ qua — cần cấu hình Contract quét VÀ Amount/ví > 0')
@@ -622,7 +633,7 @@ export async function runAutomation(
                     scanPositions.set(cfg.address, await provider.getBlockNumber())
                 }
 
-                onLog(`[5.2] Chạy liên tục đến khi nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
+                onLog(`[5.2] Tự dừng khi 5.1 (swap) hoàn thành, hoặc nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
 
                 while (!stop52()) {
                     // Phase 1: Scan all contracts in parallel
@@ -675,7 +686,7 @@ export async function runAutomation(
                         await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
                     }
                 }
-                onLog(`[5.2] ⏹ Kết thúc quét — Dừng bởi user`)
+                onLog(`[5.2] ⏹ Kết thúc quét — ${params.shouldStop?.() ? 'Dừng bởi user' : '5.1 (swap) đã hoàn thành'}`)
             }
 
             const [result51, result52] = await Promise.allSettled([run51(), run52()])
