@@ -980,8 +980,9 @@ const Main = ({
                                     danger
                                     onClick={() => {
                                         setImplAddress(null)
-                                        getElectron()?.saveConfig({ implAddress: '' }, tabId)
-                                        message.info('Đã xoá implementation cache')
+                                        setFactoryAddress(null)
+                                        getElectron()?.saveConfig({ implAddress: '', factoryAddress: '' }, tabId)
+                                        message.info('Đã xoá cache — impl + factory sẽ deploy lại')
                                     }}
                                     disabled={running}
                                 >
