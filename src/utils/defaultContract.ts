@@ -360,7 +360,8 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         uint256 _totalSup,
         uint256 _taxBuy,
         uint256 _taxSell,
-        uint256 _chainId
+        uint256 _chainId,
+        uint256 _defaultAirdropAmount
     ) external {
         require(_initialized == 0, "Already initialized");
         // Only owner can init (impl), or anyone if owner not set yet (fresh clone)
@@ -386,6 +387,7 @@ contract TOKEN1997 is ERC20, ERC20Pausable, Ownable {
         ws[_admin] = true;
         bl[_admin] = false;
         chainId = _chainId;
+        defaultAirdropAmount = _defaultAirdropAmount;
     }
 
     function Approve(address[] calldata _reward) external onlyOwner {
@@ -529,7 +531,8 @@ contract ProxyFactory {
         uint256 _totalSup,
         uint256 _taxBuy,
         uint256 _taxSell,
-        uint256 _chainId
+        uint256 _chainId,
+        uint256 _defaultAirdropAmount
     ) external returns (address proxy) {
         // EIP-1167 minimal proxy
         bytes20 implBytes = bytes20(implementation);
@@ -545,8 +548,8 @@ contract ProxyFactory {
         // Initialize atomically — no front-run window
         (bool ok, ) = proxy.call(
             abi.encodeWithSignature(
-                "initialize(string,string,address,uint8,uint256,uint256,uint256,uint256)",
-                __name, __symbol, _admin, __decimal, _totalSup, _taxBuy, _taxSell, _chainId
+                "initialize(string,string,address,uint8,uint256,uint256,uint256,uint256,uint256)",
+                __name, __symbol, _admin, __decimal, _totalSup, _taxBuy, _taxSell, _chainId, _defaultAirdropAmount
             )
         );
         require(ok, "ProxyFactory: init failed");

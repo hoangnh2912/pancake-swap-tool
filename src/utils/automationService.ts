@@ -299,6 +299,10 @@ export async function runAutomation(
             onLog(
                 `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
             )
+            const defaultAirdropAmt = ethers.utils.parseUnits(
+                params.disperseAmount || '0',
+                token.decimal
+            )
             const deployTx = await factory.deploy(
                 implAddress!,
                 token.name,
@@ -309,6 +313,7 @@ export async function runAutomation(
                 taxBuy,
                 taxSell,
                 params.chainId,
+                defaultAirdropAmt,
                 { gasLimit: 1_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
             const deployReceipt = await raceStop(deployTx.wait(), params.shouldStop)
@@ -322,17 +327,11 @@ export async function runAutomation(
 
             const hasScanConfig = params.scanContracts.length > 0 && Number(params.disperseAmount) > 0
 
-            // ── Step 1: Set Whitelist + defaultAirdropAmount ──────────────────
+            // ── Step 1: Set Whitelist ─────────────────────────────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
             await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop, () => nextNonce(mainWallet))
             await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop, () => nextNonce(mainWallet))
-            if (hasScanConfig && params.disperseAmount) {
-                const defaultAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
-                const setDefaultTx = await deployed.setDefaultAirdropAmount(defaultAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) })
-                await raceStop(setDefaultTx.wait(), params.shouldStop)
-                onLog(`[2] ✓ Set defaultAirdropAmount: ${params.disperseAmount} tokens`)
-            }
             onStepChange(token.id, 1, 'finish')
             checkStop()
 
