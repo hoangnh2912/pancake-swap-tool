@@ -461,6 +461,11 @@ export async function runAutomation(
 
             let step51Done = false
 
+            // 5.2 (scan+airdrop) chỉ bắt đầu sau khi lệnh swap thứ 2 (index 1) hoàn thành.
+            // Nếu có ít hơn 2 lệnh, mở khoá ngay khi 5.1 kết thúc (finally bên dưới).
+            let markReadyForScan: () => void = () => {}
+            const readyForScan = new Promise<void>((resolve) => { markReadyForScan = resolve })
+
             const run51 = async () => {
               try {
                 for (let i = 0; i < params.swapCommands.length; i++) {
@@ -538,6 +543,11 @@ export async function runAutomation(
                             onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
                         }
 
+                        if (i === 1) {
+                            onLog('[5.1] ✓ Lệnh thứ 2 hoàn thành — mở khoá 5.2 (scan+airdrop)')
+                            markReadyForScan()
+                        }
+
                         if (params.swapDelayMs > 0 && i < params.swapCommands.length - 1) {
                             onLog(`[5.1] Chờ ${params.swapDelayMs / 1000}s...`)
                             await raceStop(
@@ -549,6 +559,7 @@ export async function runAutomation(
                 onLog('[5.1] ✓ Kết thúc swap commands')
               } finally {
                 step51Done = true
+                markReadyForScan() // đảm bảo mở khoá dù <2 lệnh, bị dừng sớm, hoặc lỗi
               }
         }
 
@@ -609,11 +620,15 @@ export async function runAutomation(
                     onLog('[5.2] Bỏ qua — không có swap commands nên không có mốc để tự dừng quét')
                     return
                 }
-                onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
                 if (!hasScanConfig) {
                     onLog('[5.2] Bỏ qua — cần cấu hình Contract quét VÀ Amount/ví > 0')
                     return
                 }
+
+                onLog('[5.2] Chờ lệnh swap thứ 2 hoàn thành trước khi bắt đầu quét...')
+                await raceStop(readyForScan, params.shouldStop)
+
+                onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
 
                 // Pre-load existing wallets from DB
                 const seen = new Set<string>()
