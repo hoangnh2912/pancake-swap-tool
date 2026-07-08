@@ -252,11 +252,16 @@ export async function runAutomation(
 
             // Ensure implementation exists on-chain
             if (implAddress) {
+                onLog(`[init] Checking cached impl: ${implAddress}`)
                 const implCode = await provider.getCode(implAddress)
                 if (!implCode || implCode === '0x' || implCode === '0x0') {
-                    onLog(`[init] Implementation ${implAddress} not found on-chain`)
+                    onLog(`[init] ⚠ Impl not found on-chain, will deploy fresh`)
                     implAddress = null
+                } else {
+                    onLog(`[init] ✓ Impl OK (${implCode.length} bytes)`)
                 }
+            } else {
+                onLog(`[init] No cached impl — will deploy fresh`)
             }
             if (!implAddress) {
                 onLog(`[1] Deploying implementation contract (one-time)...`)
@@ -274,11 +279,16 @@ export async function runAutomation(
 
             // Ensure factory exists on-chain
             if (factoryAddress) {
+                onLog(`[init] Checking cached factory: ${factoryAddress}`)
                 const factoryCode = await provider.getCode(factoryAddress)
                 if (!factoryCode || factoryCode === '0x' || factoryCode === '0x0') {
-                    onLog(`[init] Factory ${factoryAddress} not found on-chain`)
+                    onLog(`[init] ⚠ Factory not found on-chain, will deploy fresh`)
                     factoryAddress = null
+                } else {
+                    onLog(`[init] ✓ Factory OK (${factoryCode.length} bytes)`)
                 }
+            } else {
+                onLog(`[init] No cached factory — will deploy fresh`)
             }
             if (!factoryAddress && factoryInfo) {
                 onLog(`[1] Deploying ProxyFactory (one-time)...`)
