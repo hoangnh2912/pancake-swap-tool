@@ -329,6 +329,13 @@ const Main = ({
         el.getSolcVersions().then((opts: { value: string; label: string }[]) => {
             setSolcVersionOptions(opts)
         })
+        // Load shared global settings (solc version, impl cache)
+        el.loadConfig('_global').then((gCfg: any) => {
+            if (!gCfg) return
+            if (gCfg.solcVersion) setSolcVersion(gCfg.solcVersion)
+            if (gCfg.implAddress) setImplAddress(gCfg.implAddress)
+        })
+        // Load per-tab settings
         el.loadConfig(tabId).then((cfg: any) => {
             if (!cfg) return
             if (cfg.rpc) setRpcList(cfg.rpc)
@@ -339,7 +346,6 @@ const Main = ({
             if (cfg.contractCode) setContractCode(
                 cfg.contractCode.includes('function airdrop') ? cfg.contractCode : DEFAULT_CONTRACT
             )
-            if (cfg.solcVersion) setSolcVersion(cfg.solcVersion)
             if (cfg.tokensJson) {
                 try {
                     const saved = JSON.parse(cfg.tokensJson) as Omit<
@@ -381,7 +387,6 @@ const Main = ({
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
             if (cfg.scanMaxDuration) setScanMaxDuration(Number(cfg.scanMaxDuration) || 0)
-            if (cfg.implAddress) setImplAddress(cfg.implAddress)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -734,7 +739,7 @@ const Main = ({
             // Save newly deployed infra addresses
             if (implRef.current) {
                 setImplAddress(implRef.current)
-                getElectron()?.saveConfig({ implAddress: implRef.current }, tabId)
+                getElectron()?.saveConfig({ implAddress: implRef.current }, '_global')
             }
             setRunning(false)
         }
@@ -948,7 +953,7 @@ const Main = ({
                             options={solcVersionOptions}
                             onChange={(v) => {
                                 setSolcVersion(v)
-                                scheduleSave({ solcVersion: v })
+                                getElectron()?.saveConfig({ solcVersion: v }, '_global')
                             }}
                             style={{ width: '100%' }}
                         />
@@ -970,7 +975,7 @@ const Main = ({
                                     danger
                                     onClick={() => {
                                         setImplAddress(null)
-                                        getElectron()?.saveConfig({ implAddress: '' }, tabId)
+                                        getElectron()?.saveConfig({ implAddress: '' }, '_global')
                                         message.info('Đã xoá implementation cache')
                                     }}
                                     disabled={running}
