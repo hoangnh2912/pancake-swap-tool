@@ -317,8 +317,28 @@ export async function runAutomation(
                 { gasLimit: 2_000_000, gasPrice: GAS_PRICE, nonce: nextNonce(mainWallet) }
             )
             const deployReceipt = await raceStop(deployTx.wait(), params.shouldStop)
-            const event = deployReceipt.events?.find((e: any) => e.event === 'TokenDeployed')
-            contractAddress = event?.args?.proxy || ''
+            // Extract proxy address from TokenDeployed event
+            const tdEvent = deployReceipt.events?.find((e: any) => e.event === 'TokenDeployed')
+            contractAddress = tdEvent?.args?.proxy || ''
+            // Fallback: extract from raw logs
+            if (!contractAddress && deployReceipt.logs?.length) {
+                try {
+                    const iface = new ethers.utils.Interface(factoryInfo!.abi)
+                    for (const log of deployReceipt.logs) {
+                        try {
+                            const parsed = iface.parseLog(log)
+                            if (parsed.name === 'TokenDeployed') {
+                                contractAddress = parsed.args.proxy
+                                break
+                            }
+                        } catch { /* skip unparsed logs */ }
+                    }
+                } catch { /* skip */ }
+            }
+            if (!contractAddress || contractAddress === ethers.constants.AddressZero) {
+                onLog(`[1] ❌ Không tìm thấy proxy address trong receipt! logs=${deployReceipt.logs?.length}`)
+                throw new Error('Proxy address not found in deploy receipt')
+            }
             deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
             onLog(`[1] ✓ Token: ${contractAddress} (tx: ${deployTx.hash})`)
 
