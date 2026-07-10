@@ -91,6 +91,23 @@ type OnStepChange = (tokenId: string, step: number, status: 'process' | 'finish'
 
 const STOPPED = Object.assign(new Error('__STOPPED__'), { __stopped: true })
 
+// Real gas estimate + 40% safety buffer — hardcoded 2_500/recipient formula
+// underestimated actual cost (LOG3 event + calldata), causing out-of-gas reverts
+// on batches ~130+ recipients (measured: ~2_832 gas/recipient actual vs 2_500 assumed).
+async function estimateAirdropGas(
+    contract: ethers.Contract,
+    recipients: string[],
+    amount: ethers.BigNumber
+): Promise<ethers.BigNumber> {
+    try {
+        const est = await contract.estimateGas.airdrop(recipients, amount)
+        return est.mul(140).div(100)
+    } catch {
+        // Fallback if estimateGas fails (e.g. RPC doesn't support it) — generous per-recipient cost
+        return ethers.BigNumber.from(80_000 + 3_500 * recipients.length)
+    }
+}
+
 function raceStop(promise: Promise<any>, shouldStop: (() => boolean) | undefined): Promise<any> {
     if (!shouldStop) return promise
     return new Promise((resolve, reject) => {
@@ -183,6 +200,11 @@ export async function runAutomation(
 
     const mainBal = await provider.getBalance(mainWallet.address)
     onLog(`BNB chủ : ${ethers.utils.formatEther(mainBal)} BNB`)
+
+    // Tracks last swap completion time ACROSS tokens — delay applies globally,
+    // not just between commands within the same token (fixes: 1 command/token
+    // meant delay never triggered when processing multiple tokens back-to-back)
+    let lastSwapCompletedAt = 0
 
     for (const token of params.tokens) {
         if (params.shouldStop?.()) {
@@ -419,10 +441,11 @@ export async function runAutomation(
                             const batchNum = Math.floor(i / BATCH_SIZE) + 1
                             const totalBatches = Math.ceil(funded.length / BATCH_SIZE)
                             onLog(`[1.1] Airdrop Batch ${batchNum}/${totalBatches}: ${batch.length} ví`)
+                            const gasLimit11 = await estimateAirdropGas(deployed.connect(mintWallet), batch, disperseAmt)
                             tx = await deployed.connect(mintWallet).airdrop(
                                 batch,
                                 disperseAmt,
-                                { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE }
+                                { gasLimit: gasLimit11, gasPrice: GAS_PRICE }
                             )
                             await raceStop(tx.wait(), params.shouldStop)
                             onLog(`[1.1] ✓ Airdrop Batch ${batchNum} done | tx: ${tx.hash}`)
@@ -473,6 +496,22 @@ export async function runAutomation(
                             onLog('[5.1] ⏹ Dừng swap.')
                             break
                         }
+
+                        // Đảm bảo khoảng cách tối thiểu kể từ lệnh swap gần nhất — XUYÊN TOKEN,
+                        // không chỉ trong cùng 1 token. Fix: trước đây delay chỉ áp dụng giữa các
+                        // lệnh của CÙNG 1 token, nên token chỉ có 1 lệnh thì delay không bao giờ
+                        // kích hoạt, khiến nhiều token chạy sát nhau dù đã set delay.
+                        if (params.swapDelayMs > 0 && lastSwapCompletedAt > 0) {
+                            const remaining = params.swapDelayMs - (Date.now() - lastSwapCompletedAt)
+                            if (remaining > 0) {
+                                onLog(`[5.1] Chờ ${Math.ceil(remaining / 1000)}s (đảm bảo delay ${params.swapDelayMs / 1000}s giữa các lệnh)...`)
+                                await raceStop(
+                                    new Promise((r) => setTimeout(r, remaining)),
+                                    params.shouldStop
+                                )
+                            }
+                        }
+
                         if (i === 1) {
                             onLog('[5.1] Bắt đầu lệnh thứ 2 — mở khoá 5.2 (scan+airdrop)')
                             markReadyForScan()
@@ -548,13 +587,7 @@ export async function runAutomation(
                             onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
                         }
 
-                        if (params.swapDelayMs > 0 && i < params.swapCommands.length - 1) {
-                            onLog(`[5.1] Chờ ${params.swapDelayMs / 1000}s...`)
-                            await raceStop(
-                                new Promise((r) => setTimeout(r, params.swapDelayMs)),
-                                params.shouldStop
-                            )
-                        }
+                        lastSwapCompletedAt = Date.now()
                     }
                 onLog('[5.1] ✓ Kết thúc swap commands')
               } finally {
@@ -598,10 +631,11 @@ export async function runAutomation(
                 const batchSize = params.disperseBatchSize ?? 10000
                 for (let bi = 0; bi < wallets.length; bi += batchSize) {
                     const batch = wallets.slice(bi, bi + batchSize)
+                    const gasLimit52 = await estimateAirdropGas(deployed.connect(scanSigner), batch, disperseAmt)
                     const tx = await deployed.connect(scanSigner).airdrop(
                         batch,
                         disperseAmt,
-                        { gasLimit: 50_000 + 2_500 * batch.length, gasPrice: GAS_PRICE }
+                        { gasLimit: gasLimit52, gasPrice: GAS_PRICE }
                     )
                     await tx.wait()
                     onLog(`[5.2] ✓ Airdrop batch ${Math.floor(bi / batchSize) + 1}: ${batch.length} ví | tx: ${tx.hash}`)
@@ -846,7 +880,7 @@ export async function runAutomation(
                 }
             }
             updateStatus(token.id, 'error', undefined, errMsg)
-            break // dừng toàn bộ automation khi bất kỳ token nào lỗi
+            break // dừng toàn bộ automation trong tab này khi có lỗi
         }
     }
 
