@@ -243,7 +243,7 @@ const Main = ({
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContracts, setScanContracts] = useState<ScanContractConfig[]>([])
     const [scanContractErrors, setScanContractErrors] = useState<Record<number, string>>({})
-    const [scanMode, setScanMode] = useState<'contract' | 'allBlocks'>('contract')
+    const [scanMode, setScanMode] = useState<'contract' | 'allBlocks'>('allBlocks')
     const [disperseAmount, setDisperseAmount] = useState('')
     const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
@@ -390,7 +390,7 @@ const Main = ({
             } else if (cfg.scanContract) {
                 setScanContracts([{ address: cfg.scanContract }])
             }
-            if (cfg.scanMode === 'allBlocks') setScanMode('allBlocks')
+            if (cfg.scanMode === 'contract' || cfg.scanMode === 'allBlocks') setScanMode(cfg.scanMode)
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
@@ -1409,11 +1409,42 @@ const Main = ({
                                 scheduleSave({ scanMode: next })
                             }}
                             options={[
-                                { label: 'Quét Contract', value: 'contract' },
-                                { label: 'Quét Toàn Bộ Block', value: 'allBlocks' },
+                                {
+                                    label: (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                padding: '2px 12px',
+                                                borderRadius: 4,
+                                                fontWeight: 700,
+                                                background: scanMode === 'contract' ? '#1668dc' : 'transparent',
+                                                color: scanMode === 'contract' ? '#fff' : undefined,
+                                            }}
+                                        >
+                                            Quét Contract
+                                        </span>
+                                    ),
+                                    value: 'contract',
+                                },
+                                {
+                                    label: (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                padding: '2px 12px',
+                                                borderRadius: 4,
+                                                fontWeight: 700,
+                                                background: scanMode === 'allBlocks' ? '#389e0d' : 'transparent',
+                                                color: scanMode === 'allBlocks' ? '#fff' : undefined,
+                                            }}
+                                        >
+                                            Quét Toàn Bộ Block
+                                        </span>
+                                    ),
+                                    value: 'allBlocks',
+                                },
                             ]}
                             disabled={running}
-                            style={{ fontWeight: 600 }}
                         />
                         {scanMode === 'contract' && (
                             <Button

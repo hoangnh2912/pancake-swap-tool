@@ -39,7 +39,7 @@ model Config {
   disperseAmount    String @default("")
   disperseBatchSize String @default("10000")
   scanContractsJson String @default("[]")
-  scanMode          String @default("contract")
+  scanMode          String @default("allBlocks")
   scanDelay         String @default("30")
   scanMaxDuration   String @default("0")
   implAddress       String @default("")
