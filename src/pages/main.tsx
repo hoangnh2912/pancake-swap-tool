@@ -14,9 +14,9 @@ import {
     Input,
     InputNumber,
     Modal,
+    Segmented,
     Select,
     Steps,
-    Switch,
     Table,
     Tabs,
     Tag,
@@ -1400,18 +1400,20 @@ const Main = ({
                         Cài đặt quét & airdrop (step 5.2 / 1.1)
                     </AntText>
                     <Flex align="center" gap={3}>
-                        <Text fontSize="xs" color="gray.500">
-                            {scanMode === 'allBlocks' ? 'Quét toàn bộ block' : 'Quét contract'}
-                        </Text>
-                        <Switch
-                            size="small"
-                            checked={scanMode === 'allBlocks'}
-                            onChange={(checked) => {
-                                const next = checked ? 'allBlocks' : 'contract'
+                        <Segmented
+                            size="large"
+                            value={scanMode}
+                            onChange={(v) => {
+                                const next = v as 'contract' | 'allBlocks'
                                 setScanMode(next)
                                 scheduleSave({ scanMode: next })
                             }}
+                            options={[
+                                { label: 'Quét Contract', value: 'contract' },
+                                { label: 'Quét Toàn Bộ Block', value: 'allBlocks' },
+                            ]}
                             disabled={running}
+                            style={{ fontWeight: 600 }}
                         />
                         {scanMode === 'contract' && (
                             <Button
