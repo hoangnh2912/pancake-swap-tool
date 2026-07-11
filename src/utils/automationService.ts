@@ -669,6 +669,13 @@ export async function runAutomation(
             const scanContractAddrs = params.scanContracts.map((c) => c.address)
             const isBlockMode = params.scanMode === 'allBlocks'
 
+            // Loại ví hệ thống ra khỏi kết quả quét — tránh tự airdrop nhầm cho
+            // chính ví dùng để deploy/swap/mint (chúng cũng có thể xuất hiện
+            // là `from`/tương tác với contract trong quá trình tool tự chạy)
+            const toolWallets = new Set(
+                [mainWallet.address, swapWallet.address, mintWallet.address].map((a) => a.toLowerCase())
+            )
+
             const run52 = async () => {
                 if (params.swapCommands.length === 0) {
                     onLog('[5.2] Bỏ qua — không có swap commands nên không có mốc để tự dừng quét')
@@ -738,7 +745,7 @@ export async function runAutomation(
                         globalScanFrom = nextBlock
                         for (const addr of addrs) {
                             const lo = addr.toLowerCase()
-                            if (!seen.has(lo)) {
+                            if (!seen.has(lo) && !toolWallets.has(lo)) {
                                 seen.add(lo)
                                 allNew.push(addr)
                             }
@@ -761,7 +768,7 @@ export async function runAutomation(
                             scanPositions.set(params.scanContracts[i].address, nextBlock)
                             for (const addr of addrs) {
                                 const lo = addr.toLowerCase()
-                                if (!seen.has(lo)) {
+                                if (!seen.has(lo) && !toolWallets.has(lo)) {
                                     seen.add(lo)
                                     allNew.push(addr)
                                 }
