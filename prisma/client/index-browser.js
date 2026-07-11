@@ -146,6 +146,7 @@ exports.Prisma.ConfigScalarFieldEnum = {
   disperseAmount: 'disperseAmount',
   disperseBatchSize: 'disperseBatchSize',
   scanContractsJson: 'scanContractsJson',
+  scanMode: 'scanMode',
   scanDelay: 'scanDelay',
   scanMaxDuration: 'scanMaxDuration',
   implAddress: 'implAddress',

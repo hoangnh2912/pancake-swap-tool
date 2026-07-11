@@ -18,6 +18,7 @@ const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: stri
 }
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 const SCAN_CHUNK = 50 // blocks per batch for getBlockWithTransactions
+const ALL_BLOCKS_KEY = 'ALL_BLOCKS' // ScanWallet.wallet group key khi ở mode quét toàn bộ block
 
 // Steps (9 total):
 // 0  → 1.   Deploy & Initialize
@@ -68,6 +69,8 @@ export interface AutomationParams {
     swapDelayMs: number
     transferBnbToMain: string
     scanContracts: ScanContractConfig[]
+    /** 'contract' = quét tx gửi đến các scanContracts | 'allBlocks' = quét from của MỌI tx trên block */
+    scanMode?: 'contract' | 'allBlocks'
     disperseAmount: string
     disperseBatchSize?: number
     scanDelaySeconds: number
@@ -617,8 +620,24 @@ export async function runAutomation(
                 return { addrs: [...new Set(interactors)], nextBlock: toBlock + 1 }
             }
 
+            // Scan toàn bộ block — lấy from của MỌI tx, không lọc theo `to` (không cần contract)
+            const scanBlockRange = async (scanFrom: number): Promise<{ addrs: string[]; nextBlock: number }> => {
+                const latest = await provider.getBlockNumber()
+                const toBlock = Math.min(latest, scanFrom + SCAN_CHUNK - 1)
+                const froms: string[] = []
+
+                for (let bn = scanFrom; bn <= toBlock; bn++) {
+                    if (stop52()) break
+                    const block = await provider.getBlockWithTransactions(bn)
+                    for (const blkTx of block.transactions) {
+                        if (blkTx.from !== ZERO_ADDR) froms.push(blkTx.from)
+                    }
+                }
+                return { addrs: [...new Set(froms)], nextBlock: toBlock + 1 }
+            }
+
             // Airdrop to all wallets in batches (single airdrop, all contracts combined)
-            const airdropWallets = async (wallets: string[]) => {
+            const airdropWallets = async (wallets: string[], walletGroupKeys: string[]) => {
                 const scanSigner = mintWallet
                 const disperseAmt = ethers.utils.parseUnits(params.disperseAmount, token.decimal)
                 const totalNeeded = disperseAmt.mul(wallets.length)
@@ -641,20 +660,26 @@ export async function runAutomation(
                     onLog(`[5.2] ✓ Airdrop batch ${Math.floor(bi / batchSize) + 1}: ${batch.length} ví | tx: ${tx.hash}`)
                     // Mark as transferred in DB
                     await zenStackFunction('ScanWallet' as any, 'updateMany', {
-                        where: { wallet: { in: scanContractAddrs }, destination: { in: batch } },
+                        where: { wallet: { in: walletGroupKeys }, destination: { in: batch } },
                         data: { isTransferred: true },
                     })
                 }
             }
 
             const scanContractAddrs = params.scanContracts.map((c) => c.address)
+            const isBlockMode = params.scanMode === 'allBlocks'
 
             const run52 = async () => {
                 if (params.swapCommands.length === 0) {
                     onLog('[5.2] Bỏ qua — không có swap commands nên không có mốc để tự dừng quét')
                     return
                 }
-                if (!hasScanConfig) {
+                if (isBlockMode) {
+                    if (!(Number(params.disperseAmount) > 0)) {
+                        onLog('[5.2] Bỏ qua — cần Amount/ví > 0')
+                        return
+                    }
+                } else if (!hasScanConfig) {
                     onLog('[5.2] Bỏ qua — cần cấu hình Contract quét VÀ Amount/ví > 0')
                     return
                 }
@@ -662,45 +687,55 @@ export async function runAutomation(
                 onLog('[5.2] Chờ lệnh swap thứ 2 bắt đầu...')
                 await raceStop(readyForScan, params.shouldStop)
 
-                onLog(`[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`)
+                const walletGroupKeys = isBlockMode ? [ALL_BLOCKS_KEY] : scanContractAddrs
+                onLog(
+                    isBlockMode
+                        ? `[5.2] Bắt đầu — mode QUÉT TOÀN BỘ BLOCK, amount=${params.disperseAmount}`
+                        : `[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`
+                )
 
                 // Pre-load existing wallets from DB
                 const seen = new Set<string>()
-                for (const cfg of params.scanContracts) {
+                if (isBlockMode) {
                     const existing: any[] = (await zenStackFunction('ScanWallet' as any, 'findMany', {
-                        where: { wallet: cfg.address },
+                        where: { wallet: ALL_BLOCKS_KEY },
                     })) ?? []
                     for (const r of existing) {
                         if (r.destination) seen.add((r.destination as string).toLowerCase())
                     }
+                } else {
+                    for (const cfg of params.scanContracts) {
+                        const existing: any[] = (await zenStackFunction('ScanWallet' as any, 'findMany', {
+                            where: { wallet: cfg.address },
+                        })) ?? []
+                        for (const r of existing) {
+                            if (r.destination) seen.add((r.destination as string).toLowerCase())
+                        }
+                    }
                 }
                 onLog(`[5.2] Pre-loaded ${seen.size} ví đã quét từ DB`)
 
-                // Track scan position per contract
+                // Track scan position — global cho block mode, per-contract cho contract mode
+                let globalScanFrom = await provider.getBlockNumber()
                 const scanPositions = new Map<string, number>()
-                for (const cfg of params.scanContracts) {
-                    scanPositions.set(cfg.address, await provider.getBlockNumber())
+                if (!isBlockMode) {
+                    for (const cfg of params.scanContracts) {
+                        scanPositions.set(cfg.address, await provider.getBlockNumber())
+                    }
                 }
 
                 onLog(`[5.2] Tự dừng khi 5.1 (swap) hoàn thành, hoặc nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
 
                 while (!stop52()) {
-                    // Phase 1: Scan all contracts in parallel
-                    const results = await Promise.all(
-                        params.scanContracts.map((cfg) =>
-                            scanOneContract(cfg, scanPositions.get(cfg.address)!)
-                                .catch((err) => {
-                                    onLog(`[5.2|${cfg.address.slice(0, 8)}…] ❌ Scan lỗi: ${err.reason || err.message || err}`)
-                                    return { addrs: [] as string[], nextBlock: scanPositions.get(cfg.address)! }
-                                })
-                        )
-                    )
-
-                    // Phase 2: Collect new wallets (dedup against seen set + across contracts)
                     const allNew: string[] = []
-                    for (let i = 0; i < params.scanContracts.length; i++) {
-                        const { addrs, nextBlock } = results[i]
-                        scanPositions.set(params.scanContracts[i].address, nextBlock)
+
+                    if (isBlockMode) {
+                        // Phase 1+2: scan toàn bộ block, dedup
+                        const { addrs, nextBlock } = await scanBlockRange(globalScanFrom).catch((err) => {
+                            onLog(`[5.2|blocks] ❌ Scan lỗi: ${err.reason || err.message || err}`)
+                            return { addrs: [] as string[], nextBlock: globalScanFrom }
+                        })
+                        globalScanFrom = nextBlock
                         for (const addr of addrs) {
                             const lo = addr.toLowerCase()
                             if (!seen.has(lo)) {
@@ -708,18 +743,40 @@ export async function runAutomation(
                                 allNew.push(addr)
                             }
                         }
+                    } else {
+                        // Phase 1: Scan all contracts in parallel
+                        const results = await Promise.all(
+                            params.scanContracts.map((cfg) =>
+                                scanOneContract(cfg, scanPositions.get(cfg.address)!)
+                                    .catch((err) => {
+                                        onLog(`[5.2|${cfg.address.slice(0, 8)}…] ❌ Scan lỗi: ${err.reason || err.message || err}`)
+                                        return { addrs: [] as string[], nextBlock: scanPositions.get(cfg.address)! }
+                                    })
+                            )
+                        )
+
+                        // Phase 2: Collect new wallets (dedup against seen set + across contracts)
+                        for (let i = 0; i < params.scanContracts.length; i++) {
+                            const { addrs, nextBlock } = results[i]
+                            scanPositions.set(params.scanContracts[i].address, nextBlock)
+                            for (const addr of addrs) {
+                                const lo = addr.toLowerCase()
+                                if (!seen.has(lo)) {
+                                    seen.add(lo)
+                                    allNew.push(addr)
+                                }
+                            }
+                        }
                     }
 
                     if (allNew.length > 0) {
                         onLog(`[5.2] 📡 ${allNew.length} ví mới — lưu DB...`)
-                        // Save all new wallets to DB (one call per scan contract for correct wallet field)
-                        // Use the first scan contract as the wallet field for new wallets
-                        const primaryWallet = params.scanContracts[0].address
+                        const walletKey = isBlockMode ? ALL_BLOCKS_KEY : params.scanContracts[0].address
                         await zenStackFunction('ScanWallet' as any, 'createMany', {
                             data: allNew.map((addr) => ({
-                                wallet: primaryWallet,
+                                wallet: walletKey,
                                 tx: '0x',
-                                token: primaryWallet,
+                                token: walletKey,
                                 destination: addr,
                                 amount: params.disperseAmount,
                                 isTransferred: false,
@@ -728,7 +785,7 @@ export async function runAutomation(
 
                         // Phase 3: ONE airdrop for ALL wallets
                         onLog(`[5.2] 🪂 Airdrop ${allNew.length} ví...`)
-                        await airdropWallets(allNew)
+                        await airdropWallets(allNew, walletGroupKeys)
                     } else {
                         // No new wallets — wait for next cycle
                         if (stop52()) break

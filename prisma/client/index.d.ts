@@ -2011,6 +2011,7 @@ export namespace Prisma {
     disperseAmount: string | null
     disperseBatchSize: string | null
     scanContractsJson: string | null
+    scanMode: string | null
     scanDelay: string | null
     scanMaxDuration: string | null
     implAddress: string | null
@@ -2036,6 +2037,7 @@ export namespace Prisma {
     disperseAmount: string | null
     disperseBatchSize: string | null
     scanContractsJson: string | null
+    scanMode: string | null
     scanDelay: string | null
     scanMaxDuration: string | null
     implAddress: string | null
@@ -2061,6 +2063,7 @@ export namespace Prisma {
     disperseAmount: number
     disperseBatchSize: number
     scanContractsJson: number
+    scanMode: number
     scanDelay: number
     scanMaxDuration: number
     implAddress: number
@@ -2088,6 +2091,7 @@ export namespace Prisma {
     disperseAmount?: true
     disperseBatchSize?: true
     scanContractsJson?: true
+    scanMode?: true
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
@@ -2113,6 +2117,7 @@ export namespace Prisma {
     disperseAmount?: true
     disperseBatchSize?: true
     scanContractsJson?: true
+    scanMode?: true
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
@@ -2138,6 +2143,7 @@ export namespace Prisma {
     disperseAmount?: true
     disperseBatchSize?: true
     scanContractsJson?: true
+    scanMode?: true
     scanDelay?: true
     scanMaxDuration?: true
     implAddress?: true
@@ -2236,6 +2242,7 @@ export namespace Prisma {
     disperseAmount: string
     disperseBatchSize: string
     scanContractsJson: string
+    scanMode: string
     scanDelay: string
     scanMaxDuration: string
     implAddress: string
@@ -2278,6 +2285,7 @@ export namespace Prisma {
     disperseAmount?: boolean
     disperseBatchSize?: boolean
     scanContractsJson?: boolean
+    scanMode?: boolean
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
@@ -2303,6 +2311,7 @@ export namespace Prisma {
     disperseAmount?: boolean
     disperseBatchSize?: boolean
     scanContractsJson?: boolean
+    scanMode?: boolean
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
@@ -2328,6 +2337,7 @@ export namespace Prisma {
     disperseAmount?: boolean
     disperseBatchSize?: boolean
     scanContractsJson?: boolean
+    scanMode?: boolean
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
@@ -2353,6 +2363,7 @@ export namespace Prisma {
     disperseAmount?: boolean
     disperseBatchSize?: boolean
     scanContractsJson?: boolean
+    scanMode?: boolean
     scanDelay?: boolean
     scanMaxDuration?: boolean
     implAddress?: boolean
@@ -2361,7 +2372,7 @@ export namespace Prisma {
     stepStatesJson?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2383,6 +2394,7 @@ export namespace Prisma {
       disperseAmount: string
       disperseBatchSize: string
       scanContractsJson: string
+      scanMode: string
       scanDelay: string
       scanMaxDuration: string
       implAddress: string
@@ -2828,6 +2840,7 @@ export namespace Prisma {
     readonly disperseAmount: FieldRef<"Config", 'String'>
     readonly disperseBatchSize: FieldRef<"Config", 'String'>
     readonly scanContractsJson: FieldRef<"Config", 'String'>
+    readonly scanMode: FieldRef<"Config", 'String'>
     readonly scanDelay: FieldRef<"Config", 'String'>
     readonly scanMaxDuration: FieldRef<"Config", 'String'>
     readonly implAddress: FieldRef<"Config", 'String'>
@@ -3240,6 +3253,7 @@ export namespace Prisma {
     disperseAmount: 'disperseAmount',
     disperseBatchSize: 'disperseBatchSize',
     scanContractsJson: 'scanContractsJson',
+    scanMode: 'scanMode',
     scanDelay: 'scanDelay',
     scanMaxDuration: 'scanMaxDuration',
     implAddress: 'implAddress',
@@ -3390,6 +3404,7 @@ export namespace Prisma {
     disperseAmount?: StringFilter<"Config"> | string
     disperseBatchSize?: StringFilter<"Config"> | string
     scanContractsJson?: StringFilter<"Config"> | string
+    scanMode?: StringFilter<"Config"> | string
     scanDelay?: StringFilter<"Config"> | string
     scanMaxDuration?: StringFilter<"Config"> | string
     implAddress?: StringFilter<"Config"> | string
@@ -3415,6 +3430,7 @@ export namespace Prisma {
     disperseAmount?: SortOrder
     disperseBatchSize?: SortOrder
     scanContractsJson?: SortOrder
+    scanMode?: SortOrder
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
@@ -3443,6 +3459,7 @@ export namespace Prisma {
     disperseAmount?: StringFilter<"Config"> | string
     disperseBatchSize?: StringFilter<"Config"> | string
     scanContractsJson?: StringFilter<"Config"> | string
+    scanMode?: StringFilter<"Config"> | string
     scanDelay?: StringFilter<"Config"> | string
     scanMaxDuration?: StringFilter<"Config"> | string
     implAddress?: StringFilter<"Config"> | string
@@ -3468,6 +3485,7 @@ export namespace Prisma {
     disperseAmount?: SortOrder
     disperseBatchSize?: SortOrder
     scanContractsJson?: SortOrder
+    scanMode?: SortOrder
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
@@ -3499,6 +3517,7 @@ export namespace Prisma {
     disperseAmount?: StringWithAggregatesFilter<"Config"> | string
     disperseBatchSize?: StringWithAggregatesFilter<"Config"> | string
     scanContractsJson?: StringWithAggregatesFilter<"Config"> | string
+    scanMode?: StringWithAggregatesFilter<"Config"> | string
     scanDelay?: StringWithAggregatesFilter<"Config"> | string
     scanMaxDuration?: StringWithAggregatesFilter<"Config"> | string
     implAddress?: StringWithAggregatesFilter<"Config"> | string
@@ -3601,6 +3620,7 @@ export namespace Prisma {
     disperseAmount?: string
     disperseBatchSize?: string
     scanContractsJson?: string
+    scanMode?: string
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
@@ -3626,6 +3646,7 @@ export namespace Prisma {
     disperseAmount?: string
     disperseBatchSize?: string
     scanContractsJson?: string
+    scanMode?: string
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
@@ -3651,6 +3672,7 @@ export namespace Prisma {
     disperseAmount?: StringFieldUpdateOperationsInput | string
     disperseBatchSize?: StringFieldUpdateOperationsInput | string
     scanContractsJson?: StringFieldUpdateOperationsInput | string
+    scanMode?: StringFieldUpdateOperationsInput | string
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
@@ -3676,6 +3698,7 @@ export namespace Prisma {
     disperseAmount?: StringFieldUpdateOperationsInput | string
     disperseBatchSize?: StringFieldUpdateOperationsInput | string
     scanContractsJson?: StringFieldUpdateOperationsInput | string
+    scanMode?: StringFieldUpdateOperationsInput | string
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
@@ -3701,6 +3724,7 @@ export namespace Prisma {
     disperseAmount?: string
     disperseBatchSize?: string
     scanContractsJson?: string
+    scanMode?: string
     scanDelay?: string
     scanMaxDuration?: string
     implAddress?: string
@@ -3726,6 +3750,7 @@ export namespace Prisma {
     disperseAmount?: StringFieldUpdateOperationsInput | string
     disperseBatchSize?: StringFieldUpdateOperationsInput | string
     scanContractsJson?: StringFieldUpdateOperationsInput | string
+    scanMode?: StringFieldUpdateOperationsInput | string
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
@@ -3751,6 +3776,7 @@ export namespace Prisma {
     disperseAmount?: StringFieldUpdateOperationsInput | string
     disperseBatchSize?: StringFieldUpdateOperationsInput | string
     scanContractsJson?: StringFieldUpdateOperationsInput | string
+    scanMode?: StringFieldUpdateOperationsInput | string
     scanDelay?: StringFieldUpdateOperationsInput | string
     scanMaxDuration?: StringFieldUpdateOperationsInput | string
     implAddress?: StringFieldUpdateOperationsInput | string
@@ -3914,6 +3940,7 @@ export namespace Prisma {
     disperseAmount?: SortOrder
     disperseBatchSize?: SortOrder
     scanContractsJson?: SortOrder
+    scanMode?: SortOrder
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
@@ -3939,6 +3966,7 @@ export namespace Prisma {
     disperseAmount?: SortOrder
     disperseBatchSize?: SortOrder
     scanContractsJson?: SortOrder
+    scanMode?: SortOrder
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder
@@ -3964,6 +3992,7 @@ export namespace Prisma {
     disperseAmount?: SortOrder
     disperseBatchSize?: SortOrder
     scanContractsJson?: SortOrder
+    scanMode?: SortOrder
     scanDelay?: SortOrder
     scanMaxDuration?: SortOrder
     implAddress?: SortOrder

@@ -16,6 +16,7 @@ import {
     Modal,
     Select,
     Steps,
+    Switch,
     Table,
     Tabs,
     Tag,
@@ -242,6 +243,7 @@ const Main = ({
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContracts, setScanContracts] = useState<ScanContractConfig[]>([])
     const [scanContractErrors, setScanContractErrors] = useState<Record<number, string>>({})
+    const [scanMode, setScanMode] = useState<'contract' | 'allBlocks'>('contract')
     const [disperseAmount, setDisperseAmount] = useState('')
     const [disperseBatchSize, setDisperseBatchSize] = useState<number>(10000)
     const [scanDelay, setScanDelay] = useState<number>(30)
@@ -388,6 +390,7 @@ const Main = ({
             } else if (cfg.scanContract) {
                 setScanContracts([{ address: cfg.scanContract }])
             }
+            if (cfg.scanMode === 'allBlocks') setScanMode('allBlocks')
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
@@ -734,6 +737,7 @@ const Main = ({
                     scanContracts: scanContracts
                         .filter((c) => c.address)
                         .map((c) => ({ address: c.address.trim() })),
+                    scanMode,
                     disperseAmount,
                     disperseBatchSize,
                     scanDelaySeconds: scanDelay,
@@ -1395,18 +1399,35 @@ const Main = ({
                     >
                         Cài đặt quét & airdrop (step 5.2 / 1.1)
                     </AntText>
-                    <Button
-                        size="small"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            const next = [...scanContracts, { address: '' }]
-                            setScanContracts(next)
-                            scheduleSave({ scanContractsJson: JSON.stringify(next) })
-                        }}
-                        disabled={running}
-                    >
-                        Thêm contract
-                    </Button>
+                    <Flex align="center" gap={3}>
+                        <Text fontSize="xs" color="gray.500">
+                            {scanMode === 'allBlocks' ? 'Quét toàn bộ block' : 'Quét contract'}
+                        </Text>
+                        <Switch
+                            size="small"
+                            checked={scanMode === 'allBlocks'}
+                            onChange={(checked) => {
+                                const next = checked ? 'allBlocks' : 'contract'
+                                setScanMode(next)
+                                scheduleSave({ scanMode: next })
+                            }}
+                            disabled={running}
+                        />
+                        {scanMode === 'contract' && (
+                            <Button
+                                size="small"
+                                icon={<PlusOutlined />}
+                                onClick={() => {
+                                    const next = [...scanContracts, { address: '' }]
+                                    setScanContracts(next)
+                                    scheduleSave({ scanContractsJson: JSON.stringify(next) })
+                                }}
+                                disabled={running}
+                            >
+                                Thêm contract
+                            </Button>
+                        )}
+                    </Flex>
                 </Flex>
                 <Flex align="center" gap={3} wrap="wrap" mb={3}>
                     <Text fontSize="sm" color="gray.400">
@@ -1456,7 +1477,13 @@ const Main = ({
                         addonAfter="s"
                     />
                 </Flex>
-                {scanContracts.length === 0 ? (
+                {scanMode === 'allBlocks' ? (
+                    <AntText type="secondary" style={{ fontSize: 12 }}>
+                        Mode quét toàn bộ block: lấy địa chỉ <code>from</code> của MỌI giao dịch trên
+                        block (không giới hạn contract cụ thể) — kho ví dùng chung key{' '}
+                        <code>ALL_BLOCKS</code>, tự chống trùng.
+                    </AntText>
+                ) : scanContracts.length === 0 ? (
                     <AntText type="secondary" style={{ fontSize: 12 }}>
                         Chưa cấu hình contract quét — nhấn "Thêm contract"
                     </AntText>
@@ -1565,7 +1592,9 @@ const Main = ({
                         </label>
                     </Flex>
                 </Flex>
-                {scanContracts.length === 0 ? (
+                {scanMode === 'allBlocks' ? (
+                    <ScanContractPanel contractAddress="ALL_BLOCKS" />
+                ) : scanContracts.length === 0 ? (
                     <AntText type="secondary" style={{ fontSize: 12 }}>
                         Chưa cấu hình contract quét — thêm contract ở trên
                     </AntText>
