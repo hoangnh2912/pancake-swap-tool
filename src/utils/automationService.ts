@@ -793,6 +793,17 @@ export async function runAutomation(
                     )
                 }
                 const actualSellAmt = swapBal.lt(sellAmt) ? swapBal : sellAmt
+
+                // Đảm bảo delay xuyên suốt — sell 90% cũng là 1 lệnh swap on-chain thật,
+                // phải tính vào cùng hệ thống delay với các lệnh 5.1 (không được bỏ qua)
+                if (params.swapDelayMs > 0 && lastSwapCompletedAt > 0) {
+                    const remaining = params.swapDelayMs - (Date.now() - lastSwapCompletedAt)
+                    if (remaining > 0) {
+                        onLog(`[6] Chờ ${Math.ceil(remaining / 1000)}s (đảm bảo delay ${params.swapDelayMs / 1000}s giữa các lệnh)...`)
+                        await raceStop(new Promise((r) => setTimeout(r, remaining)), params.shouldStop)
+                    }
+                }
+
                 const sellDeadline = Math.floor(Date.now() / 1000) + 600
                 await ensureApproval(
                     swapErc20,
@@ -812,6 +823,7 @@ export async function runAutomation(
                 )
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[6] ✓ Sold 90% | tx: ${tx.hash}`)
+                lastSwapCompletedAt = Date.now()
             } else {
                 onLog('[6] Bỏ qua (sellMintAmount = 0)')
             }
