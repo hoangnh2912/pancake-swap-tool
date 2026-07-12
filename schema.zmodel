@@ -34,6 +34,7 @@ model Config {
   solcVersion       String @default("0.8.27")
   swapCommandsJson  String @default("[]")
   swapDelay         String @default("0")
+  swapRepeat        String @default("1")
   transferBnbToMain String @default("")
   scanContract      String @default("")
   disperseAmount    String @default("")

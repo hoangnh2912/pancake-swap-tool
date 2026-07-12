@@ -240,6 +240,7 @@ const Main = ({
     >({})
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
+    const [swapRepeat, setSwapRepeat] = useState<number>(1)
     const [transferBnbToMain, setTransferBnbToMain] = useState('')
     const [scanContracts, setScanContracts] = useState<ScanContractConfig[]>([])
     const [scanContractErrors, setScanContractErrors] = useState<Record<number, string>>({})
@@ -380,6 +381,7 @@ const Main = ({
                 }
             }
             if (cfg.swapDelay) setSwapDelay(Number(cfg.swapDelay) || 0)
+            if (cfg.swapRepeat) setSwapRepeat(Number(cfg.swapRepeat) || 1)
             if (cfg.transferBnbToMain) setTransferBnbToMain(cfg.transferBnbToMain)
             if (cfg.scanContractsJson) {
                 try {
@@ -733,6 +735,7 @@ const Main = ({
                     tokens: valid as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
+                    swapRepeat: swapRepeat || 1,
                     transferBnbToMain,
                     scanContracts: scanContracts
                         .filter((c) => c.address)
@@ -1289,6 +1292,21 @@ const Main = ({
                         disabled={running}
                         style={{ width: 100 }}
                         addonAfter="s"
+                    />
+                    <Text fontSize="sm" color="gray.400" ml={4}>
+                        Lặp
+                    </Text>
+                    <InputNumber
+                        size="small"
+                        min={1}
+                        value={swapRepeat}
+                        onChange={(v) => {
+                            setSwapRepeat(v ?? 1)
+                            scheduleSave({ swapRepeat: String(v ?? 1) })
+                        }}
+                        disabled={running}
+                        style={{ width: 80 }}
+                        addonAfter="lần"
                     />
                     <Text fontSize="sm" color="gray.400" ml={4}>
                         BNB chuyển về ví chủ (step 7)

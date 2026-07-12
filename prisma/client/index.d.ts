@@ -2006,6 +2006,7 @@ export namespace Prisma {
     solcVersion: string | null
     swapCommandsJson: string | null
     swapDelay: string | null
+    swapRepeat: string | null
     transferBnbToMain: string | null
     scanContract: string | null
     disperseAmount: string | null
@@ -2032,6 +2033,7 @@ export namespace Prisma {
     solcVersion: string | null
     swapCommandsJson: string | null
     swapDelay: string | null
+    swapRepeat: string | null
     transferBnbToMain: string | null
     scanContract: string | null
     disperseAmount: string | null
@@ -2058,6 +2060,7 @@ export namespace Prisma {
     solcVersion: number
     swapCommandsJson: number
     swapDelay: number
+    swapRepeat: number
     transferBnbToMain: number
     scanContract: number
     disperseAmount: number
@@ -2086,6 +2089,7 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    swapRepeat?: true
     transferBnbToMain?: true
     scanContract?: true
     disperseAmount?: true
@@ -2112,6 +2116,7 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    swapRepeat?: true
     transferBnbToMain?: true
     scanContract?: true
     disperseAmount?: true
@@ -2138,6 +2143,7 @@ export namespace Prisma {
     solcVersion?: true
     swapCommandsJson?: true
     swapDelay?: true
+    swapRepeat?: true
     transferBnbToMain?: true
     scanContract?: true
     disperseAmount?: true
@@ -2237,6 +2243,7 @@ export namespace Prisma {
     solcVersion: string
     swapCommandsJson: string
     swapDelay: string
+    swapRepeat: string
     transferBnbToMain: string
     scanContract: string
     disperseAmount: string
@@ -2280,6 +2287,7 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    swapRepeat?: boolean
     transferBnbToMain?: boolean
     scanContract?: boolean
     disperseAmount?: boolean
@@ -2306,6 +2314,7 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    swapRepeat?: boolean
     transferBnbToMain?: boolean
     scanContract?: boolean
     disperseAmount?: boolean
@@ -2332,6 +2341,7 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    swapRepeat?: boolean
     transferBnbToMain?: boolean
     scanContract?: boolean
     disperseAmount?: boolean
@@ -2358,6 +2368,7 @@ export namespace Prisma {
     solcVersion?: boolean
     swapCommandsJson?: boolean
     swapDelay?: boolean
+    swapRepeat?: boolean
     transferBnbToMain?: boolean
     scanContract?: boolean
     disperseAmount?: boolean
@@ -2372,7 +2383,7 @@ export namespace Prisma {
     stepStatesJson?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2389,6 +2400,7 @@ export namespace Prisma {
       solcVersion: string
       swapCommandsJson: string
       swapDelay: string
+      swapRepeat: string
       transferBnbToMain: string
       scanContract: string
       disperseAmount: string
@@ -2835,6 +2847,7 @@ export namespace Prisma {
     readonly solcVersion: FieldRef<"Config", 'String'>
     readonly swapCommandsJson: FieldRef<"Config", 'String'>
     readonly swapDelay: FieldRef<"Config", 'String'>
+    readonly swapRepeat: FieldRef<"Config", 'String'>
     readonly transferBnbToMain: FieldRef<"Config", 'String'>
     readonly scanContract: FieldRef<"Config", 'String'>
     readonly disperseAmount: FieldRef<"Config", 'String'>
@@ -3248,6 +3261,7 @@ export namespace Prisma {
     solcVersion: 'solcVersion',
     swapCommandsJson: 'swapCommandsJson',
     swapDelay: 'swapDelay',
+    swapRepeat: 'swapRepeat',
     transferBnbToMain: 'transferBnbToMain',
     scanContract: 'scanContract',
     disperseAmount: 'disperseAmount',
@@ -3399,6 +3413,7 @@ export namespace Prisma {
     solcVersion?: StringFilter<"Config"> | string
     swapCommandsJson?: StringFilter<"Config"> | string
     swapDelay?: StringFilter<"Config"> | string
+    swapRepeat?: StringFilter<"Config"> | string
     transferBnbToMain?: StringFilter<"Config"> | string
     scanContract?: StringFilter<"Config"> | string
     disperseAmount?: StringFilter<"Config"> | string
@@ -3425,6 +3440,7 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    swapRepeat?: SortOrder
     transferBnbToMain?: SortOrder
     scanContract?: SortOrder
     disperseAmount?: SortOrder
@@ -3454,6 +3470,7 @@ export namespace Prisma {
     solcVersion?: StringFilter<"Config"> | string
     swapCommandsJson?: StringFilter<"Config"> | string
     swapDelay?: StringFilter<"Config"> | string
+    swapRepeat?: StringFilter<"Config"> | string
     transferBnbToMain?: StringFilter<"Config"> | string
     scanContract?: StringFilter<"Config"> | string
     disperseAmount?: StringFilter<"Config"> | string
@@ -3480,6 +3497,7 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    swapRepeat?: SortOrder
     transferBnbToMain?: SortOrder
     scanContract?: SortOrder
     disperseAmount?: SortOrder
@@ -3512,6 +3530,7 @@ export namespace Prisma {
     solcVersion?: StringWithAggregatesFilter<"Config"> | string
     swapCommandsJson?: StringWithAggregatesFilter<"Config"> | string
     swapDelay?: StringWithAggregatesFilter<"Config"> | string
+    swapRepeat?: StringWithAggregatesFilter<"Config"> | string
     transferBnbToMain?: StringWithAggregatesFilter<"Config"> | string
     scanContract?: StringWithAggregatesFilter<"Config"> | string
     disperseAmount?: StringWithAggregatesFilter<"Config"> | string
@@ -3615,6 +3634,7 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    swapRepeat?: string
     transferBnbToMain?: string
     scanContract?: string
     disperseAmount?: string
@@ -3641,6 +3661,7 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    swapRepeat?: string
     transferBnbToMain?: string
     scanContract?: string
     disperseAmount?: string
@@ -3667,6 +3688,7 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    swapRepeat?: StringFieldUpdateOperationsInput | string
     transferBnbToMain?: StringFieldUpdateOperationsInput | string
     scanContract?: StringFieldUpdateOperationsInput | string
     disperseAmount?: StringFieldUpdateOperationsInput | string
@@ -3693,6 +3715,7 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    swapRepeat?: StringFieldUpdateOperationsInput | string
     transferBnbToMain?: StringFieldUpdateOperationsInput | string
     scanContract?: StringFieldUpdateOperationsInput | string
     disperseAmount?: StringFieldUpdateOperationsInput | string
@@ -3719,6 +3742,7 @@ export namespace Prisma {
     solcVersion?: string
     swapCommandsJson?: string
     swapDelay?: string
+    swapRepeat?: string
     transferBnbToMain?: string
     scanContract?: string
     disperseAmount?: string
@@ -3745,6 +3769,7 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    swapRepeat?: StringFieldUpdateOperationsInput | string
     transferBnbToMain?: StringFieldUpdateOperationsInput | string
     scanContract?: StringFieldUpdateOperationsInput | string
     disperseAmount?: StringFieldUpdateOperationsInput | string
@@ -3771,6 +3796,7 @@ export namespace Prisma {
     solcVersion?: StringFieldUpdateOperationsInput | string
     swapCommandsJson?: StringFieldUpdateOperationsInput | string
     swapDelay?: StringFieldUpdateOperationsInput | string
+    swapRepeat?: StringFieldUpdateOperationsInput | string
     transferBnbToMain?: StringFieldUpdateOperationsInput | string
     scanContract?: StringFieldUpdateOperationsInput | string
     disperseAmount?: StringFieldUpdateOperationsInput | string
@@ -3935,6 +3961,7 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    swapRepeat?: SortOrder
     transferBnbToMain?: SortOrder
     scanContract?: SortOrder
     disperseAmount?: SortOrder
@@ -3961,6 +3988,7 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    swapRepeat?: SortOrder
     transferBnbToMain?: SortOrder
     scanContract?: SortOrder
     disperseAmount?: SortOrder
@@ -3987,6 +4015,7 @@ export namespace Prisma {
     solcVersion?: SortOrder
     swapCommandsJson?: SortOrder
     swapDelay?: SortOrder
+    swapRepeat?: SortOrder
     transferBnbToMain?: SortOrder
     scanContract?: SortOrder
     disperseAmount?: SortOrder

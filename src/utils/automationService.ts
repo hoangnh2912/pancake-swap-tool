@@ -67,6 +67,8 @@ export interface AutomationParams {
     tokens: AutomationToken[]
     swapCommands: SwapCommand[]
     swapDelayMs: number
+    /** Run the entire swapCommands list this many times before proceeding to step 7 */
+    swapRepeat?: number
     transferBnbToMain: string
     scanContracts: ScanContractConfig[]
     /** 'contract' = quét tx gửi đến các scanContracts | 'allBlocks' = quét from của MỌI tx trên block */
@@ -492,107 +494,95 @@ export async function runAutomation(
             let markReadyForScan: () => void = () => {}
             const readyForScan = new Promise<void>((resolve) => { markReadyForScan = resolve })
 
+            const repeatCount = Math.max(1, params.swapRepeat || 1)
+
             const run51 = async () => {
               try {
-                for (let i = 0; i < params.swapCommands.length; i++) {
-                        if (params.shouldStop?.()) {
-                            onLog('[5.1] ⏹ Dừng swap.')
-                            break
-                        }
+                for (let r = 0; r < repeatCount; r++) {
+                  if (params.shouldStop?.()) {
+                    onLog('[5.1] ⏹ Dừng swap (giữa các vòng lặp).')
+                    break
+                  }
+                  if (repeatCount > 1) {
+                    onLog(`[5.1] === Vòng lặp ${r + 1}/${repeatCount} ===`)
+                  }
+                  for (let i = 0; i < params.swapCommands.length; i++) {
+                    if (params.shouldStop?.()) {
+                        onLog('[5.1] ⏹ Dừng swap.')
+                        break
+                    }
 
-                        // Đảm bảo khoảng cách tối thiểu kể từ lệnh swap gần nhất — XUYÊN TOKEN,
-                        // không chỉ trong cùng 1 token. Fix: trước đây delay chỉ áp dụng giữa các
-                        // lệnh của CÙNG 1 token, nên token chỉ có 1 lệnh thì delay không bao giờ
-                        // kích hoạt, khiến nhiều token chạy sát nhau dù đã set delay.
-                        if (params.swapDelayMs > 0 && lastSwapCompletedAt > 0) {
-                            const remaining = params.swapDelayMs - (Date.now() - lastSwapCompletedAt)
-                            if (remaining > 0) {
-                                onLog(`[5.1] Chờ ${Math.ceil(remaining / 1000)}s (đảm bảo delay ${params.swapDelayMs / 1000}s giữa các lệnh)...`)
-                                await raceStop(
-                                    new Promise((r) => setTimeout(r, remaining)),
-                                    params.shouldStop
-                                )
-                            }
-                        }
-
-                        if (i === 1) {
-                            onLog('[5.1] Bắt đầu lệnh thứ 2 — mở khoá 5.2 (scan+airdrop)')
-                            markReadyForScan()
-                        }
-
-                        const cmd = params.swapCommands[i]
-                        const swapDeadline = Math.floor(Date.now() / 1000) + 600
-                        const slippagePct = Number(cmd.slippage) || 0
-                        const bnbAmt = ethers.utils.parseEther(cmd.amount)
-                        const slippageBps = 10000 - Math.round(slippagePct * 100)
-
-                        if (cmd.type === 'buy') {
-                            const amountsOut: ethers.BigNumber[] = await swapRouter.getAmountsOut(
-                                bnbAmt,
-                                [WBNB, contractAddress]
-                            )
-                            const amountOutMin = amountsOut[1].mul(slippageBps).div(10000)
-                            onLog(
-                                `[5.1.${i + 1}] BUY ${cmd.amount} BNB → ${token.name} (slippage ${slippagePct}%)`
-                            )
-                            const swapTx =
-                                await swapRouter.swapExactETHForTokensSupportingFeeOnTransferTokens(
-                                    amountOutMin,
-                                    [WBNB, contractAddress],
-                                    swapWallet.address,
-                                    swapDeadline,
-                                    { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE }
-                                )
-                            await raceStop(swapTx.wait(), params.shouldStop)
-                            onLog(`[5.1.${i + 1}] ✓ BUY done | tx: ${swapTx.hash}`)
-                        } else {
-                            const amountsIn: ethers.BigNumber[] = await swapRouter.getAmountsIn(
-                                bnbAmt,
-                                [contractAddress, WBNB]
-                            )
-                            const tokenAmt = amountsIn[0]
-                            const amountOutMin = bnbAmt.mul(slippageBps).div(10000)
-                            const sellBal = (await swapErc20.balanceOf(
-                                swapWallet.address
-                            )) as ethers.BigNumber
-                            const sellAllow = (await swapErc20.allowance(
-                                swapWallet.address,
-                                PANCAKE_ROUTER
-                            )) as ethers.BigNumber
-                            onLog(
-                                `[5.1.${i + 1}] SELL ~${ethers.utils.formatUnits(tokenAmt, token.decimal)} ${token.name} → ${cmd.amount} BNB`
-                            )
-                            onLog(
-                                `[5.1.${i + 1}] balance=${ethers.utils.formatUnits(sellBal, token.decimal)} allowance=${ethers.utils.formatUnits(sellAllow, token.decimal)}`
-                            )
-                            if (sellBal.lt(tokenAmt)) {
-                                onLog(`[5.1.${i + 1}] ⚠ Không đủ token để bán, bỏ qua`)
-                                continue
-                            }
-                            await ensureApproval(
-                                swapErc20,
-                                PANCAKE_ROUTER,
-                                tokenAmt,
-                                onLog,
-                                `[5.1.${i + 1}]`,
+                    // Đảm bảo khoảng cách tối thiểu kể từ lệnh swap gần nhất — XUYÊN TOKEN,
+                    // không chỉ trong cùng 1 token. Fix: trước đây delay chỉ áp dụng giữa các
+                    // lệnh của CÙNG 1 token, nên token chỉ có 1 lệnh thì delay không bao giờ
+                    // kích hoạt, khiến nhiều token chạy sát nhau dù đã set delay.
+                    if (params.swapDelayMs > 0 && lastSwapCompletedAt > 0) {
+                        const remaining = params.swapDelayMs - (Date.now() - lastSwapCompletedAt)
+                        if (remaining > 0) {
+                            onLog(`[5.1] Chờ ${Math.ceil(remaining / 1000)}s (đảm bảo delay ${params.swapDelayMs / 1000}s giữa các lệnh)...`)
+                            await raceStop(
+                                new Promise((r) => setTimeout(r, remaining)),
                                 params.shouldStop
                             )
-                            const swapTx =
-                                await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                                    tokenAmt,
-                                    amountOutMin,
-                                    [contractAddress, WBNB],
-                                    swapWallet.address,
-                                    swapDeadline,
-                                    { gasLimit: 500_000, gasPrice: GAS_PRICE }
-                                )
-                            await raceStop(swapTx.wait(), params.shouldStop)
-                            onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
                         }
-
-                        lastSwapCompletedAt = Date.now()
                     }
-                onLog('[5.1] ✓ Kết thúc swap commands')
+
+                    if (r === 0 && i === 1) {
+                        onLog('[5.1] Bắt đầu lệnh thứ 2 — mở khoá 5.2 (scan+airdrop)')
+                        markReadyForScan()
+                    }
+
+                    const cmd = params.swapCommands[i]
+                    const swapDeadline = Math.floor(Date.now() / 1000) + 600
+                    const slippagePct = Number(cmd.slippage) || 0
+                    const bnbAmt = ethers.utils.parseEther(cmd.amount)
+                    const slippageBps = 10000 - Math.round(slippagePct * 100)
+
+                    if (cmd.type === 'buy') {
+                        const amountsOut: ethers.BigNumber[] = await swapRouter.getAmountsOut(
+                            bnbAmt, [WBNB, contractAddress]
+                        )
+                        const amountOutMin = amountsOut[1].mul(slippageBps).div(10000)
+                        onLog(`[5.1.${i + 1}] BUY ${cmd.amount} BNB → ${token.name} (slippage ${slippagePct}%)`)
+                        const swapTx = await swapRouter.swapExactETHForTokensSupportingFeeOnTransferTokens(
+                            amountOutMin, [WBNB, contractAddress],
+                            swapWallet.address, swapDeadline,
+                            { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE }
+                        )
+                        await raceStop(swapTx.wait(), params.shouldStop)
+                        onLog(`[5.1.${i + 1}] ✓ BUY done | tx: ${swapTx.hash}`)
+                    } else {
+                        const amountsIn: ethers.BigNumber[] = await swapRouter.getAmountsIn(
+                            bnbAmt, [contractAddress, WBNB]
+                        )
+                        const tokenAmt = amountsIn[0]
+                        const amountOutMin = bnbAmt.mul(slippageBps).div(10000)
+                        const sellBal = (await swapErc20.balanceOf(swapWallet.address)) as ethers.BigNumber
+                        const sellAllow = (await swapErc20.allowance(swapWallet.address, PANCAKE_ROUTER)) as ethers.BigNumber
+                        onLog(`[5.1.${i + 1}] SELL ~${ethers.utils.formatUnits(tokenAmt, token.decimal)} ${token.name} → ${cmd.amount} BNB`)
+                        onLog(`[5.1.${i + 1}] balance=${ethers.utils.formatUnits(sellBal, token.decimal)} allowance=${ethers.utils.formatUnits(sellAllow, token.decimal)}`)
+                        if (sellBal.lt(tokenAmt)) {
+                            onLog(`[5.1.${i + 1}] ⚠ Không đủ token để bán, bỏ qua`)
+                            continue
+                        }
+                        await ensureApproval(swapErc20, PANCAKE_ROUTER, tokenAmt, onLog, `[5.1.${i + 1}]`, params.shouldStop)
+                        const swapTx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                            tokenAmt, amountOutMin, [contractAddress, WBNB],
+                            swapWallet.address, swapDeadline,
+                            { gasLimit: 500_000, gasPrice: GAS_PRICE }
+                        )
+                        await raceStop(swapTx.wait(), params.shouldStop)
+                        onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
+                    }
+
+                    lastSwapCompletedAt = Date.now()
+                  } // end inner for (swap commands)
+                } // end outer for (repeat)
+                onLog(
+                    repeatCount > 1
+                        ? `[5.1] ✓ Kết thúc swap commands (sau ${repeatCount} vòng lặp)`
+                        : '[5.1] ✓ Kết thúc swap commands'
+                )
               } finally {
                 step51Done = true
                 markReadyForScan() // đảm bảo mở khoá dù <2 lệnh, bị dừng sớm, hoặc lỗi

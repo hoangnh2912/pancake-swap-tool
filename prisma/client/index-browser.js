@@ -141,6 +141,7 @@ exports.Prisma.ConfigScalarFieldEnum = {
   solcVersion: 'solcVersion',
   swapCommandsJson: 'swapCommandsJson',
   swapDelay: 'swapDelay',
+  swapRepeat: 'swapRepeat',
   transferBnbToMain: 'transferBnbToMain',
   scanContract: 'scanContract',
   disperseAmount: 'disperseAmount',
