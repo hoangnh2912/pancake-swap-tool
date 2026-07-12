@@ -1309,7 +1309,7 @@ const Main = ({
                 <Table
                     dataSource={swapCommands}
                     rowKey="id"
-                    pagination={false}
+                    pagination={{ pageSize: 10, showSizeChanger: false, showTotal: (t) => `${t} lệnh` }}
                     size="small"
                     locale={{ emptyText: 'Chưa có lệnh swap' }}
                     columns={[
