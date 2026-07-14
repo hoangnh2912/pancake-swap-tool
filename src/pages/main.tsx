@@ -430,6 +430,25 @@ const Main = ({
         }, 800)
     }, [tabId])
 
+    // Auto-fetch Chain ID từ RPC (debounce 800ms sau khi ngừng gõ)
+    useEffect(() => {
+        const urls = parseRpcList(rpcList)
+        if (urls.length === 0) return
+        const timer = setTimeout(() => {
+            buildProvider(urls)
+                .getNetwork()
+                .then((net) => {
+                    const id = String(net.chainId)
+                    setChainId(id)
+                    scheduleSave({ chainId: id })
+                })
+                .catch(() => {
+                    /* RPC không phản hồi, giữ nguyên chainId hiện tại */
+                })
+        }, 800)
+        return () => clearTimeout(timer)
+    }, [rpcList, scheduleSave])
+
     const logIdRef = useRef(0)
     const swapIdRef = useRef(1)
     const logSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -1064,10 +1083,10 @@ const Main = ({
                                 scheduleSave({ rpc: e.target.value })
                             }}
                             placeholder={'https://bsc.drpc.org\nhttps://bsc-rpc.publicnode.com'}
-                            autoSize={{ minRows: 2, maxRows: 6 }}
+                            autoSize={{ minRows: 1, maxRows: 6 }}
                             style={{ flex: 1, fontFamily: 'monospace', fontSize: 12 }}
                         />
-                        <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right">
+                        <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right" alignSelf="center">
                             Chain ID
                         </Text>
                         <Input
@@ -1077,9 +1096,15 @@ const Main = ({
                                 scheduleSave({ chainId: e.target.value })
                             }}
                             placeholder="56"
-                            style={{ width: 80 }}
+                            style={{ width: 80, alignSelf: 'center' }}
                         />
-                        <Text fontSize="sm" color="gray.400" minW="90px" textAlign="right">
+                        <Text
+                            fontSize="sm"
+                            color="gray.400"
+                            minW="90px"
+                            textAlign="right"
+                            alignSelf="center"
+                        >
                             Gas Price (Gwei)
                         </Text>
                         <Input
@@ -1089,7 +1114,7 @@ const Main = ({
                                 scheduleSave({ gasPriceGwei: e.target.value })
                             }}
                             placeholder="0.05"
-                            style={{ width: 80 }}
+                            style={{ width: 80, alignSelf: 'center' }}
                         />
                     </Flex>
 
