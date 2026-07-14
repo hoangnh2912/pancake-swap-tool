@@ -49,6 +49,12 @@ import { findWalletConflict, registerRunningWallet, unregisterRunningWallet } fr
 
 const { Title, Text: AntText, Link } = Typography
 
+const EXPLORER_BY_CHAIN: Record<number, string> = {
+    56: 'https://bscscan.com',
+    97: 'https://testnet.bscscan.com',
+}
+const explorerBaseUrl = (chainId: number) => EXPLORER_BY_CHAIN[chainId] ?? EXPLORER_BY_CHAIN[56]
+
 type RowStatus = 'idle' | 'running' | 'success' | 'error'
 
 interface TokenRow {
@@ -223,6 +229,7 @@ const Main = ({
 }) => {
     const [rpcList, setRpcList] = useState('https://bsc.drpc.org')
     const [chainId, setChainId] = useState('56')
+    const [gasPriceGwei, setGasPriceGwei] = useState('0.05')
     const [mainKey, setMainKey] = useState('')
     const [swapKey, setSwapKey] = useState('')
     const [mintKey, setMintKey] = useState('')
@@ -348,6 +355,7 @@ const Main = ({
             if (!cfg) return
             if (cfg.rpc) setRpcList(cfg.rpc)
             if (cfg.chainId) setChainId(cfg.chainId)
+            if (cfg.gasPriceGwei) setGasPriceGwei(cfg.gasPriceGwei)
             if (cfg.mainKey) setMainKey(cfg.mainKey)
             if (cfg.swapKey) setSwapKey(cfg.swapKey)
             if (cfg.mintKey) setMintKey(cfg.mintKey)
@@ -727,6 +735,7 @@ const Main = ({
                 {
                     rpcList: rpcUrls,
                     chainId: Number(chainId) || 56,
+                    gasPriceGwei: Number(gasPriceGwei) || 0.05,
                     mainPrivateKey: normalizeKey(mainKey),
                     swapPrivateKey: normalizeKey(swapKey),
                     mintPrivateKey: normalizeKey(mintKey),
@@ -795,7 +804,7 @@ const Main = ({
                     {row.contractAddress && (
                         <Tooltip title={row.contractAddress}>
                             <Link
-                                href={`https://bscscan.com/address/${row.contractAddress}`}
+                                href={`${explorerBaseUrl(Number(chainId) || 56)}/address/${row.contractAddress}`}
                                 target="_blank"
                                 style={{ fontSize: 11 }}
                             >
@@ -1068,6 +1077,18 @@ const Main = ({
                                 scheduleSave({ chainId: e.target.value })
                             }}
                             placeholder="56"
+                            style={{ width: 80 }}
+                        />
+                        <Text fontSize="sm" color="gray.400" minW="90px" textAlign="right">
+                            Gas Price (Gwei)
+                        </Text>
+                        <Input
+                            value={gasPriceGwei}
+                            onChange={(e) => {
+                                setGasPriceGwei(e.target.value)
+                                scheduleSave({ gasPriceGwei: e.target.value })
+                            }}
+                            placeholder="0.05"
                             style={{ width: 80 }}
                         />
                     </Flex>
@@ -1697,7 +1718,7 @@ const Main = ({
                                         {contractAddress && (
                                             <Tooltip title={contractAddress}>
                                                 <Link
-                                                    href={`https://bscscan.com/address/${contractAddress}`}
+                                                    href={`${explorerBaseUrl(Number(chainId) || 56)}/address/${contractAddress}`}
                                                     target="_blank"
                                                     style={{ fontSize: 11 }}
                                                 >

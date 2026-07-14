@@ -2,8 +2,6 @@ import { ethers } from 'ethers'
 import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
-const GAS_PRICE = ethers.BigNumber.from(50_000_000)
-
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
     56: {
         router: '0x10ed43c718714eb63d5aa57b78b54704e256024e',
@@ -64,6 +62,8 @@ export interface AutomationParams {
     abi: any[]
     bytecode: string
     chainId: number
+    /** Gas price in Gwei for all transactions. Defaults to 0.05 Gwei. */
+    gasPriceGwei?: number
     tokens: AutomationToken[]
     swapCommands: SwapCommand[]
     swapDelayMs: number
@@ -139,6 +139,7 @@ async function ensureWhitelisted(
     address: string,
     onLog: (msg: string) => void,
     label: string,
+    gasPrice: ethers.BigNumber,
     shouldStop?: () => boolean
 ): Promise<void> {
     const already: boolean = await contract.ws(address)
@@ -146,7 +147,7 @@ async function ensureWhitelisted(
         onLog(`${label} ${address.slice(0, 8)}… đã whitelist, bỏ qua`)
         return
     }
-    const tx: ethers.ContractTransaction = await contract.setW(address, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+    const tx: ethers.ContractTransaction = await contract.setW(address, { gasLimit: 100_000, gasPrice })
     await raceStop(tx.wait(), shouldStop)
     onLog(`${label} ✓ Whitelisted ${address.slice(0, 8)}… | tx: ${tx.hash}`)
 }
@@ -157,6 +158,7 @@ async function ensureApproval(
     required: ethers.BigNumber,
     onLog: (msg: string) => void,
     label: string,
+    gasPrice: ethers.BigNumber,
     shouldStop?: () => boolean
 ): Promise<void> {
     const owner: string = await tokenContract.signer.getAddress()
@@ -168,7 +170,7 @@ async function ensureApproval(
     const tx: ethers.ContractTransaction = await tokenContract.approve(
         spender,
         ethers.constants.MaxUint256,
-        { gasLimit: 100_000, gasPrice: GAS_PRICE }
+        { gasLimit: 100_000, gasPrice }
     )
     await raceStop(tx.wait(), shouldStop)
     onLog(`${label} ✓ Approved (MaxUint256) | tx: ${tx.hash}`)
@@ -181,10 +183,16 @@ export async function runAutomation(
     onStepChange: OnStepChange,
     onScanLog?: (msg: string) => void
 ): Promise<void> {
-    const chainCfg = CHAIN_CONFIG[params.chainId] ?? CHAIN_CONFIG[56]
+    const chainCfg = CHAIN_CONFIG[params.chainId]
+    if (!chainCfg) {
+        throw new Error(
+            `Chain ID ${params.chainId} chưa được hỗ trợ (chỉ hỗ trợ 56 - BSC Mainnet, 97 - BSC Testnet)`
+        )
+    }
     const PANCAKE_ROUTER = chainCfg.router
     const PANCAKE_FACTORY = chainCfg.factory
     const WBNB = chainCfg.wbnb
+    const gasPrice = ethers.utils.parseUnits(String(params.gasPriceGwei ?? 0.05), 'gwei')
 
     const provider = buildProvider(params.rpcList)
     const mainWallet = new ethers.Wallet(params.mainPrivateKey, provider)
@@ -266,7 +274,7 @@ export async function runAutomation(
                     params.abi, params.bytecode, mainWallet
                 )
                 const implDeployed = await contractFactory.deploy(
-                    { gasLimit: 10_000_000, gasPrice: GAS_PRICE }
+                    { gasLimit: 10_000_000, gasPrice: gasPrice }
                 )
                 await raceStop(implDeployed.deployed(), params.shouldStop)
                 implAddress = implDeployed.address
@@ -286,7 +294,7 @@ export async function runAutomation(
             const proxyTx = await mainWallet.sendTransaction({
                 data: proxyBytecode,
                 gasLimit: 150_000,
-                gasPrice: GAS_PRICE,
+                gasPrice: gasPrice,
             })
             const proxyReceipt = await raceStop(proxyTx.wait(), params.shouldStop)
             contractAddress = proxyReceipt.contractAddress!
@@ -309,7 +317,7 @@ export async function runAutomation(
                 taxSell,
                 params.chainId,
                 defaultAirdropAmt,
-                { gasLimit: 500_000, gasPrice: GAS_PRICE }
+                { gasLimit: 500_000, gasPrice: gasPrice }
             )
             await raceStop(initTx.wait(), params.shouldStop)
             onLog(`[1] ✓ Initialized | tx: ${initTx.hash}`)
@@ -325,8 +333,8 @@ export async function runAutomation(
             // ── Step 1: Set Whitelist ─────────────────────────────────────────
             currentStep = 1
             onStepChange(token.id, 1, 'process')
-            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', params.shouldStop)
-            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', params.shouldStop)
+            await ensureWhitelisted(deployed, swapWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
+            await ensureWhitelisted(deployed, mintWallet.address, onLog, '[2]', gasPrice, params.shouldStop)
             onStepChange(token.id, 1, 'finish')
             checkStop()
 
@@ -341,7 +349,7 @@ export async function runAutomation(
                     mainWallet
                 )
                 onLog(`[3] Approve(mintWallet, ${token.mintAmount} tokens)`)
-                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                const tx = await mintForMint.Approve(mintWallet.address, approveValMint, { gasLimit: 200_000, gasPrice: gasPrice })
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[3] ✓ Minted to mint wallet | tx: ${tx.hash}`)
             }
@@ -361,7 +369,7 @@ export async function runAutomation(
                 throw new Error(
                     `[4] Khong du BNB: can ${token.liquidityBNB}, co ${ethers.utils.formatEther(bnbBal)}`
                 )
-            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', params.shouldStop)
+            await ensureApproval(erc20, PANCAKE_ROUTER, liqTokenRaw, onLog, '[4]', gasPrice, params.shouldStop)
 
             const deadline = Math.floor(Date.now() / 1000) + 600
             const router = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, mainWallet)
@@ -373,7 +381,7 @@ export async function runAutomation(
                 mainWallet.address,
                 deadline,
             ] as const
-            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: GAS_PRICE }
+            const liqOverride = { value: liqBNB, gasLimit: 6_000_000, gasPrice: gasPrice }
 
             onLog(`[4] addLiquidityETH(${token.liquidityToken} tokens + ${token.liquidityBNB} BNB)`)
             let tx = await router.addLiquidityETH(...liqArgs, liqOverride)
@@ -425,7 +433,7 @@ export async function runAutomation(
                             ['function Approve(address from, uint256 _value) external returns (bool)'],
                             mainWallet
                         )
-                        tx = await mintContract11.Approve(mainWallet.address, approveVal11, { gasLimit: 200_000, gasPrice: GAS_PRICE })
+                        tx = await mintContract11.Approve(mainWallet.address, approveVal11, { gasLimit: 200_000, gasPrice: gasPrice })
                         await raceStop(tx.wait(), params.shouldStop)
                         onLog(`[1.1] ✓ Minted | tx: ${tx.hash}`)
                     }
@@ -437,7 +445,7 @@ export async function runAutomation(
                         const BATCH_SIZE = params.disperseBatchSize ?? 10000
                         const totalAmt = disperseAmt.mul(funded.length)
                         onLog(`[1.1] Transfer ${ethers.utils.formatUnits(totalAmt, token.decimal)} tokens → mintWallet`)
-                        tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: GAS_PRICE })
+                        tx = await deployed.transfer(mintWallet.address, totalAmt, { gasLimit: 100_000, gasPrice: gasPrice })
                         await raceStop(tx.wait(), params.shouldStop)
                         onLog(`[1.1] ✓ Transferred to mintWallet | tx: ${tx.hash}`)
 
@@ -450,7 +458,7 @@ export async function runAutomation(
                             tx = await deployed.connect(mintWallet).airdrop(
                                 batch,
                                 disperseAmt,
-                                { gasLimit: gasLimit11, gasPrice: GAS_PRICE }
+                                { gasLimit: gasLimit11, gasPrice: gasPrice }
                             )
                             await raceStop(tx.wait(), params.shouldStop)
                             onLog(`[1.1] ✓ Airdrop Batch ${batchNum} done | tx: ${tx.hash}`)
@@ -547,7 +555,7 @@ export async function runAutomation(
                         const swapTx = await swapRouter.swapExactETHForTokensSupportingFeeOnTransferTokens(
                             amountOutMin, [WBNB, contractAddress],
                             swapWallet.address, swapDeadline,
-                            { value: bnbAmt, gasLimit: 500_000, gasPrice: GAS_PRICE }
+                            { value: bnbAmt, gasLimit: 500_000, gasPrice: gasPrice }
                         )
                         await raceStop(swapTx.wait(), params.shouldStop)
                         onLog(`[5.1.${i + 1}] ✓ BUY done | tx: ${swapTx.hash}`)
@@ -565,11 +573,11 @@ export async function runAutomation(
                             onLog(`[5.1.${i + 1}] ⚠ Không đủ token để bán, bỏ qua`)
                             continue
                         }
-                        await ensureApproval(swapErc20, PANCAKE_ROUTER, tokenAmt, onLog, `[5.1.${i + 1}]`, params.shouldStop)
+                        await ensureApproval(swapErc20, PANCAKE_ROUTER, tokenAmt, onLog, `[5.1.${i + 1}]`, gasPrice, params.shouldStop)
                         const swapTx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
                             tokenAmt, amountOutMin, [contractAddress, WBNB],
                             swapWallet.address, swapDeadline,
-                            { gasLimit: 500_000, gasPrice: GAS_PRICE }
+                            { gasLimit: 500_000, gasPrice: gasPrice }
                         )
                         await raceStop(swapTx.wait(), params.shouldStop)
                         onLog(`[5.1.${i + 1}] ✓ SELL done | tx: ${swapTx.hash}`)
@@ -644,7 +652,7 @@ export async function runAutomation(
                     const tx = await deployed.connect(scanSigner).airdrop(
                         batch,
                         disperseAmt,
-                        { gasLimit: gasLimit52, gasPrice: GAS_PRICE }
+                        { gasLimit: gasLimit52, gasPrice: gasPrice }
                     )
                     await tx.wait()
                     onLog(`[5.2] ✓ Airdrop batch ${Math.floor(bi / batchSize) + 1}: ${batch.length} ví | tx: ${tx.hash}`)
@@ -820,7 +828,7 @@ export async function runAutomation(
                 const approveValue = ethers.utils.parseUnits(token.sellMintAmount, Math.max(0, token.decimal - 9))
                 tx = await mintContract.Approve(swapWallet.address, approveValue, {
                     gasLimit: 200_000,
-                    gasPrice: GAS_PRICE,
+                    gasPrice: gasPrice,
                 })
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[6] ✓ Minted to swap wallet | tx: ${tx.hash}`)
@@ -865,6 +873,7 @@ export async function runAutomation(
                     actualSellAmt,
                     onLog,
                     '[6]',
+                    gasPrice,
                     params.shouldStop
                 )
                 tx = await swapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -873,7 +882,7 @@ export async function runAutomation(
                     [contractAddress, WBNB],
                     swapWallet.address,
                     sellDeadline,
-                    { gasLimit: 500_000, gasPrice: GAS_PRICE }
+                    { gasLimit: 500_000, gasPrice: gasPrice }
                 )
                 await raceStop(tx.wait(), params.shouldStop)
                 onLog(`[6] ✓ Sold 90% | tx: ${tx.hash}`)
@@ -889,7 +898,7 @@ export async function runAutomation(
             onStepChange(token.id, 8, 'process')
             if (Number(params.transferBnbToMain) > 0) {
                 const wantAmt = ethers.utils.parseEther(params.transferBnbToMain)
-                const gasCost = ethers.BigNumber.from(21_000).mul(GAS_PRICE)
+                const gasCost = ethers.BigNumber.from(21_000).mul(gasPrice)
                 const balance = await swapWallet.getBalance()
                 const maxSend = balance.sub(gasCost)
                 if (maxSend.lte(0)) {
@@ -904,7 +913,7 @@ export async function runAutomation(
                         to: mainWallet.address,
                         value: sendAmt,
                         gasLimit: 21_000,
-                        gasPrice: GAS_PRICE,
+                        gasPrice: gasPrice,
                         type: 0,
                     })
                     await raceStop(transferTx.wait(), params.shouldStop)
