@@ -693,31 +693,40 @@ const Main = ({
             message.error('Vui lòng nhập RPC URL')
             return
         }
-        const valid = tokens.filter(
+        // Token đã 'success' không chạy lại; token 'error' còn contractAddress sẽ resume
+        // (bỏ qua deploy), token 'idle' hoặc 'error' chưa deploy xong sẽ chạy full từ đầu.
+        const runnable = tokens.filter((t) => t.status !== 'success')
+        if (runnable.length === 0) {
+            message.info('Không có token nào cần chạy — tất cả đã hoàn thành')
+            return
+        }
+        const valid = runnable.filter(
             (t) => t.name && t.mintAmount && t.liquidityToken && t.liquidityBNB
         )
         if (valid.length === 0) {
             message.error('Vui lòng nhập đầy đủ thông tin ít nhất 1 token')
             return
         }
+        const isResuming = (t: TokenRow) => t.status === 'error' && !!t.contractAddress
 
         stopRef.current = false
         setRunning(true)
         registerRunningWallet(tabId, mainAddr)
         setTokens((prev) =>
-            prev.map((r) => ({
-                ...r,
-                status: 'idle' as RowStatus,
-                contractAddress: undefined,
-                errorMsg: undefined,
-            }))
+            prev.map((r) => {
+                if (r.status === 'success') return r
+                if (isResuming(r)) return r // giữ contractAddress để resume
+                return { ...r, status: 'idle' as RowStatus, contractAddress: undefined, errorMsg: undefined }
+            })
         )
 
         const initialSteps: Record<string, { tokenName: string; statuses: StepStatus[] }> = {}
         for (const t of valid) {
             initialSteps[t.id] = {
                 tokenName: t.name,
-                statuses: ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'],
+                statuses: isResuming(t)
+                    ? ['finish', 'finish', 'finish', 'finish', 'finish', 'wait', 'wait', 'wait', 'wait']
+                    : ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'],
             }
         }
         setStepStates(initialSteps)
@@ -760,7 +769,10 @@ const Main = ({
                     mintPrivateKey: normalizeKey(mintKey),
                     abi: compileResult.abi,
                     bytecode: compileResult.bytecode,
-                    tokens: valid as AutomationToken[],
+                    tokens: valid.map((t) => ({
+                        ...t,
+                        resumeContractAddress: isResuming(t) ? t.contractAddress : undefined,
+                    })) as AutomationToken[],
                     swapCommands,
                     swapDelayMs: swapDelay * 1000,
                     swapRepeat: swapRepeat || 1,
