@@ -35,7 +35,7 @@ export interface TabStatus {
     tokenTotal: number
 }
 import type { AutomationToken, ScanContractConfig, StepStatus, SwapCommand } from '../utils/automationService'
-import { runAutomation } from '../utils/automationService'
+import { runAutomation, SUPPORTED_CHAINS } from '../utils/automationService'
 import { buildProvider, parseRpcList } from '../utils/buildProvider'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
 import * as XLSX from 'xlsx'
@@ -49,11 +49,14 @@ import { findWalletConflict, registerRunningWallet, unregisterRunningWallet } fr
 
 const { Title, Text: AntText, Link } = Typography
 
-const EXPLORER_BY_CHAIN: Record<number, string> = {
-    56: 'https://bscscan.com',
-    97: 'https://testnet.bscscan.com',
-}
+const EXPLORER_BY_CHAIN: Record<number, string> = Object.fromEntries(
+    SUPPORTED_CHAINS.map((c) => [c.chainId, c.explorer])
+)
 const explorerBaseUrl = (chainId: number) => EXPLORER_BY_CHAIN[chainId] ?? EXPLORER_BY_CHAIN[56]
+const CHAIN_ID_OPTIONS = SUPPORTED_CHAINS.map((c) => ({
+    value: String(c.chainId),
+    label: `${c.name} (${c.chainId})`,
+}))
 
 type RowStatus = 'idle' | 'running' | 'success' | 'error'
 
@@ -1101,14 +1104,14 @@ const Main = ({
                         <Text fontSize="sm" color="gray.400" minW="80px" textAlign="right" alignSelf="center">
                             Chain ID
                         </Text>
-                        <Input
+                        <Select
                             value={chainId}
-                            onChange={(e) => {
-                                setChainId(e.target.value)
-                                scheduleSave({ chainId: e.target.value })
+                            onChange={(val) => {
+                                setChainId(val)
+                                scheduleSave({ chainId: val })
                             }}
-                            placeholder="56"
-                            style={{ width: 80, alignSelf: 'center' }}
+                            options={CHAIN_ID_OPTIONS}
+                            style={{ width: 170, alignSelf: 'center' }}
                         />
                         <Text
                             fontSize="sm"

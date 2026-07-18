@@ -2,6 +2,7 @@ import { ethers } from 'ethers'
 import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
 import zenStackFunction from './zenstack-function'
+// wbnb = wrapped native gas token của chain đó (WBNB/WETH tuỳ chain)
 const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: string }> = {
     56: {
         router: '0x10ed43c718714eb63d5aa57b78b54704e256024e',
@@ -13,7 +14,48 @@ const CHAIN_CONFIG: Record<number, { router: string; factory: string; wbnb: stri
         factory: '0x6725f303b657a9451d8ba641348b6761a6cc7a17',
         wbnb: '0xae13d989dac2f0debff460ac112a837c89baa7cd',
     },
+    1: {
+        router: '0xeff92a263d31888d860bd50809a8d171709b7b1c',
+        factory: '0x1097053fd2ea711dad45caccc45eff7548fcb362',
+        wbnb: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    },
+    42161: {
+        router: '0x8cfe327cec66d1c090dd72bd0ff11d690c33a2eb',
+        factory: '0x02a84c1b3bbd7401a5f7fa98a384ebc70bb5749e',
+        wbnb: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+    },
+    8453: {
+        router: '0x8cfe327cec66d1c090dd72bd0ff11d690c33a2eb',
+        factory: '0x02a84c1b3bbd7401a5f7fa98a384ebc70bb5749e',
+        wbnb: '0x4200000000000000000000000000000000000006',
+    },
+    59144: {
+        router: '0x8cfe327cec66d1c090dd72bd0ff11d690c33a2eb',
+        factory: '0x02a84c1b3bbd7401a5f7fa98a384ebc70bb5749e',
+        wbnb: '0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f',
+    },
+    204: {
+        router: '0x8cfe327cec66d1c090dd72bd0ff11d690c33a2eb',
+        factory: '0x02a84c1b3bbd7401a5f7fa98a384ebc70bb5749e',
+        wbnb: '0x4200000000000000000000000000000000000006',
+    },
+    324: {
+        router: '0x5aeaf2883fbf30f3d62471154eda3c0c1b05942d',
+        factory: '0xd03d8d566183f0086d8d09a84e1e30b58dd5619d',
+        wbnb: '0x5aea5775959fbc2557cc8789bc1bf90a239d9a91',
+    },
 }
+
+export const SUPPORTED_CHAINS: { chainId: number; name: string; explorer: string }[] = [
+    { chainId: 56, name: 'BSC Mainnet', explorer: 'https://bscscan.com' },
+    { chainId: 97, name: 'BSC Testnet', explorer: 'https://testnet.bscscan.com' },
+    { chainId: 1, name: 'Ethereum', explorer: 'https://etherscan.io' },
+    { chainId: 8453, name: 'Base', explorer: 'https://basescan.org' },
+    { chainId: 42161, name: 'Arbitrum One', explorer: 'https://arbiscan.io' },
+    { chainId: 59144, name: 'Linea', explorer: 'https://lineascan.build' },
+    { chainId: 204, name: 'opBNB', explorer: 'https://opbnb.bscscan.com' },
+    { chainId: 324, name: 'zkSync Era', explorer: 'https://explorer.zksync.io' },
+]
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 const SCAN_CHUNK = 50 // blocks per batch for getBlockWithTransactions
 const ALL_BLOCKS_KEY = 'ALL_BLOCKS' // ScanWallet.wallet group key khi ở mode quét toàn bộ block
@@ -188,9 +230,8 @@ export async function runAutomation(
 ): Promise<void> {
     const chainCfg = CHAIN_CONFIG[params.chainId]
     if (!chainCfg) {
-        throw new Error(
-            `Chain ID ${params.chainId} chưa được hỗ trợ (chỉ hỗ trợ 56 - BSC Mainnet, 97 - BSC Testnet)`
-        )
+        const supported = SUPPORTED_CHAINS.map((c) => `${c.chainId} - ${c.name}`).join(', ')
+        throw new Error(`Chain ID ${params.chainId} chưa được hỗ trợ (chỉ hỗ trợ ${supported})`)
     }
     const PANCAKE_ROUTER = chainCfg.router
     const PANCAKE_FACTORY = chainCfg.factory
