@@ -1715,11 +1715,13 @@ const Main = ({
                         size="small"
                         activeKey={scanTabKey || scanContracts[0]?.address}
                         onChange={setScanTabKey}
-                        items={scanContracts.map((cfg) => ({
-                            key: cfg.address,
-                            label: `${cfg.address.slice(0, 8)}...${cfg.address.slice(-6)}`,
-                            children: <ScanContractPanel contractAddress={cfg.address} />,
-                        }))}
+                        items={[...new Map(scanContracts.map((cfg) => [cfg.address, cfg])).values()].map(
+                            (cfg) => ({
+                                key: cfg.address,
+                                label: `${cfg.address.slice(0, 8)}...${cfg.address.slice(-6)}`,
+                                children: <ScanContractPanel contractAddress={cfg.address} />,
+                            })
+                        )}
                         style={{ marginTop: -8 }}
                     />
                 )}

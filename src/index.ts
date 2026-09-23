@@ -3,7 +3,7 @@ import './setup'
 import { BrowserWindow, app, ipcMain } from 'electron'
 import path from 'node:path'
 import { PrismaClient } from '../prisma/client'
-import './server'
+import { startServer } from './server'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -158,7 +158,7 @@ if (require('electron-squirrel-startup')) {
 
 let mainWindow: BrowserWindow
 
-const createWindow = (): void => {
+const createWindow = (serverPort: number): void => {
     mainWindow = new BrowserWindow({
         center: true,
         webPreferences: {
@@ -171,13 +171,19 @@ const createWindow = (): void => {
     })
     mainWindow.setMenuBarVisibility(false)
     mainWindow.maximize()
-    mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
+    const separator = MAIN_WINDOW_WEBPACK_ENTRY.includes('?') ? '&' : '?'
+    mainWindow.loadURL(`${MAIN_WINDOW_WEBPACK_ENTRY}${separator}serverPort=${serverPort}`)
 }
 
-app.on('ready', createWindow)
+let resolvedServerPort: number
+
+app.on('ready', async () => {
+    resolvedServerPort = await startServer()
+    createWindow(resolvedServerPort)
+})
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
 })
 app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(resolvedServerPort)
 })

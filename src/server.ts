@@ -27,19 +27,25 @@ app.use(
     })
 )
 
-const server = serve(
-    {
-        fetch: app.fetch,
-        hostname: '0.0.0.0',
-        port: 8080,
-    },
-    () => {
-        console.log('Hono server is running on http://localhost:8080')
-    }
-)
+// port: 0 → OS tự cấp cổng trống, tránh xung đột với service khác (vd OrbStack)
+// đang chiếm cổng cố định trên máy dev.
+export function startServer(): Promise<number> {
+    return new Promise((resolve) => {
+        const server = serve(
+            {
+                fetch: app.fetch,
+                hostname: '0.0.0.0',
+                port: 0,
+            },
+            (info) => {
+                console.log(`Hono server is running on http://localhost:${info.port}`)
+                resolve(info.port)
+            }
+        )
 
-// graceful shutdown
-process.on('SIGINT', () => {
-    server.close()
-    process.exit(0)
-})
+        process.on('SIGINT', () => {
+            server.close()
+            process.exit(0)
+        })
+    })
+}

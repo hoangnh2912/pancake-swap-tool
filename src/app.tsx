@@ -5,7 +5,8 @@ import { createRoot } from 'react-dom/client'
 import { Provider as ZenStackProvider } from './hooks/zenstack'
 import TabManager from './pages/tab-manager'
 
-export const endpoint = 'http://localhost:8080/api/model'
+const serverPort = new URLSearchParams(window.location.search).get('serverPort') || '8791'
+export const endpoint = `http://localhost:${serverPort}/api/model`
 export const fetchInstance = window.fetch.bind(window)
 
 const queryClient = new QueryClient()

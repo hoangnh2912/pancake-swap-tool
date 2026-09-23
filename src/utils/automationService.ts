@@ -263,6 +263,11 @@ export async function runAutomation(
     // meant delay never triggered when processing multiple tokens back-to-back)
     let lastSwapCompletedAt = 0
 
+    // scanContracts (vd Router) dùng CHUNG cho cả batch nhiều token — chỉ clear
+    // scan records 1 LẦN ở token đầu tiên, không phải mỗi token, nếu không sẽ
+    // xoá mất kết quả quét/airdrop của các token trước đó trong cùng batch.
+    let scanRecordsCleared = false
+
     for (const token of params.tokens) {
         if (params.shouldStop?.()) {
             onLog('\n⏹ Đã dừng automation.')
@@ -527,12 +532,13 @@ export async function runAutomation(
                 onLog('[1.1] Bỏ qua (chưa cấu hình scanContract hoặc disperseAmount)')
             }
             */
-            if (hasScanConfig) {
+            if (hasScanConfig && !scanRecordsCleared) {
+                scanRecordsCleared = true
                 const scanAddrs = params.scanContracts.map((c) => c.address).filter(Boolean)
                 await zenStackFunction('ScanWallet' as any, 'deleteMany', {
                     where: { wallet: { in: scanAddrs } },
                 })
-                onLog('[1.1] ✓ Cleared scan records')
+                onLog('[1.1] ✓ Cleared scan records (1 lần đầu batch)')
             }
                 onLog('[1.1] Bỏ qua airdrop (tạm tắt)')
                 onStepChange(token.id, 4, 'finish')
@@ -720,7 +726,6 @@ export async function runAutomation(
                 }
             }
 
-            const scanContractAddrs = params.scanContracts.map((c) => c.address)
             const isBlockMode = params.scanMode === 'allBlocks'
 
             // Loại ví hệ thống ra khỏi kết quả quét — tránh tự airdrop nhầm cho
@@ -745,10 +750,19 @@ export async function runAutomation(
                     return
                 }
 
+                // Chốt điểm bắt đầu quét NGAY (trước khi chờ lệnh swap thứ 2) — tránh bỏ sót
+                // giao dịch xảy ra giữa lúc add liquidity và lúc 5.2 thực sự bắt đầu vòng lặp.
+                let globalScanFrom = await provider.getBlockNumber()
+                const scanPositions = new Map<string, number>()
+                if (!isBlockMode) {
+                    for (const cfg of params.scanContracts) {
+                        scanPositions.set(cfg.address, globalScanFrom)
+                    }
+                }
+
                 onLog('[5.2] Chờ lệnh swap thứ 2 bắt đầu...')
                 await raceStop(readyForScan, params.shouldStop)
 
-                const walletGroupKeys = isBlockMode ? [ALL_BLOCKS_KEY] : scanContractAddrs
                 onLog(
                     isBlockMode
                         ? `[5.2] Bắt đầu — mode QUÉT TOÀN BỘ BLOCK, amount=${params.disperseAmount}`
@@ -776,19 +790,10 @@ export async function runAutomation(
                 }
                 onLog(`[5.2] Pre-loaded ${seen.size} ví đã quét từ DB`)
 
-                // Track scan position — global cho block mode, per-contract cho contract mode
-                let globalScanFrom = await provider.getBlockNumber()
-                const scanPositions = new Map<string, number>()
-                if (!isBlockMode) {
-                    for (const cfg of params.scanContracts) {
-                        scanPositions.set(cfg.address, await provider.getBlockNumber())
-                    }
-                }
-
                 onLog(`[5.2] Tự dừng khi 5.1 (swap) hoàn thành, hoặc nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
 
                 while (!stop52()) {
-                    const allNew: string[] = []
+                    const allNew: { addr: string; walletKey: string }[] = []
 
                     if (isBlockMode) {
                         // Phase 1+2: scan toàn bộ block, dedup
@@ -801,7 +806,7 @@ export async function runAutomation(
                             const lo = addr.toLowerCase()
                             if (!seen.has(lo) && !toolWallets.has(lo)) {
                                 seen.add(lo)
-                                allNew.push(addr)
+                                allNew.push({ addr, walletKey: ALL_BLOCKS_KEY })
                             }
                         }
                     } else {
@@ -817,14 +822,16 @@ export async function runAutomation(
                         )
 
                         // Phase 2: Collect new wallets (dedup against seen set + across contracts)
+                        // — mỗi ví gắn đúng walletKey của contract đã tìm ra nó, không gộp về contract đầu tiên
                         for (let i = 0; i < params.scanContracts.length; i++) {
                             const { addrs, nextBlock } = results[i]
-                            scanPositions.set(params.scanContracts[i].address, nextBlock)
+                            const walletKey = params.scanContracts[i].address
+                            scanPositions.set(walletKey, nextBlock)
                             for (const addr of addrs) {
                                 const lo = addr.toLowerCase()
                                 if (!seen.has(lo) && !toolWallets.has(lo)) {
                                     seen.add(lo)
-                                    allNew.push(addr)
+                                    allNew.push({ addr, walletKey })
                                 }
                             }
                         }
@@ -832,21 +839,33 @@ export async function runAutomation(
 
                     if (allNew.length > 0) {
                         onLog(`[5.2] 📡 ${allNew.length} ví mới — lưu DB...`)
-                        const walletKey = isBlockMode ? ALL_BLOCKS_KEY : params.scanContracts[0].address
-                        await zenStackFunction('ScanWallet' as any, 'createMany', {
-                            data: allNew.map((addr) => ({
-                                wallet: walletKey,
-                                tx: '0x',
-                                token: walletKey,
-                                destination: addr,
-                                amount: params.disperseAmount,
-                                isTransferred: false,
-                            })),
-                        })
+                        try {
+                            await zenStackFunction('ScanWallet' as any, 'createMany', {
+                                data: allNew.map(({ addr, walletKey }) => ({
+                                    wallet: walletKey,
+                                    tx: '0x',
+                                    token: walletKey,
+                                    destination: addr,
+                                    amount: params.disperseAmount,
+                                    isTransferred: false,
+                                })),
+                            })
+                            onLog(`[5.2] ✓ Đã lưu ${allNew.length} ví vào DB`)
+                        } catch (err: any) {
+                            onLog(`[5.2] ❌ Lưu DB thất bại: ${err.message || err} — bỏ qua airdrop batch này để tránh mất dấu`)
+                            // Không xoá khỏi `seen` — tránh airdrop trùng nếu lỗi chỉ là tạm thời;
+                            // batch này coi như bỏ lỡ, sẽ không tự retry.
+                            if (stop52()) break
+                            await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
+                            continue
+                        }
 
-                        // Phase 3: ONE airdrop for ALL wallets
+                        // Phase 3: ONE airdrop for ALL wallets (gộp mọi contract), nhưng update DB đúng theo walletKey của từng ví
                         onLog(`[5.2] 🪂 Airdrop ${allNew.length} ví...`)
-                        await airdropWallets(allNew, walletGroupKeys)
+                        await airdropWallets(
+                            allNew.map((w) => w.addr),
+                            [...new Set(allNew.map((w) => w.walletKey))]
+                        )
                     } else {
                         // No new wallets — wait for next cycle
                         if (stop52()) break

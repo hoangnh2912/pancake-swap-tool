@@ -34,6 +34,10 @@ const zenStackFunction = async <T, K = unknown>(
         }),
     })
     const data = await res.json()
+    if (!res.ok) {
+        const msg = data?.error?.message || data?.message || JSON.stringify(data)
+        throw new Error(`zenStackFunction ${model}.${ops} failed (${res.status}): ${msg}`)
+    }
     return data.data
 }
 
