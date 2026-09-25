@@ -3,6 +3,7 @@ import {
     DownloadOutlined,
     PlayCircleOutlined,
     PlusOutlined,
+    ReloadOutlined,
     SettingOutlined,
     StopOutlined,
     UploadOutlined,
@@ -674,6 +675,28 @@ const Main = ({
         setTokens((prev) =>
             prev.map((r) => (r.id === id ? { ...r, status, contractAddress, errorMsg } : r))
         )
+
+    const handleResetTokens = () => {
+        Modal.confirm({
+            title: 'Chạy lại từ đầu?',
+            content:
+                'Xoá trạng thái đã hoàn thành/lỗi của tất cả token (kể cả contract đã deploy) — lần bấm "Bắt đầu Automation" tới sẽ deploy lại từ đầu, không resume.',
+            okText: 'Reset',
+            cancelText: 'Huỷ',
+            onOk: () => {
+                setTokens((prev) =>
+                    prev.map((r) => ({
+                        ...r,
+                        status: 'idle' as RowStatus,
+                        contractAddress: undefined,
+                        errorMsg: undefined,
+                    }))
+                )
+                setStepStates({})
+                getElectron()?.saveConfig({ stepStatesJson: '{}' }, tabId)
+            },
+        })
+    }
 
     const handleStart = async () => {
         if (!mainKey || !swapKey || !mintKey) {
@@ -1830,6 +1853,16 @@ const Main = ({
                             style={{ height: 48 }}
                         >
                             Dừng
+                        </Button>
+                    )}
+                    {!running && (
+                        <Button
+                            size="large"
+                            icon={<ReloadOutlined />}
+                            onClick={handleResetTokens}
+                            style={{ height: 48 }}
+                        >
+                            Chạy lại từ đầu
                         </Button>
                     )}
                 </Flex>

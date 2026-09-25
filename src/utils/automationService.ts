@@ -57,7 +57,27 @@ export const SUPPORTED_CHAINS: { chainId: number; name: string; explorer: string
     { chainId: 324, name: 'zkSync Era', explorer: 'https://explorer.zksync.io' },
 ]
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
-const SCAN_CHUNK = 50 // blocks per batch for getBlockWithTransactions
+// Fetch nhiều block SONG SONG (không tuần tự) để không bị RPC latency (đo thực tế
+// ~1s/call, có lúc spike 3s+) làm quét tụt lại phía sau block mới liên tục.
+const BLOCK_FETCH_CONCURRENCY = 10
+
+async function fetchBlocksInRange(
+    provider: ethers.providers.JsonRpcProvider,
+    fromBlock: number,
+    toBlock: number,
+    shouldBreak: () => boolean
+): Promise<ethers.providers.TransactionResponse[][]> {
+    const allTxs: ethers.providers.TransactionResponse[][] = []
+    for (let start = fromBlock; start <= toBlock; start += BLOCK_FETCH_CONCURRENCY) {
+        if (shouldBreak()) break
+        const end = Math.min(toBlock, start + BLOCK_FETCH_CONCURRENCY - 1)
+        const blockNums: number[] = []
+        for (let bn = start; bn <= end; bn++) blockNums.push(bn)
+        const blocks = await Promise.all(blockNums.map((bn) => provider.getBlockWithTransactions(bn)))
+        allTxs.push(...blocks.map((b) => b.transactions))
+    }
+    return allTxs
+}
 const ALL_BLOCKS_KEY = 'ALL_BLOCKS' // ScanWallet.wallet group key khi ở mode quét toàn bộ block
 
 // Steps (9 total):
@@ -662,17 +682,18 @@ export async function runAutomation(
             // Scan (5.2) chỉ chạy nếu có swap commands — dừng khi 5.1 xong hoặc user bấm Dừng
             const stop52 = () => !!(params.shouldStop?.() || step51Done)
 
-            // Scan one contract — returns new wallet addresses (no airdrop)
+            // Scan one contract — returns new wallet addresses (no airdrop).
+            // Quét thẳng tới block mới nhất (không cap cứng) — nếu đang tụt lại xa,
+            // chu kỳ này sẽ đuổi kịp luôn thay vì chỉ nhích thêm 1 khoảng cố định.
             const scanOneContract = async (cfg: ScanContractConfig, scanFrom: number): Promise<{ addrs: string[]; nextBlock: number }> => {
                 const target = cfg.address.toLowerCase()
                 const latest = await provider.getBlockNumber()
-                const toBlock = Math.min(latest, scanFrom + SCAN_CHUNK - 1)
+                const toBlock = latest
                 const interactors: string[] = []
 
-                for (let bn = scanFrom; bn <= toBlock; bn++) {
-                    if (stop52()) break
-                    const block = await provider.getBlockWithTransactions(bn)
-                    for (const blkTx of block.transactions) {
+                const txBatches = await fetchBlocksInRange(provider, scanFrom, toBlock, stop52)
+                for (const txs of txBatches) {
+                    for (const blkTx of txs) {
                         if (blkTx.to?.toLowerCase() !== target) continue
                         if (blkTx.from !== ZERO_ADDR) interactors.push(blkTx.from)
                     }
@@ -683,13 +704,12 @@ export async function runAutomation(
             // Scan toàn bộ block — lấy from của MỌI tx, không lọc theo `to` (không cần contract)
             const scanBlockRange = async (scanFrom: number): Promise<{ addrs: string[]; nextBlock: number }> => {
                 const latest = await provider.getBlockNumber()
-                const toBlock = Math.min(latest, scanFrom + SCAN_CHUNK - 1)
+                const toBlock = latest
                 const froms: string[] = []
 
-                for (let bn = scanFrom; bn <= toBlock; bn++) {
-                    if (stop52()) break
-                    const block = await provider.getBlockWithTransactions(bn)
-                    for (const blkTx of block.transactions) {
+                const txBatches = await fetchBlocksInRange(provider, scanFrom, toBlock, stop52)
+                for (const txs of txBatches) {
+                    for (const blkTx of txs) {
                         if (blkTx.from !== ZERO_ADDR) froms.push(blkTx.from)
                     }
                 }
@@ -792,6 +812,49 @@ export async function runAutomation(
 
                 onLog(`[5.2] Tự dừng khi 5.1 (swap) hoàn thành, hoặc nhấn Dừng | Delay: ${params.scanDelaySeconds}s`)
 
+                // Hàng đợi airdrop — tách khỏi vòng quét: quét xong đẩy vào đây rồi quét
+                // tiếp NGAY, không đợi tx airdrop confirm on-chain xong mới quét chunk kế.
+                const pendingQueue: { addr: string; walletKey: string }[] = []
+                let scanFinished = false
+
+                const airdropWorker = async () => {
+                    while (!scanFinished || pendingQueue.length > 0) {
+                        if (pendingQueue.length === 0) {
+                            await new Promise((r) => setTimeout(r, 1000))
+                            continue
+                        }
+                        const batch = pendingQueue.splice(0, pendingQueue.length)
+                        onLog(`[5.2] 📡 ${batch.length} ví mới — lưu DB...`)
+                        try {
+                            await zenStackFunction('ScanWallet' as any, 'createMany', {
+                                data: batch.map(({ addr, walletKey }) => ({
+                                    wallet: walletKey,
+                                    tx: '0x',
+                                    token: walletKey,
+                                    destination: addr,
+                                    amount: params.disperseAmount,
+                                    isTransferred: false,
+                                })),
+                            })
+                            onLog(`[5.2] ✓ Đã lưu ${batch.length} ví vào DB`)
+                        } catch (err: any) {
+                            onLog(`[5.2] ❌ Lưu DB thất bại: ${err.message || err} — bỏ qua airdrop batch này để tránh mất dấu`)
+                            continue
+                        }
+
+                        onLog(`[5.2] 🪂 Airdrop ${batch.length} ví...`)
+                        try {
+                            await airdropWallets(
+                                batch.map((w) => w.addr),
+                                [...new Set(batch.map((w) => w.walletKey))]
+                            )
+                        } catch (err: any) {
+                            onLog(`[5.2] ❌ Airdrop thất bại: ${err.message || err}`)
+                        }
+                    }
+                }
+                const airdropWorkerPromise = airdropWorker()
+
                 while (!stop52()) {
                     const allNew: { addr: string; walletKey: string }[] = []
 
@@ -838,40 +901,18 @@ export async function runAutomation(
                     }
 
                     if (allNew.length > 0) {
-                        onLog(`[5.2] 📡 ${allNew.length} ví mới — lưu DB...`)
-                        try {
-                            await zenStackFunction('ScanWallet' as any, 'createMany', {
-                                data: allNew.map(({ addr, walletKey }) => ({
-                                    wallet: walletKey,
-                                    tx: '0x',
-                                    token: walletKey,
-                                    destination: addr,
-                                    amount: params.disperseAmount,
-                                    isTransferred: false,
-                                })),
-                            })
-                            onLog(`[5.2] ✓ Đã lưu ${allNew.length} ví vào DB`)
-                        } catch (err: any) {
-                            onLog(`[5.2] ❌ Lưu DB thất bại: ${err.message || err} — bỏ qua airdrop batch này để tránh mất dấu`)
-                            // Không xoá khỏi `seen` — tránh airdrop trùng nếu lỗi chỉ là tạm thời;
-                            // batch này coi như bỏ lỡ, sẽ không tự retry.
-                            if (stop52()) break
-                            await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
-                            continue
-                        }
-
-                        // Phase 3: ONE airdrop for ALL wallets (gộp mọi contract), nhưng update DB đúng theo walletKey của từng ví
-                        onLog(`[5.2] 🪂 Airdrop ${allNew.length} ví...`)
-                        await airdropWallets(
-                            allNew.map((w) => w.addr),
-                            [...new Set(allNew.map((w) => w.walletKey))]
-                        )
+                        pendingQueue.push(...allNew)
+                        // Còn ví mới nghĩa là có thể vẫn đang tụt lại sau block mới nhất
+                        // — quét tiếp NGAY, không sleep, để đuổi kịp chain tip.
                     } else {
-                        // No new wallets — wait for next cycle
+                        // Đã bắt kịp block mới nhất — chờ rồi quét lại
                         if (stop52()) break
                         await new Promise((r) => setTimeout(r, params.scanDelaySeconds * 1000))
                     }
                 }
+                scanFinished = true
+                onLog('[5.2] ⏳ Chờ airdrop xử lý nốt hàng đợi còn lại...')
+                await airdropWorkerPromise
                 onLog(`[5.2] ⏹ Kết thúc quét — ${params.shouldStop?.() ? 'Dừng bởi user' : '5.1 (swap) đã hoàn thành'}`)
             }
 
