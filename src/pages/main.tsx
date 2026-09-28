@@ -122,28 +122,80 @@ const getElectron = () => (window as any).electron
 
 const SCAN_PAGE_SIZE = 20
 
-const ScanContractPanel = ({ contractAddress }: { contractAddress: string }) => {
+// 1 contract quét (vd Router) dùng chung cho nhiều token deploy — tách theo `token`
+// (địa chỉ ERC20 thật) để xem riêng ví đã airdrop của từng token, không gộp lẫn.
+const ScanContractPanel = ({
+    contractAddress,
+    tokens,
+}: {
+    contractAddress: string
+    tokens: TokenRow[]
+}) => {
+    const [tokenTabKey, setTokenTabKey] = useState('')
+
+    const { data: tokenRows = [] } = useFindManyScanWallet(
+        { where: { wallet: contractAddress }, distinct: ['token'] as any },
+        { refetchInterval: 5000 }
+    )
+    const tokenAddrs = [
+        ...new Set((tokenRows as any[]).map((r) => r.token as string).filter(Boolean)),
+    ]
+
+    if (tokenAddrs.length === 0) {
+        return (
+            <AntText type="secondary" style={{ fontSize: 12 }}>
+                Chưa có token nào được airdrop qua contract này
+            </AntText>
+        )
+    }
+
+    const labelFor = (addr: string) => {
+        const t = tokens.find((t) => t.contractAddress?.toLowerCase() === addr.toLowerCase())
+        const short = `${addr.slice(0, 6)}…${addr.slice(-4)}`
+        return t?.name ? `${t.name} (${short})` : short
+    }
+
+    return (
+        <Tabs
+            size="small"
+            activeKey={tokenTabKey || tokenAddrs[0]}
+            onChange={setTokenTabKey}
+            items={tokenAddrs.map((addr) => ({
+                key: addr,
+                label: labelFor(addr),
+                children: <ScanTokenPanel walletKey={contractAddress} tokenAddress={addr} />,
+            }))}
+            style={{ marginTop: -8 }}
+        />
+    )
+}
+
+const ScanTokenPanel = ({
+    walletKey,
+    tokenAddress,
+}: {
+    walletKey: string
+    tokenAddress: string
+}) => {
     const [page, setPage] = useState(1)
 
     const { data: total = 0 } = useCountScanWallet(
-        { where: { wallet: contractAddress } },
+        { where: { wallet: walletKey, token: tokenAddress } },
         { refetchInterval: 5000 }
     )
     const { data: transferred = 0 } = useCountScanWallet(
-        { where: { wallet: contractAddress, isTransferred: true } },
+        { where: { wallet: walletKey, token: tokenAddress, isTransferred: true } },
         { refetchInterval: 5000 }
     )
     const { data: rows = [] } = useFindManyScanWallet(
         {
-            where: { wallet: contractAddress },
+            where: { wallet: walletKey, token: tokenAddress },
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * SCAN_PAGE_SIZE,
             take: SCAN_PAGE_SIZE,
         },
         { refetchInterval: 5000 }
     )
-
-    const shortAddr = `${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)}`
 
     return (
         <>
@@ -1728,7 +1780,7 @@ const Main = ({
                     </Flex>
                 </Flex>
                 {scanMode === 'allBlocks' ? (
-                    <ScanContractPanel contractAddress="ALL_BLOCKS" />
+                    <ScanContractPanel contractAddress="ALL_BLOCKS" tokens={tokens} />
                 ) : scanContracts.length === 0 ? (
                     <AntText type="secondary" style={{ fontSize: 12 }}>
                         Chưa cấu hình contract quét — thêm contract ở trên
@@ -1742,7 +1794,7 @@ const Main = ({
                             (cfg) => ({
                                 key: cfg.address,
                                 label: `${cfg.address.slice(0, 8)}...${cfg.address.slice(-6)}`,
-                                children: <ScanContractPanel contractAddress={cfg.address} />,
+                                children: <ScanContractPanel contractAddress={cfg.address} tokens={tokens} />,
                             })
                         )}
                         style={{ marginTop: -8 }}

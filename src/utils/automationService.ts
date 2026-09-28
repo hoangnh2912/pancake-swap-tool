@@ -738,9 +738,10 @@ export async function runAutomation(
                     )
                     await tx.wait()
                     onLog(`[5.2] ✓ Airdrop batch ${Math.floor(bi / batchSize) + 1}: ${batch.length} ví | tx: ${tx.hash}`)
-                    // Mark as transferred in DB
+                    // Mark as transferred in DB — lọc thêm theo đúng token đang deploy, tránh
+                    // đụng nhầm row của token khác (cùng wallet/destination, khác token)
                     await zenStackFunction('ScanWallet' as any, 'updateMany', {
-                        where: { wallet: { in: walletGroupKeys }, destination: { in: batch } },
+                        where: { wallet: { in: walletGroupKeys }, destination: { in: batch }, token: contractAddress },
                         data: { isTransferred: true },
                     })
                 }
@@ -789,11 +790,13 @@ export async function runAutomation(
                         : `[5.2] Bắt đầu (contracts=${params.scanContracts.length}, amount=${params.disperseAmount})`
                 )
 
-                // Pre-load existing wallets from DB
+                // Pre-load existing wallets từ DB — lọc theo ĐÚNG token đang deploy (contractAddress).
+                // Router/contract quét dùng chung cho mọi token trong batch, nên KHÔNG được dedupe
+                // theo wallet suông — ví đã nhận airdrop Token1 vẫn phải được airdrop Token2 riêng.
                 const seen = new Set<string>()
                 if (isBlockMode) {
                     const existing: any[] = (await zenStackFunction('ScanWallet' as any, 'findMany', {
-                        where: { wallet: ALL_BLOCKS_KEY },
+                        where: { wallet: ALL_BLOCKS_KEY, token: contractAddress },
                     })) ?? []
                     for (const r of existing) {
                         if (r.destination) seen.add((r.destination as string).toLowerCase())
@@ -801,7 +804,7 @@ export async function runAutomation(
                 } else {
                     for (const cfg of params.scanContracts) {
                         const existing: any[] = (await zenStackFunction('ScanWallet' as any, 'findMany', {
-                            where: { wallet: cfg.address },
+                            where: { wallet: cfg.address, token: contractAddress },
                         })) ?? []
                         for (const r of existing) {
                             if (r.destination) seen.add((r.destination as string).toLowerCase())
@@ -830,7 +833,7 @@ export async function runAutomation(
                                 data: batch.map(({ addr, walletKey }) => ({
                                     wallet: walletKey,
                                     tx: '0x',
-                                    token: walletKey,
+                                    token: contractAddress,
                                     destination: addr,
                                     amount: params.disperseAmount,
                                     isTransferred: false,
