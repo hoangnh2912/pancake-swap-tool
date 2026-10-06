@@ -2,8 +2,9 @@
 
 Chi tiết đầy đủ + acceptance criteria: `tasks/plan.md` (nguồn: `SPEC.md`).
 
-- [ ] **Task 1** — Schema (`schema.zmodel` + generate/db:push) + `src/utils/fakeVolumeContract.ts`
-      (copy source từ `swap-ref.txt`, xoá file tạm sau). Verify: compile qua IPC OK.
+- [x] **Task 1** — Schema (`schema.zmodel` + generate/db:push) + `src/utils/fakeVolumeContract.ts`
+      (copy source từ `swap-ref.txt`, xoá file tạm sau). Verify: compile qua solc script OK (phát
+      hiện `owner` private, không có getter — đã cập nhật Task 2 dùng `callStatic.withdraw()`).
 - [ ] **Task 2** — `automationService.ts`: deploy/cache contract (1 lần/batch, owner=swapWallet) +
       chèn step "4.2 Fake Volume" (index 5) giữa dòng 566/568 hiện tại + shift index 5→6→7→8→9
       cho 8 `onStepChange` + 3 `currentStep` theo bảng trong plan.md. Verify: tsc sạch, grep xác

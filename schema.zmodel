@@ -47,4 +47,8 @@ model Config {
   factoryAddress    String @default("")
   logsJson          String @default("[]")
   stepStatesJson    String @default("{}")
+  fakeVolumeEnabled   String @default("")
+  fakeVolumeTimes     String @default("3")
+  fakeVolumeBnbAmount String @default("")
+  fakeVolumeAddress   String @default("")
 }

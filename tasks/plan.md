@@ -45,28 +45,20 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
   - (Số dòng là snapshot hiện tại — Task 2 phải `grep -n "onStepChange(token.id"` lại trước khi
     sửa để chắc không bị lệch do các edit trước đó trong cùng task.)
 
-## Task 1 — Schema + contract source (nền tảng, không có hành vi mới)
+## Task 1 — Schema + contract source (nền tảng, không có hành vi mới) — DONE
 
-- [ ] `schema.zmodel`: thêm vào model `Config`:
-  ```prisma
-  fakeVolumeEnabled   String @default("")
-  fakeVolumeTimes     String @default("3")
-  fakeVolumeBnbAmount String @default("")
-  fakeVolumeAddress   String @default("")
-  ```
-- [ ] `yarn generate` + `yarn db:push` — xác nhận chạy sạch, `prisma/schema.prisma` +
-      `src/hooks/zenstack/` tái tạo đúng (không sửa tay 2 chỗ này).
-- [ ] File mới `src/utils/fakeVolumeContract.ts`: copy nguyên văn source Solidity từ
-      `swap-ref.txt` (đã verify đúng ở SPEC §1), export `FAKE_VOLUME_SOURCE` (string) — theo
-      đúng cách `defaultContract.ts` đang export `DEFAULT_CONTRACT`.
-- [ ] Xoá `swap-ref.txt` ở root sau khi copy xong (file tạm, không phải artifact dự án).
-- **Verify:** `tsc --noEmit --skipLibCheck` sạch. Gọi thử `window.electron.compileContract` (qua
-  console DevTools trong `yarn start` đang chạy) với `FAKE_VOLUME_SOURCE` → xác nhận compile ra
-  đúng `abi` + `bytecode`, không lỗi solc.
+- [x] `schema.zmodel`: thêm vào model `Config` (`fakeVolumeEnabled/Times/BnbAmount/Address`).
+- [x] `yarn generate` + `yarn db:push` — chạy sạch, verify qua `sqlite3 ".schema Config"` thấy đủ
+      4 cột mới.
+- [x] File mới `src/utils/fakeVolumeContract.ts`: copy nguyên văn source Solidity từ
+      `swap-ref.txt`, export default `FAKE_VOLUME_CONTRACT` (string) — theo đúng cách
+      `defaultContract.ts` export `DEFAULT_CONTRACT`.
+- [x] Xoá `swap-ref.txt` ở root sau khi copy xong.
+- **Verify:** `tsc --noEmit` sạch. Test compile bằng script Node gọi thẳng `solc` (cùng gói +
+  cùng input-shape `index.ts` dùng) → PASS, contract `FakeVolume` compile ra 7 abi entries,
+  bytecode 10406 ký tự hex. **Phát hiện quan trọng:** `owner` trong contract là `private`, KHÔNG
+  có getter `owner()` — đã sửa Task 2 bên dưới dùng `callStatic.withdraw()` thay vì `owner()`.
 - **Depends on:** none.
-- **Checkpoint:** dừng lại xác nhận compile OK trước khi sang Task 2 — nếu solc version mismatch
-  (contract dùng `pragma solidity ^0.8.0`, tool default `0.8.27`) phải xử lý ở đây trước, không
-  mang lỗi compile sang task sau.
 
 ## Task 2 — `automationService.ts`: deploy/cache + chạy step Fake Volume
 
@@ -75,10 +67,14 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
       `onFakeVolumeDeployed?: (address: string) => void` (callback để `main.tsx` persist địa chỉ
       mới deploy — theo đúng pattern callback đã có, vd `onStepChange`, `onLog`).
 - [ ] Trước vòng lặp `for (const token of params.tokens)` (đầu `runAutomation`, nếu
-      `fakeVolumeEnabled`): resolve `fakeVolumeAddress` — nếu có sẵn, gọi `owner()` xác nhận còn
-      sống + đúng `swapWallet.address` (bọc try/catch, fail → coi như chưa có); nếu không có/fail
-      → deploy mới bằng `swapWallet` (constructor nhận `chainId`), gọi `onFakeVolumeDeployed`.
-      Biến địa chỉ cuối cùng dùng chung cho toàn bộ token trong loop (không deploy lại mỗi token).
+      `fakeVolumeEnabled`): resolve `fakeVolumeAddress` — nếu có sẵn, verify còn dùng được bằng
+      `callStatic.withdraw()` (bọc try/catch) — **không dùng `owner()`**, `owner` trong contract
+      là `private`, không có getter; `callStatic.withdraw()` revert nếu `swapWallet` không phải
+      owner (đúng ownership check, không tốn gas thật, không cần balance). Fail → coi như chưa
+      có; nếu không có/fail → deploy mới bằng `swapWallet` (constructor nhận `chainId`), gọi
+      `onFakeVolumeDeployed`. Biến địa chỉ cuối cùng dùng chung cho toàn bộ token trong loop
+      (không deploy lại mỗi token).
+      _(Phát hiện lúc verify compile Task 1 — kế hoạch gốc đề `owner()` là sai, đã sửa.)_
 - [ ] Chèn block mới giữa dòng 566/568 hiện tại (xem "Điểm neo" ở trên — grep lại trước khi sửa):
       `currentStep = 5; onStepChange(token.id, 5, 'process')` → nếu disabled/thiếu params → log
       bỏ qua + `onStepChange(token.id, 5, 'finish')` luôn; nếu enabled → gửi BNB

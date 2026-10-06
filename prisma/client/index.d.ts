@@ -2019,6 +2019,10 @@ export namespace Prisma {
     factoryAddress: string | null
     logsJson: string | null
     stepStatesJson: string | null
+    fakeVolumeEnabled: string | null
+    fakeVolumeTimes: string | null
+    fakeVolumeBnbAmount: string | null
+    fakeVolumeAddress: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -2046,6 +2050,10 @@ export namespace Prisma {
     factoryAddress: string | null
     logsJson: string | null
     stepStatesJson: string | null
+    fakeVolumeEnabled: string | null
+    fakeVolumeTimes: string | null
+    fakeVolumeBnbAmount: string | null
+    fakeVolumeAddress: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -2073,6 +2081,10 @@ export namespace Prisma {
     factoryAddress: number
     logsJson: number
     stepStatesJson: number
+    fakeVolumeEnabled: number
+    fakeVolumeTimes: number
+    fakeVolumeBnbAmount: number
+    fakeVolumeAddress: number
     _all: number
   }
 
@@ -2102,6 +2114,10 @@ export namespace Prisma {
     factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
+    fakeVolumeEnabled?: true
+    fakeVolumeTimes?: true
+    fakeVolumeBnbAmount?: true
+    fakeVolumeAddress?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -2129,6 +2145,10 @@ export namespace Prisma {
     factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
+    fakeVolumeEnabled?: true
+    fakeVolumeTimes?: true
+    fakeVolumeBnbAmount?: true
+    fakeVolumeAddress?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -2156,6 +2176,10 @@ export namespace Prisma {
     factoryAddress?: true
     logsJson?: true
     stepStatesJson?: true
+    fakeVolumeEnabled?: true
+    fakeVolumeTimes?: true
+    fakeVolumeBnbAmount?: true
+    fakeVolumeAddress?: true
     _all?: true
   }
 
@@ -2256,6 +2280,10 @@ export namespace Prisma {
     factoryAddress: string
     logsJson: string
     stepStatesJson: string
+    fakeVolumeEnabled: string
+    fakeVolumeTimes: string
+    fakeVolumeBnbAmount: string
+    fakeVolumeAddress: string
     _count: ConfigCountAggregateOutputType | null
     _min: ConfigMinAggregateOutputType | null
     _max: ConfigMaxAggregateOutputType | null
@@ -2300,6 +2328,10 @@ export namespace Prisma {
     factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
+    fakeVolumeEnabled?: boolean
+    fakeVolumeTimes?: boolean
+    fakeVolumeBnbAmount?: boolean
+    fakeVolumeAddress?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2327,6 +2359,10 @@ export namespace Prisma {
     factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
+    fakeVolumeEnabled?: boolean
+    fakeVolumeTimes?: boolean
+    fakeVolumeBnbAmount?: boolean
+    fakeVolumeAddress?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2354,6 +2390,10 @@ export namespace Prisma {
     factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
+    fakeVolumeEnabled?: boolean
+    fakeVolumeTimes?: boolean
+    fakeVolumeBnbAmount?: boolean
+    fakeVolumeAddress?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -2381,9 +2421,13 @@ export namespace Prisma {
     factoryAddress?: boolean
     logsJson?: boolean
     stepStatesJson?: boolean
+    fakeVolumeEnabled?: boolean
+    fakeVolumeTimes?: boolean
+    fakeVolumeBnbAmount?: boolean
+    fakeVolumeAddress?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson" | "fakeVolumeEnabled" | "fakeVolumeTimes" | "fakeVolumeBnbAmount" | "fakeVolumeAddress", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2413,6 +2457,10 @@ export namespace Prisma {
       factoryAddress: string
       logsJson: string
       stepStatesJson: string
+      fakeVolumeEnabled: string
+      fakeVolumeTimes: string
+      fakeVolumeBnbAmount: string
+      fakeVolumeAddress: string
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -2860,6 +2908,10 @@ export namespace Prisma {
     readonly factoryAddress: FieldRef<"Config", 'String'>
     readonly logsJson: FieldRef<"Config", 'String'>
     readonly stepStatesJson: FieldRef<"Config", 'String'>
+    readonly fakeVolumeEnabled: FieldRef<"Config", 'String'>
+    readonly fakeVolumeTimes: FieldRef<"Config", 'String'>
+    readonly fakeVolumeBnbAmount: FieldRef<"Config", 'String'>
+    readonly fakeVolumeAddress: FieldRef<"Config", 'String'>
   }
     
 
@@ -3273,7 +3325,11 @@ export namespace Prisma {
     implAddress: 'implAddress',
     factoryAddress: 'factoryAddress',
     logsJson: 'logsJson',
-    stepStatesJson: 'stepStatesJson'
+    stepStatesJson: 'stepStatesJson',
+    fakeVolumeEnabled: 'fakeVolumeEnabled',
+    fakeVolumeTimes: 'fakeVolumeTimes',
+    fakeVolumeBnbAmount: 'fakeVolumeBnbAmount',
+    fakeVolumeAddress: 'fakeVolumeAddress'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -3426,6 +3482,10 @@ export namespace Prisma {
     factoryAddress?: StringFilter<"Config"> | string
     logsJson?: StringFilter<"Config"> | string
     stepStatesJson?: StringFilter<"Config"> | string
+    fakeVolumeEnabled?: StringFilter<"Config"> | string
+    fakeVolumeTimes?: StringFilter<"Config"> | string
+    fakeVolumeBnbAmount?: StringFilter<"Config"> | string
+    fakeVolumeAddress?: StringFilter<"Config"> | string
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -3453,6 +3513,10 @@ export namespace Prisma {
     factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
+    fakeVolumeEnabled?: SortOrder
+    fakeVolumeTimes?: SortOrder
+    fakeVolumeBnbAmount?: SortOrder
+    fakeVolumeAddress?: SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -3483,6 +3547,10 @@ export namespace Prisma {
     factoryAddress?: StringFilter<"Config"> | string
     logsJson?: StringFilter<"Config"> | string
     stepStatesJson?: StringFilter<"Config"> | string
+    fakeVolumeEnabled?: StringFilter<"Config"> | string
+    fakeVolumeTimes?: StringFilter<"Config"> | string
+    fakeVolumeBnbAmount?: StringFilter<"Config"> | string
+    fakeVolumeAddress?: StringFilter<"Config"> | string
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -3510,6 +3578,10 @@ export namespace Prisma {
     factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
+    fakeVolumeEnabled?: SortOrder
+    fakeVolumeTimes?: SortOrder
+    fakeVolumeBnbAmount?: SortOrder
+    fakeVolumeAddress?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
     _min?: ConfigMinOrderByAggregateInput
@@ -3543,6 +3615,10 @@ export namespace Prisma {
     factoryAddress?: StringWithAggregatesFilter<"Config"> | string
     logsJson?: StringWithAggregatesFilter<"Config"> | string
     stepStatesJson?: StringWithAggregatesFilter<"Config"> | string
+    fakeVolumeEnabled?: StringWithAggregatesFilter<"Config"> | string
+    fakeVolumeTimes?: StringWithAggregatesFilter<"Config"> | string
+    fakeVolumeBnbAmount?: StringWithAggregatesFilter<"Config"> | string
+    fakeVolumeAddress?: StringWithAggregatesFilter<"Config"> | string
   }
 
   export type ScanWalletCreateInput = {
@@ -3647,6 +3723,10 @@ export namespace Prisma {
     factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
+    fakeVolumeEnabled?: string
+    fakeVolumeTimes?: string
+    fakeVolumeBnbAmount?: string
+    fakeVolumeAddress?: string
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -3674,6 +3754,10 @@ export namespace Prisma {
     factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
+    fakeVolumeEnabled?: string
+    fakeVolumeTimes?: string
+    fakeVolumeBnbAmount?: string
+    fakeVolumeAddress?: string
   }
 
   export type ConfigUpdateInput = {
@@ -3701,6 +3785,10 @@ export namespace Prisma {
     factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
+    fakeVolumeEnabled?: StringFieldUpdateOperationsInput | string
+    fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
+    fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
+    fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -3728,6 +3816,10 @@ export namespace Prisma {
     factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
+    fakeVolumeEnabled?: StringFieldUpdateOperationsInput | string
+    fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
+    fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
+    fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigCreateManyInput = {
@@ -3755,6 +3847,10 @@ export namespace Prisma {
     factoryAddress?: string
     logsJson?: string
     stepStatesJson?: string
+    fakeVolumeEnabled?: string
+    fakeVolumeTimes?: string
+    fakeVolumeBnbAmount?: string
+    fakeVolumeAddress?: string
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -3782,6 +3878,10 @@ export namespace Prisma {
     factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
+    fakeVolumeEnabled?: StringFieldUpdateOperationsInput | string
+    fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
+    fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
+    fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -3809,6 +3909,10 @@ export namespace Prisma {
     factoryAddress?: StringFieldUpdateOperationsInput | string
     logsJson?: StringFieldUpdateOperationsInput | string
     stepStatesJson?: StringFieldUpdateOperationsInput | string
+    fakeVolumeEnabled?: StringFieldUpdateOperationsInput | string
+    fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
+    fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
+    fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -3974,6 +4078,10 @@ export namespace Prisma {
     factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
+    fakeVolumeEnabled?: SortOrder
+    fakeVolumeTimes?: SortOrder
+    fakeVolumeBnbAmount?: SortOrder
+    fakeVolumeAddress?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -4001,6 +4109,10 @@ export namespace Prisma {
     factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
+    fakeVolumeEnabled?: SortOrder
+    fakeVolumeTimes?: SortOrder
+    fakeVolumeBnbAmount?: SortOrder
+    fakeVolumeAddress?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -4028,6 +4140,10 @@ export namespace Prisma {
     factoryAddress?: SortOrder
     logsJson?: SortOrder
     stepStatesJson?: SortOrder
+    fakeVolumeEnabled?: SortOrder
+    fakeVolumeTimes?: SortOrder
+    fakeVolumeBnbAmount?: SortOrder
+    fakeVolumeAddress?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {

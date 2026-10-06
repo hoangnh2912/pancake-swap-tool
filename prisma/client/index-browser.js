@@ -153,7 +153,11 @@ exports.Prisma.ConfigScalarFieldEnum = {
   implAddress: 'implAddress',
   factoryAddress: 'factoryAddress',
   logsJson: 'logsJson',
-  stepStatesJson: 'stepStatesJson'
+  stepStatesJson: 'stepStatesJson',
+  fakeVolumeEnabled: 'fakeVolumeEnabled',
+  fakeVolumeTimes: 'fakeVolumeTimes',
+  fakeVolumeBnbAmount: 'fakeVolumeBnbAmount',
+  fakeVolumeAddress: 'fakeVolumeAddress'
 };
 
 exports.Prisma.SortOrder = {
