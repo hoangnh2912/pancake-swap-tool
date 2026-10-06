@@ -1,161 +1,164 @@
-# SPEC — Resume automation cho token bị lỗi (retry per-token)
+# SPEC — Bước "Fake Volume" trước khi swap
 
 ## 1. Objective
 
-**Vấn đề khách báo (nguyên văn, đã phân tích):**
-> Đang chạy 24/24 token, 1 token bị lỗi giữa chừng (ví dụ bước swap không thực hiện được) →
-> automation dừng hẳn token đó, báo lỗi. Khách phải chạy lại nhưng **không muốn mất tiến độ**:
-> không muốn deploy lại contract (đã tốn gas), không muốn mất ví đã quét được (`ScanWallet` cũ),
-> và không cần retry đúng lệnh swap bị lỗi — chỉ cần chạy lại toàn bộ danh sách lệnh swap từ đầu.
+**Yêu cầu khách (nguyên văn, đã phân tích từ chat + file `swap-ref.txt` khách gửi):**
+> Thêm 1 bước fake volume — giống hồi xưa — chèn SAU khi add liquidity (step 4), TRƯỚC khi chạy
+> các lệnh swap (step 5.1). Luồng: chuyển BNB vào trong 1 contract riêng → contract thực thi
+> fake swap (mua/bán qua lại Router nhiều vòng) → xong thì rút hết (BNB/token còn lại) về ví
+> swap → rồi mới chuyển qua chạy các lệnh swap đã cấu hình như bình thường.
 
-**Mục tiêu:** Khi 1 token có `status = 'error'` (đã có `contractAddress` — tức đã deploy xong),
-bấm nút chạy chung ("Bắt đầu Automation") sẽ **resume** riêng token đó thay vì chạy lại từ đầu:
+**Xác nhận cơ chế (từ `swap-ref.txt`, KHÔNG phải kiểu "fake event" như `airdrop()` hiện có):**
+Hợp đồng `FakeVolume` riêng biệt (không phải sửa `defaultContract.ts`/TOKEN1997), swap **THẬT**
+qua PancakeSwap Router — có gas thật + slippage thật mỗi vòng, volume ghi nhận thật trên
+Dexscreener/DEXTools.
 
-- **Bỏ qua** step 0–4 (Deploy & Initialize, Set Whitelist, Transfer Token mint wallet, Add
-  Liquidity, Clear+transfer ví đã quét) — dùng lại `contractAddress` đã có.
-- **Chạy lại** step 5.1 (swap — luôn bắt đầu từ lệnh đầu tiên trong danh sách, không phải lệnh bị
-  lỗi) + 5.2 (quét & airdrop) song song như luồng bình thường, rồi tiếp tục 6 (mint thêm + bán
-  90%) và 7 (chuyển BNB về ví chủ) — tức resume chạy tiếp **hết pipeline còn lại**, không dừng
-  giữa chừng.
-- **Không xoá** `ScanWallet` cũ của token đó khi resume (hiện code đang `deleteMany` mỗi lần chạy
-  — xem Finding bên dưới).
+```solidity
+contract FakeVolume {
+    IPancakeRouter public router;      // chọn theo chainId (97 testnet / mainnet default)
+    address private owner;
 
-Token có `status = 'idle'` (chưa từng chạy) vẫn chạy full pipeline từ step 0 như hiện tại. Token
-có `status = 'success'` không bị động tới khi bấm lại nút chạy chung (không tự re-run).
+    function withdraw() public onlyOwner { payable(owner).transfer(address(this).balance); }
+    function withdrawToken(address token) public onlyOwner { IERC20(token).transfer(owner, IERC20(token).balanceOf(address(this))); }
+    receive() external payable {}
 
-## 2. Finding trong code hiện tại (căn cứ để sửa)
-
-`src/utils/automationService.ts:475-481` — mỗi lần `runAutomation` chạy (kể cả full run bình
-thường), có đoạn:
-
-```ts
-if (hasScanConfig) {
-    const scanAddrs = params.scanContracts.map((c) => c.address).filter(Boolean)
-    await zenStackFunction('ScanWallet' as any, 'deleteMany', {
-        where: { wallet: { in: scanAddrs } },
-    })
-    onLog('[1.1] ✓ Cleared scan records')
+    function swap(address token, uint256 times, uint256 amount) public onlyOwner {
+        // not payable — tiêu BNB ĐÃ nằm sẵn trong contract (nhận qua receive())
+        for (uint256 i = 0; i < times; i++) {
+            // buy bằng amountIn hiện có (lần đầu = amount param)
+            uint[] memory outWT = router.swapExactETHForTokens{value: amountIn}(0, pathWT, address(this), ...);
+            amountIn = outWT[1];
+            // sell TOÀN BỘ token vừa mua, trả về BNB
+            uint[] memory outTW = router.swapExactTokensForETH(amountIn, 0, pathTW, address(this), ...);
+            amountIn = outTW[1];
+        }
+    }
 }
 ```
 
-Đây chính là chỗ xoá "ví tổng quét cũ" mà khách không muốn mất khi resume. Khi resume phải
-**skip toàn bộ step 4 (bao gồm deleteMany này)**, không chỉ riêng dòng deleteMany.
+**Lưu ý quan trọng rút ra từ code:** mỗi vòng lặp LUÔN kết thúc bằng SELL (bán hết token vừa mua
+về BNB) → sau `times` vòng, contract giữ **BNB**, không giữ token. `withdrawToken()` vẫn gọi thêm
+cho an toàn (dust token do làm tròn), nhưng nguồn rút chính là `withdraw()` (BNB).
 
-`src/pages/main.tsx:704-714` — `handleStart` hiện tại reset **toàn bộ** tokens về `idle` và xoá
-`contractAddress` trước khi chạy:
+## 2. Phạm vi thay đổi
 
-```ts
-setTokens((prev) =>
-    prev.map((r) => ({ ...r, status: 'idle' as RowStatus, contractAddress: undefined, errorMsg: undefined }))
-)
+### 2.1 Hợp đồng — file mới `src/utils/fakeVolumeContract.ts`
+
+- Copy nguyên văn source Solidity từ `swap-ref.txt` (đã verify ở trên), export dạng string giống
+  cách `defaultContract.ts` export `DEFAULT_CONTRACT`/ABI — đặt tên `FAKE_VOLUME_CONTRACT` +
+  `FAKE_VOLUME_ABI` (constructor, `swap`, `withdraw`, `withdrawToken`, `transferOwnership`,
+  `owner`).
+- Compile qua `window.electron.compileContract` (IPC có sẵn, dùng lại solc cache) — KHÔNG cần
+  sửa `src/index.ts` (API `compile-contract` đã generic, nhận source bất kỳ).
+
+### 2.2 Deploy & cache contract — `schema.zmodel` + `automationService.ts`
+
+Thêm cột vào model `Config`:
+```prisma
+fakeVolumeEnabled   String @default("")      // "" | "true"
+fakeVolumeTimes     String @default("3")
+fakeVolumeBnbAmount String @default("")      // BNB mỗi lần gọi swap(), đơn vị ether-string
+fakeVolumeAddress   String @default("")      // contract FakeVolume đã deploy, tái dùng mọi lần
+```
+→ `yarn generate` + `yarn db:push` sau khi sửa.
+
+Deploy **1 lần duy nhất cho cả batch** (không phải mỗi token) — giống cách cache EIP-1167
+`implAddress` hiện tại:
+- Đầu `runAutomation` (trước vòng lặp `for (const token of params.tokens)`), nếu
+  `params.fakeVolumeEnabled` true:
+  - Nếu `params.fakeVolumeAddress` có sẵn → gọi `owner()` xác nhận contract còn tồn tại & đúng
+    chủ (so với `swapWallet.address`) → tái sử dụng.
+  - Nếu không có hoặc check fail → deploy mới bằng `swapWallet` (constructor `_chainId`), lưu địa
+    chỉ qua callback `onFakeVolumeDeployed(address)` → `main.tsx` gọi `scheduleSave({
+    fakeVolumeAddress: addr })` để persist, tránh deploy lại ở lần chạy sau.
+
+**Vì sao deploy bằng `swapWallet` (không phải `mainWallet`/`mintWallet`):** owner = người deploy
+→ `withdraw()`/`withdrawToken()` tự động trả thẳng về `swapWallet`, khớp đúng yêu cầu "withdraw
+về ví swap" mà không cần thêm bước `transferOwnership`.
+
+### 2.3 Chèn step mới trong `automationService.ts` — "Step 4.5 — Fake Volume"
+
+Vị trí: trong vòng lặp `for (const token of params.tokens)`, **sau** `onStepChange(token.id, 4,
+'finish')` (add liquidity xong), **trước** `Promise.allSettled([run51(), run52()])` (step 5.1).
+
+```
+[4.5] Bỏ qua nếu: !fakeVolumeEnabled, hoặc !fakeVolumeAddress (deploy fail ở bước đầu),
+      hoặc times/amount không hợp lệ (> 0).
+[4.5] Gửi BNB vào contract: swapWallet.sendTransaction({ to: fakeVolumeAddress,
+      value: parseEther(fakeVolumeBnbAmount), gasPrice }), await tx.wait()
+[4.5] Gọi swap(): fakeVolume.connect(swapWallet).swap(contractAddress, times,
+      parseEther(fakeVolumeBnbAmount), { gasLimit: <estimate>, gasPrice }), await tx.wait()
+[4.5] Rút sạch: withdraw() rồi withdrawToken(contractAddress) (await tx.wait() từng cái,
+      withdrawToken cho phép revert không chặn flow — bọc try/catch riêng, chỉ log cảnh báo
+      nếu fail vì thường sẽ revert "không có gì để rút" khi dust = 0)
+[4.5] ✓ xong → onStepChange(token.id, 4.5-equiv, 'finish') → tiếp tục step 5 như cũ
 ```
 
-Việc này xoá mất `contractAddress` cần để resume — phải sửa để chỉ reset các row sẽ chạy lại từ
-đầu (status hiện tại là `idle`), giữ nguyên `contractAddress` của row `error` (sẽ dùng để resume),
-và không đụng tới row `success`.
+Lỗi ở bất kỳ tx nào trong bước này (gửi BNB / swap / withdraw() bắt buộc) → **throw**, token này
+dừng với `status = 'error'` giống các step khác hiện tại — KHÔNG âm thầm bỏ qua rồi chạy tiếp
+step 5 (vì BNB thật đã gửi vào contract, phải biết rõ để xử lý thủ công nếu kẹt).
 
-## 3. Phạm vi thay đổi
+**UI Steps:** thêm 1 bước mới vào mảng `Steps` hiển thị hiện có (9 bước → 10 bước), tên "4.5 Fake
+Volume", giữa "4. Add Liquidity" và "5.1 Swap Commands". Cần dời index các `statuses[]` hiện tại
+từ vị trí 4 trở đi lùi 1 (rà soát kỹ toàn bộ `onStepChange(token.id, N, ...)` đang dùng số cứng
+5/6/7/8 cho các step sau — đổi hết +1).
 
-### 3.1 `src/utils/automationService.ts`
+### 2.4 UI — `main.tsx`
 
-- `AutomationParams['tokens']` items thêm optional field trên mỗi token (hoặc tương đương):
-  `resumeContractAddress?: string` — nếu có giá trị này, coi token đó là đang resume.
-- Trong vòng lặp `for (const token of params.tokens)`:
-  - Nếu `token.resumeContractAddress` có giá trị:
-    - Bỏ qua toàn bộ khối step 0 → step 4 (deploy proxy, initialize, whitelist, mint-transfer,
-      add liquidity, clear scan records).
-    - Gán trực tiếp `contractAddress = token.resumeContractAddress` và
-      `deployed = new ethers.Contract(contractAddress, params.abi, mainWallet)`.
-    - Gọi `onStepChange(token.id, 0..4, 'finish')` ngay lập tức để UI Steps hiển thị các bước đã
-      xong (không hiển thị `wait`/`process` cho các bước không chạy lại).
-    - Log rõ ràng: `onLog(\`[resume] Bỏ qua deploy — dùng lại contract đã có: ${contractAddress}\`)`.
-  - Nếu không có `resumeContractAddress`: giữ nguyên logic hiện tại (deploy full từ đầu).
-  - Từ step 5.1 trở đi (swap, scan/airdrop, sell 90%, transfer BNB) logic **giữ nguyên 100%** —
-    không cần thay đổi gì, vì:
-    - `run51` vốn đã luôn bắt đầu từ `i = 0` (lệnh swap đầu tiên) mỗi lần được gọi → tự nhiên thoả
-      yêu cầu "chạy lại lệnh swap đầu tiên, không retry lệnh bị lỗi".
-    - `run52` (scan+airdrop) đọc `ScanWallet` hiện có từ DB làm điểm khởi đầu dedupe
-      (`Pre-loaded N ví đã quét từ DB`) — vì dữ liệu cũ không bị xoá, hành vi này tự động đúng.
-- Không thay đổi hành vi hiện tại của full-run bình thường (deleteMany scan records vẫn giữ
-  nguyên khi **không** resume — ngoài phạm vi yêu cầu này).
+Thêm 1 khối cấu hình mới (đặt giữa khu "Swap Commands" và khu "Cài đặt Quét & Airdrop", hoặc
+ngay trên Swap Commands — vị trí chính xác do bạn quyết khi review):
+- `Switch`/`Segmented` bật/tắt "Fake Volume trước khi swap" (`fakeVolumeEnabled`).
+- `InputNumber` "Số vòng" (`fakeVolumeTimes`, min=1, **không có default ngầm hiểu** — bắt nhập).
+- `Input` "BNB mỗi vòng" (`fakeVolumeBnbAmount`, **bắt buộc nhập tay**, không suy ra từ
+  `liquidityBNB` hay field nào khác — liên quan tiền thật, không đoán).
+- Validate khi bật: `times > 0` và `bnbAmount` parse được + `> 0`, nếu thiếu → chặn Start, báo lỗi
+  rõ (theo đúng pattern `message.error` hiện có cho `scanContracts`/`disperseAmount`).
 
-### 3.2 `src/pages/main.tsx`
+## 3. Ngoài phạm vi / giới hạn đã biết
 
-- `handleStart`:
-  - Xác định tập token sẽ chạy trong lần bấm này:
-    - `status === 'idle'` (hoặc chưa từng set) → full run, reset `contractAddress`/`errorMsg` về
-      `undefined` như hiện tại.
-    - `status === 'error'`:
-      - Nếu có `contractAddress` → resume (giữ nguyên `contractAddress`, chỉ reset
-        `status → 'running'`, giữ nguyên `errorMsg` cho tới khi có kết quả mới).
-      - Nếu KHÔNG có `contractAddress` (lỗi xảy ra trước khi deploy xong) → full run như token
-        `idle` (deploy lại từ đầu, theo quyết định đã chốt).
-    - `status === 'success'` → **không** đưa vào danh sách chạy, giữ nguyên nguyên trạng, không
-      gọi `runAutomation` cho token này.
-  - Validate (`valid = tokens.filter(...)`) áp dụng như cũ nhưng chỉ trên tập token sẽ chạy ở
-    trên (loại `success` ra trước khi validate/filter).
-  - Khi build `params.tokens` truyền vào `runAutomation`, với token đang resume thêm
-    `resumeContractAddress: token.contractAddress`.
-  - `initialSteps` (cho `Steps` UI): với token resume, khởi tạo statuses = `['finish','finish',
-    'finish','finish','finish','wait','wait','wait','wait']` (5 bước đầu coi như xong) thay vì
-    toàn bộ `'wait'` như hiện tại — để UI không "giật lùi" hiển thị lại các bước đã hoàn thành.
-  - Nếu tất cả token đều `success` (không còn gì để chạy) khi bấm nút chung → báo
-    `message.info('Không có token nào cần chạy lại — tất cả đã hoàn thành')` và không gọi
-    `runAutomation`.
+- Không tự động tính/giới hạn (cap) gas tối đa cho `times` lớn — nếu user nhập `times` quá cao,
+  tx có thể tốn gas rất lớn hoặc revert do vượt block gas limit. Không hard-block trong spec này,
+  chỉ hiển thị cảnh báo dòng chữ nhỏ dưới input ("mỗi vòng = 2 lần swap thật, tốn gas thật").
+- Không đổi `gasPrice` — dùng chung biến `gasPrice` tĩnh hiện có cho mọi tx (kể cả gửi BNB, swap,
+  withdraw) theo đúng quyết định đã chốt trước đó (gas price fix cứng theo Config).
+- Không thêm UI xem lịch sử các lần fake-volume đã chạy (không log riêng ra bảng DB) — chỉ hiện
+  trong log text như các step khác.
+- Nếu đổi `scanMode`/RPC/chain giữa các lần chạy mà `fakeVolumeAddress` cũ thuộc chain khác →
+  check `owner()` ở bước 2.2 sẽ tự fail (gọi sai chain) → tool tự deploy lại, không cần xử lý
+  riêng.
 
-## 4. UI/UX không đổi
+## 4. Acceptance Criteria
 
-- Không thêm nút riêng per-row — dùng chung nút "Bắt đầu Automation" hiện có (quyết định đã chốt
-  với user), tool tự phân loại theo `status` của từng row.
-- `Steps` chi tiết theo token (đoạn hiển thị `1. Deploy & Initialize` … `7. Chuyển BNB về ví chủ`)
-  không đổi cấu trúc, chỉ đổi trạng thái khởi tạo khi resume (xem 3.2).
+1. Bật Fake Volume, `times=2`, `amount=0.001` BNB, token mới (chưa có `fakeVolumeAddress`) → log
+   thấy `[4.5]` deploy contract mới → gửi 0.001 BNB → gọi `swap(token, 2, 0.001 BNB)` → rút sạch
+   (`withdraw()` log có tx hash) → rồi mới thấy `[5.1]` bắt đầu như cũ. Steps UI hiện đủ 10 bước,
+   bước Fake Volume chuyển `finish` đúng lúc.
+2. Chạy token thứ 2 cùng batch → log `[4.5]` thấy dùng lại contract cũ (không deploy lại, không
+   tốn gas deploy thêm).
+3. Tắt Fake Volume → không có log `[4.5]` nào, hành vi y hệt hiện tại (không regress).
+4. Bật nhưng để trống `times` hoặc `amount` → bấm Start bị chặn, báo lỗi rõ, không gọi
+   `runAutomation`.
+5. Sau khi `[4.5]` xong, balance BNB + token của contract `FakeVolume` trên BscScan = 0.
+6. Nếu tx `swap()` revert (vd slippage router revert do pool quá mỏng) → token này dừng với
+   `status='error'`, log hiện rõ lỗi, KHÔNG tự chuyển sang step 5.
 
-## 5. Ngoài phạm vi / giới hạn đã biết
+## 5. Testing strategy
 
-- `contractAddress`/`status` của `TokenRow` hiện **không được persist** vào config
-  (`tokensJson` chỉ lưu các field khác — xem `Omit<TokenRow, 'status' | 'contractAddress' |
-  'errorMsg'>` tại chỗ load config). Nghĩa là nếu tool bị đóng/reload trước khi bấm resume,
-  `contractAddress` sẽ mất và token đó buộc phải chạy lại từ đầu (deploy mới). Đây là giới hạn đã
-  biết, **không sửa trong spec này** (không được yêu cầu, và persist private-key-liên-quan-context
-  cần cân nhắc riêng).
-- Không đổi hành vi xoá `ScanWallet` khi chạy full run bình thường (không resume) — chỉ chặn xoá
-  khi đang resume.
-
-## 6. Acceptance Criteria
-
-1. Chạy 1 token thành công (`status = 'success'`) → bấm nút chạy chung lần nữa → token đó KHÔNG
-   chạy lại (không gọi lại `runAutomation` cho nó), giữ nguyên `contractAddress`/log cũ.
-2. Chạy token, cho lỗi giả lập ở bước 5.1 (swap) → `status = 'error'`, `contractAddress` vẫn còn
-   trên row → bấm nút chạy chung → token đó:
-   - Log hiển thị `[resume] Bỏ qua deploy — dùng lại contract đã có: 0x...`.
-   - Steps UI: bước 1–5 (index 0-4) hiển thị `finish` ngay, không chạy lại on-chain tx nào cho
-     deploy/whitelist/mint-transfer/liquidity.
-   - Step 5.1 chạy lại từ lệnh swap đầu tiên trong danh sách (không phải lệnh bị lỗi).
-   - `ScanWallet` rows có sẵn trong DB cho token đó (nếu có) vẫn còn nguyên, không bị `deleteMany`.
-   - Nếu chạy hết không lỗi tiếp → tiếp tục step 6 (mint+bán 90%) và step 7 (chuyển BNB) tự động,
-     `status` cuối cùng → `'success'`.
-3. Token lỗi trước khi có `contractAddress` (ví dụ lỗi compile hoặc lỗi ngay bước deploy) → bấm
-   chạy lại → chạy full pipeline từ step 0 (deploy mới), y như token `idle`.
-4. Full run bình thường (không có token nào `error`/`success` từ trước, toàn bộ `idle`) → hành vi
-   không đổi so với hiện tại.
-
-## 7. Testing strategy
-
-Không có test suite tự động hiện có cho `automationService.ts` (chạy on-chain, khó unit test).
-Verify thủ công theo Acceptance Criteria bằng `yarn start` trên BSC Testnet (chainId 97):
-- Case 2 giả lập lỗi: tạm set `slippagePct` cực thấp hoặc balance không đủ để 1 lệnh swap trong
-  step 5.1 revert có chủ đích, xác nhận token dừng đúng, sau đó verify resume theo AC #2.
-- Kiểm tra bằng mắt cột `Steps` + đọc log console, đối chiếu DB (`ScanWallet`) trước/sau qua
-  `yarn generate` hooks hoặc query trực tiếp SQLite.
+Không có test suite tự động cho on-chain flow (giống các step khác trong file này). Verify thủ
+công trên BSC Testnet (chainId 97) theo Acceptance Criteria — đối chiếu tx thật + balance contract
+`FakeVolume` sau khi chạy qua BscScan testnet.
 
 `tsc --noEmit --skipLibCheck` phải sạch sau khi sửa (không lỗi `src/`).
 
-## 8. Boundaries
+## 6. Boundaries
 
-- **Luôn làm:** giữ nguyên logic on-chain hiện có cho từng step (không đổi thứ tự, không đổi gas
-  limit/gas price hiện tại) — chỉ thêm nhánh rẽ resume/skip, không refactor lại phần deploy.
-- **Hỏi trước:** nếu phát hiện cần đổi cấu trúc `AutomationParams` theo cách phá vỡ tương thích
-  lớn (ví dụ đổi `tokens` từ mảng object sang shape khác) — báo lại trước khi làm.
-- **Không bao giờ:** không thêm logic tự động retry vô hạn (không tự động resume khi lỗi — vẫn
-  cần user bấm nút thủ công như hiện tại). Không đổi hành vi xoá `ScanWallet` của full-run bình
-  thường.
+- **Luôn làm:** dùng chung `gasPrice` tĩnh hiện có cho mọi tx trong bước này; log mọi tx qua
+  `onLog` prefix `[4.5]` nhất quán style các step khác; rút sạch BNB/token khỏi contract ngay sau
+  mỗi lần gọi `swap()` — không để BNB kẹt lại giữa các lần chạy.
+- **Hỏi trước:** vị trí đặt UI field trong form (đề xuất ở trên, chưa chốt); có cần soft-cap cảnh
+  báo khi `times` quá lớn không (đề xuất >10 hiện warning, chưa chốt số cụ thể); tên hiển thị
+  bước trong Steps UI ("4.5 Fake Volume" — đặt tên khác nếu muốn).
+- **Không bao giờ:** không âm thầm nuốt lỗi ở bước 4.5 rồi tự chạy tiếp step 5 khi BNB thật đã
+  gửi vào contract nhưng `swap()`/`withdraw()` fail; không deploy lại `FakeVolume` contract mỗi
+  token trong cùng batch (lãng phí gas deploy không cần thiết); không tự suy diễn giá trị mặc
+  định cho `times`/`amount` — luôn bắt user nhập tay.
