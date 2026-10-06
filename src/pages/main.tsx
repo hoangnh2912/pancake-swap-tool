@@ -18,6 +18,7 @@ import {
     Segmented,
     Select,
     Steps,
+    Switch,
     Table,
     Tabs,
     Tag,
@@ -39,6 +40,7 @@ import type { AutomationToken, ScanContractConfig, StepStatus, SwapCommand } fro
 import { runAutomation, SUPPORTED_CHAINS } from '../utils/automationService'
 import { buildProvider, parseRpcList } from '../utils/buildProvider'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
+import FAKE_VOLUME_CONTRACT from '../utils/fakeVolumeContract'
 import * as XLSX from 'xlsx'
 import {
     useCountScanWallet,
@@ -301,6 +303,10 @@ const Main = ({
     const [stepStates, setStepStates] = useState<
         Record<string, { tokenName: string; statuses: StepStatus[] }>
     >({})
+    const [fakeVolumeEnabled, setFakeVolumeEnabled] = useState(false)
+    const [fakeVolumeTimes, setFakeVolumeTimes] = useState<number>(1)
+    const [fakeVolumeBnbAmount, setFakeVolumeBnbAmount] = useState('')
+    const [fakeVolumeAddress, setFakeVolumeAddress] = useState<string | null>(null)
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [swapRepeat, setSwapRepeat] = useState<number>(1)
@@ -460,6 +466,10 @@ const Main = ({
             if (cfg.disperseAmount) setDisperseAmount(cfg.disperseAmount)
             if (cfg.disperseBatchSize) setDisperseBatchSize(Number(cfg.disperseBatchSize) || 10000)
             if (cfg.scanDelay) setScanDelay(Number(cfg.scanDelay) || 30)
+            if (cfg.fakeVolumeEnabled) setFakeVolumeEnabled(cfg.fakeVolumeEnabled === 'true')
+            if (cfg.fakeVolumeTimes) setFakeVolumeTimes(Number(cfg.fakeVolumeTimes) || 1)
+            if (cfg.fakeVolumeBnbAmount) setFakeVolumeBnbAmount(cfg.fakeVolumeBnbAmount)
+            if (cfg.fakeVolumeAddress) setFakeVolumeAddress(cfg.fakeVolumeAddress)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -771,6 +781,16 @@ const Main = ({
             message.error('Vui lòng nhập RPC URL')
             return
         }
+        if (fakeVolumeEnabled) {
+            if (!(fakeVolumeTimes > 0)) {
+                message.error('Fake Volume: vui lòng nhập số vòng > 0')
+                return
+            }
+            if (!fakeVolumeBnbAmount || !(Number(fakeVolumeBnbAmount) > 0)) {
+                message.error('Fake Volume: vui lòng nhập số BNB mỗi vòng > 0')
+                return
+            }
+        }
         // Token đã 'success' không chạy lại; token 'error' còn contractAddress sẽ resume
         // (bỏ qua deploy), token 'idle' hoặc 'error' chưa deploy xong sẽ chạy full từ đầu.
         const runnable = tokens.filter((t) => t.status !== 'success')
@@ -803,8 +823,8 @@ const Main = ({
             initialSteps[t.id] = {
                 tokenName: t.name,
                 statuses: isResuming(t)
-                    ? ['finish', 'finish', 'finish', 'finish', 'finish', 'wait', 'wait', 'wait', 'wait']
-                    : ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'],
+                    ? ['finish', 'finish', 'finish', 'finish', 'finish', 'wait', 'wait', 'wait', 'wait', 'wait']
+                    : ['wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait', 'wait'],
             }
         }
         setStepStates(initialSteps)
@@ -833,6 +853,16 @@ const Main = ({
             addLog(
                 `Compile thành công: contract "${compileResult.contractName}" [solc ${solcVersion}]`
             )
+
+            let fakeVolumeAbi: any[] | undefined
+            let fakeVolumeBytecode: string | undefined
+            if (fakeVolumeEnabled) {
+                addLog('Đang compile FakeVolume contract...')
+                const fvCompile = await getElectron()?.compileContract(FAKE_VOLUME_CONTRACT, solcVersion)
+                fakeVolumeAbi = fvCompile.abi
+                fakeVolumeBytecode = fvCompile.bytecode
+                addLog('Compile FakeVolume thành công')
+            }
 
             const normalizeKey = (k: string) =>
                 k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`
@@ -864,6 +894,16 @@ const Main = ({
                     scanDelaySeconds: scanDelay,
                     existingImplementationAddress: implAddress,
                     _implRef: implRef,
+                    fakeVolumeEnabled,
+                    fakeVolumeTimes,
+                    fakeVolumeBnbAmount,
+                    fakeVolumeAddress,
+                    fakeVolumeAbi,
+                    fakeVolumeBytecode,
+                    onFakeVolumeDeployed: (addr) => {
+                        setFakeVolumeAddress(addr)
+                        getElectron()?.saveConfig({ fakeVolumeAddress: addr }, tabId)
+                    },
                     shouldStop: () => stopRef.current,
                 },
                 addLog,
@@ -1360,6 +1400,71 @@ const Main = ({
                     pagination={false}
                     size="small"
                 />
+            </Box>
+
+            {/* Fake Volume — chạy sau Add Liquidity, trước Lệnh swap */}
+            <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
+                <Flex align="center" justify="space-between" mb={fakeVolumeEnabled ? 3 : 0}>
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                        }}
+                    >
+                        Fake Volume (trước khi swap)
+                    </AntText>
+                    <Switch
+                        checked={fakeVolumeEnabled}
+                        onChange={(checked) => {
+                            setFakeVolumeEnabled(checked)
+                            scheduleSave({ fakeVolumeEnabled: checked ? 'true' : '' })
+                        }}
+                        disabled={running}
+                    />
+                </Flex>
+                {fakeVolumeEnabled && (
+                    <>
+                        <Flex align="center" gap={16}>
+                            <Text fontSize="sm" color="gray.400">
+                                Số vòng
+                            </Text>
+                            <InputNumber
+                                size="small"
+                                min={1}
+                                value={fakeVolumeTimes}
+                                onChange={(v) => {
+                                    const val = v ?? 1
+                                    setFakeVolumeTimes(val)
+                                    scheduleSave({ fakeVolumeTimes: String(val) })
+                                }}
+                                disabled={running}
+                                style={{ width: 90 }}
+                            />
+                            <Text fontSize="sm" color="gray.400" ml={2}>
+                                BNB mỗi vòng
+                            </Text>
+                            <Input
+                                size="small"
+                                value={fakeVolumeBnbAmount}
+                                placeholder="0.001"
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setFakeVolumeBnbAmount(val)
+                                    scheduleSave({ fakeVolumeBnbAmount: val })
+                                }}
+                                disabled={running}
+                                style={{ width: 120 }}
+                            />
+                        </Flex>
+                        {fakeVolumeTimes > 10 && (
+                            <AntText type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                                Mỗi vòng = 2 lần swap thật qua Router, tốn gas thật — cân nhắc số vòng lớn.
+                            </AntText>
+                        )}
+                    </>
+                )}
             </Box>
 
             {/* Swap Commands */}
@@ -1861,15 +1966,16 @@ const Main = ({
                                                 status: statuses[4],
                                             },
                                             */
-                                            { title: '5.1 Chạy lệnh swap', status: statuses[5] },
-                                            { title: '5.2 Quét & Airdrop', status: statuses[6] },
+                                            { title: '4.2 Fake Volume', status: statuses[5] },
+                                            { title: '5.1 Chạy lệnh swap', status: statuses[6] },
+                                            { title: '5.2 Quét & Airdrop', status: statuses[7] },
                                             {
                                                 title: '6. Mint thêm & Bán 90%',
-                                                status: statuses[7],
+                                                status: statuses[8],
                                             },
                                             {
                                                 title: '7. Chuyển BNB về ví chủ',
-                                                status: statuses[8],
+                                                status: statuses[9],
                                             },
                                         ]}
                                     />

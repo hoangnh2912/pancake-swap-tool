@@ -90,7 +90,7 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
 - **Depends on:** Task 1 (dùng `FAKE_VOLUME_CONTRACT` để compile ra bytecode/abi lúc deploy —
   thực ra compile xảy ra ở Task 3/main.tsx, Task 2 chỉ nhận `fakeVolumeAbi/Bytecode` qua params).
 
-## Task 3 — `main.tsx`: UI, validate, wiring
+## Task 3 — `main.tsx`: UI, validate, wiring — DONE
 
 - [ ] State mới: `fakeVolumeEnabled`, `fakeVolumeTimes`, `fakeVolumeBnbAmount` (load/save qua
       `scheduleSave`/`cfg.fakeVolume*` theo đúng pattern các field khác, vd `scanDelay`).
@@ -109,12 +109,16 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
       swap"; đổi `statuses[5..8]` của 4 entry còn lại (5.1, 5.2, 6., 7.) → `statuses[6..9]`.
 - [ ] `initialSteps` (chỗ khởi tạo mảng `statuses` toàn `'wait'`/resume `'finish'` khi bấm Start —
       đã sửa ở feature Resume trước đó): tăng độ dài mảng từ 9 → 10 phần tử.
-- **Verify:** `tsc --noEmit --skipLibCheck` sạch. `yarn package` build qua không lỗi webpack.
-  Chạy `yarn start`, bật Fake Volume, để trống `times` → bấm Start → xác nhận bị chặn đúng message
-  (chưa cần chạy on-chain thật ở task này).
+- **Verify:** `tsc --noEmit` sạch (3 lần, sau mỗi nhóm thay đổi). `yarn package` build qua không
+  lỗi webpack (241.84s, exit 0, "SUCCESS Packaging application").
+  _(Lệch nhỏ so với plan: `onFakeVolumeDeployed` dùng `getElectron()?.saveConfig(...)` persist
+  NGAY lập tức thay vì `scheduleSave` debounce 800ms — an toàn hơn cho 1 sự kiện quan trọng xảy
+  ra 1 lần, tránh bị patch khác đè mất do `scheduleSave` không merge patch khi gọi dồn dập.)_
+  _(Phát hiện thêm: statuses[4] "4.1" đang bị comment `/* TEMPORARILY DISABLED */` trong Steps UI
+  từ trước — không phải do task này. "4.2 Fake Volume" chèn NGAY SAU block comment đó, statuses[5]
+  — không cần bật lại 4.1 để làm việc này.)_
 - **Depends on:** Task 2 (field name `AutomationParams` phải khớp).
-- **Checkpoint:** dừng lại, confirm UI hiển thị đúng + validate chặn đúng trước khi sang Task 4
-  (on-chain thật, tốn BNB testnet thật nếu sai sót).
+- **Chưa verify on-chain thật** — sang Task 4 (cần ví/BNB testnet thật, phải do user chạy tay).
 
 ## Task 4 — Verify thủ công trên BSC Testnet (chainId 97)
 
