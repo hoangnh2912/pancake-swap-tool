@@ -146,6 +146,19 @@ export interface AutomationParams {
     existingImplementationAddress?: string | null
     /** Mutable ref for newly deployed impl address */
     _implRef?: { current: string | null }
+    /** Bước 4.2: swap thật (mua rồi bán) nhiều vòng qua FakeVolume contract trước khi chạy
+     *  các lệnh swap người dùng cấu hình — tạo volume thật trên Pancake. */
+    fakeVolumeEnabled?: boolean
+    fakeVolumeTimes?: number
+    /** BNB mỗi vòng, dạng ether-string (vd "0.001") */
+    fakeVolumeBnbAmount?: string
+    /** Địa chỉ FakeVolume contract đã deploy từ lần chạy trước — tái sử dụng nếu còn hợp lệ */
+    fakeVolumeAddress?: string | null
+    /** ABI/bytecode đã compile sẵn (compile 1 lần ở main.tsx, không compile lại trong service) */
+    fakeVolumeAbi?: any[]
+    fakeVolumeBytecode?: string
+    /** Callback khi deploy FakeVolume contract mới — để caller persist địa chỉ ngay */
+    onFakeVolumeDeployed?: (address: string) => void
 }
 
 export type StepStatus = 'wait' | 'process' | 'finish' | 'error'
@@ -175,6 +188,21 @@ async function estimateAirdropGas(
     } catch {
         // Fallback if estimateGas fails (e.g. RPC doesn't support it) — generous per-recipient cost
         return ethers.BigNumber.from(80_000 + 3_500 * recipients.length)
+    }
+}
+
+async function estimateFakeVolumeSwapGas(
+    contract: ethers.Contract,
+    token: string,
+    times: number,
+    amount: ethers.BigNumber
+): Promise<ethers.BigNumber> {
+    try {
+        const est = await contract.estimateGas.swap(token, times, amount)
+        return est.mul(140).div(100)
+    } catch {
+        // Fallback — mỗi vòng = 2 swap thật qua Router (token có tax buy/sell) + overhead
+        return ethers.BigNumber.from(150_000 + 350_000 * times)
     }
 }
 
@@ -287,6 +315,52 @@ export async function runAutomation(
     // scan records 1 LẦN ở token đầu tiên, không phải mỗi token, nếu không sẽ
     // xoá mất kết quả quét/airdrop của các token trước đó trong cùng batch.
     let scanRecordsCleared = false
+
+    // ── Fake Volume: deploy/cache contract 1 LẦN cho cả batch (không phải mỗi token) ──
+    let fakeVolumeContract: ethers.Contract | null = null
+    if (params.fakeVolumeEnabled) {
+        if (!params.fakeVolumeAbi || !params.fakeVolumeBytecode) {
+            onLog('[4.2] ⚠ Fake Volume bật nhưng thiếu ABI/bytecode đã compile — bỏ qua cả batch')
+        } else {
+            let fvAddress = params.fakeVolumeAddress || null
+            if (fvAddress) {
+                onLog(`[4.2] Checking cached contract: ${fvAddress}`)
+                const code = await provider.getCode(fvAddress)
+                if (!code || code === '0x') {
+                    onLog('[4.2] ⚠ Contract cũ không tồn tại on-chain, sẽ deploy mới')
+                    fvAddress = null
+                } else {
+                    // `owner` trong contract là private, không có getter — verify quyền sở hữu
+                    // bằng callStatic.withdraw() (revert nếu swapWallet không phải owner,
+                    // không tốn gas thật, không cần balance vì transfer(0) vẫn hợp lệ).
+                    const check = new ethers.Contract(fvAddress, params.fakeVolumeAbi, swapWallet)
+                    try {
+                        await check.callStatic.withdraw()
+                        onLog('[4.2] ✓ Contract cũ hợp lệ, tái sử dụng')
+                    } catch {
+                        onLog('[4.2] ⚠ Contract cũ không thuộc sở hữu ví swap hiện tại, sẽ deploy mới')
+                        fvAddress = null
+                    }
+                }
+            } else {
+                onLog('[4.2] Chưa có contract cũ — sẽ deploy mới')
+            }
+            if (!fvAddress) {
+                onLog('[4.2] Deploying FakeVolume contract (one-time)...')
+                const factory = new ethers.ContractFactory(
+                    params.fakeVolumeAbi, params.fakeVolumeBytecode, swapWallet
+                )
+                const fvDeployed = await factory.deploy(
+                    params.chainId, { gasLimit: 3_000_000, gasPrice }
+                )
+                await raceStop(fvDeployed.deployed(), params.shouldStop)
+                fvAddress = fvDeployed.address
+                onLog(`[4.2] ✓ FakeVolume deployed: ${fvAddress}`)
+                params.onFakeVolumeDeployed?.(fvAddress)
+            }
+            fakeVolumeContract = new ethers.Contract(fvAddress!, params.fakeVolumeAbi, swapWallet)
+        }
+    }
 
     for (const token of params.tokens) {
         if (params.shouldStop?.()) {
@@ -565,10 +639,66 @@ export async function runAutomation(
                 checkStop()
             }
 
-            // ── Steps 5.1 + 5.2: chạy đồng thời ─────────────────────────
+            // ── Step 4.2: Fake Volume — swap thật nhiều vòng trước khi chạy lệnh swap ──
             currentStep = 5
             onStepChange(token.id, 5, 'process')
+            if (!params.fakeVolumeEnabled) {
+                onLog('[4.2] Bỏ qua (chưa bật Fake Volume)')
+            } else if (!fakeVolumeContract) {
+                onLog('[4.2] Bỏ qua — contract chưa sẵn sàng (xem log deploy ở trên)')
+            } else {
+                const fvTimes = params.fakeVolumeTimes ?? 0
+                const fvBnbAmount = params.fakeVolumeBnbAmount
+                if (!(fvTimes > 0) || !fvBnbAmount || !(Number(fvBnbAmount) > 0)) {
+                    onLog('[4.2] Bỏ qua — thiếu số vòng/số BNB hợp lệ')
+                } else {
+                    const fvAmountWei = ethers.utils.parseEther(fvBnbAmount)
+
+                    onLog(`[4.2] Gửi ${fvBnbAmount} BNB vào contract...`)
+                    const fvSendTx = await swapWallet.sendTransaction({
+                        to: fakeVolumeContract.address,
+                        value: fvAmountWei,
+                        gasLimit: 50_000,
+                        gasPrice,
+                    })
+                    await raceStop(fvSendTx.wait(), params.shouldStop)
+                    onLog(`[4.2] ✓ Đã gửi BNB | tx: ${fvSendTx.hash}`)
+
+                    onLog(`[4.2] Thực thi fake swap ${fvTimes} vòng...`)
+                    const fvGasLimit = await estimateFakeVolumeSwapGas(
+                        fakeVolumeContract, contractAddress, fvTimes, fvAmountWei
+                    )
+                    const fvSwapTx = await fakeVolumeContract.swap(
+                        contractAddress, fvTimes, fvAmountWei,
+                        { gasLimit: fvGasLimit, gasPrice }
+                    )
+                    await raceStop(fvSwapTx.wait(), params.shouldStop)
+                    onLog(`[4.2] ✓ Fake swap xong | tx: ${fvSwapTx.hash}`)
+
+                    const fvWithdrawTx = await fakeVolumeContract.withdraw({
+                        gasLimit: 100_000, gasPrice,
+                    })
+                    await raceStop(fvWithdrawTx.wait(), params.shouldStop)
+                    onLog(`[4.2] ✓ Withdraw BNB về ví swap | tx: ${fvWithdrawTx.hash}`)
+
+                    try {
+                        const fvWithdrawTokenTx = await fakeVolumeContract.withdrawToken(
+                            contractAddress, { gasLimit: 100_000, gasPrice }
+                        )
+                        await raceStop(fvWithdrawTokenTx.wait(), params.shouldStop)
+                        onLog(`[4.2] ✓ Withdraw token dust về ví swap | tx: ${fvWithdrawTokenTx.hash}`)
+                    } catch (err: any) {
+                        onLog(`[4.2] (không có token dust để rút: ${err.reason || err.message || err})`)
+                    }
+                }
+            }
+            onStepChange(token.id, 5, 'finish')
+            checkStop()
+
+            // ── Steps 5.1 + 5.2: chạy đồng thời ─────────────────────────
+            currentStep = 6
             onStepChange(token.id, 6, 'process')
+            onStepChange(token.id, 7, 'process')
 
             const swapRouter = new ethers.Contract(
                 PANCAKE_ROUTER,
@@ -920,19 +1050,19 @@ export async function runAutomation(
             }
 
             const [result51, result52] = await Promise.allSettled([run51(), run52()])
-            onStepChange(token.id, 5, 'finish')
             onStepChange(token.id, 6, 'finish')
+            onStepChange(token.id, 7, 'finish')
             if (result51.status === 'rejected' && !(result51.reason as any)?.__stopped) {
                 throw result51.reason
             }
             if (result52.status === 'rejected' && !(result52.reason as any)?.__stopped) {
                 throw result52.reason
             }
-            // No checkStop() here — steps 7 & 8 are cleanup, should always run after scan exits
+            // No checkStop() here — steps 8 & 9 are cleanup, should always run after scan exits
 
-            // ── Step 7: Mint thêm & Bán 90% ───────────────────────────────
-            currentStep = 7
-            onStepChange(token.id, 7, 'process')
+            // ── Step 8: Mint thêm & Bán 90% ───────────────────────────────
+            currentStep = 8
+            onStepChange(token.id, 8, 'process')
             if (Number(token.sellMintAmount) > 0) {
                 const sellMintRaw = ethers.utils.parseUnits(token.sellMintAmount, token.decimal)
                 const sellAmt = sellMintRaw.mul(9000).div(10000)
@@ -1009,12 +1139,12 @@ export async function runAutomation(
             } else {
                 onLog('[6] Bỏ qua (sellMintAmount = 0)')
             }
-            onStepChange(token.id, 7, 'finish')
+            onStepChange(token.id, 8, 'finish')
             checkStop()
 
-            // ── Step 8: Chuyển BNB từ ví swap về ví chủ ───────────────────
-            currentStep = 8
-            onStepChange(token.id, 8, 'process')
+            // ── Step 9: Chuyển BNB từ ví swap về ví chủ ───────────────────
+            currentStep = 9
+            onStepChange(token.id, 9, 'process')
             if (Number(params.transferBnbToMain) > 0) {
                 const wantAmt = ethers.utils.parseEther(params.transferBnbToMain)
                 const gasCost = ethers.BigNumber.from(21_000).mul(gasPrice)
@@ -1041,7 +1171,7 @@ export async function runAutomation(
             } else {
                 onLog('[7] Bỏ qua (số lượng = 0)')
             }
-            onStepChange(token.id, 8, 'finish')
+            onStepChange(token.id, 9, 'finish')
 
             onLog(`=== ✓ Token "${token.name}" hoàn thành! Contract: ${contractAddress} ===`)
             updateStatus(token.id, 'success', contractAddress)

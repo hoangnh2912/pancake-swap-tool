@@ -60,7 +60,7 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
   có getter `owner()` — đã sửa Task 2 bên dưới dùng `callStatic.withdraw()` thay vì `owner()`.
 - **Depends on:** none.
 
-## Task 2 — `automationService.ts`: deploy/cache + chạy step Fake Volume
+## Task 2 — `automationService.ts`: deploy/cache + chạy step Fake Volume — DONE
 
 - [ ] `AutomationParams`: thêm `fakeVolumeEnabled?: boolean`, `fakeVolumeTimes?: number`,
       `fakeVolumeBnbAmount?: string`, `fakeVolumeAddress?: string | null`,
@@ -84,13 +84,11 @@ Criteria trong SPEC §4 (per SPEC §5 testing strategy) + verify thủ công tr�
       không throw) → `onStepChange(token.id, 5, 'finish')`.
 - [ ] Sửa 8 `onStepChange` + 3 `currentStep` theo bảng mapping ở trên (5→6, 6→7, 7→8, 8→9).
 - [ ] Log mọi tx bước này qua `onLog` prefix `[4.2]` (khớp quyết định đổi tên ở trên).
-- **Verify:** `tsc --noEmit --skipLibCheck` sạch. `grep -n "onStepChange(token.id" | grep -E
-  ", [5-8],"` để xác nhận KHÔNG còn index cũ nào sót (chỉ còn `, 5,` cho chính step Fake Volume
-  mới, không còn `,6,7,8` dùng sai chỗ).
-- **Depends on:** Task 1 (cần `FAKE_VOLUME_SOURCE` để compile ra bytecode/abi dùng deploy).
-- **Checkpoint:** dừng lại, đọc lại toàn bộ diff block step 4.2 + bảng index-shift bằng mắt trước
-  khi sang Task 3 — đây là chỗ dễ lỗi nhất (sai 1 index làm Steps UI hiển thị sai toàn bộ từ đó
-  trở đi).
+- **Verify:** `tsc --noEmit` sạch. `grep -n "onStepChange(token.id\|currentStep = "` lại toàn bộ
+  → xác nhận chuỗi index liên tục 0,1,2,3,4,5(mới),6,7,6,7,8,9 không trùng/sót (đã đối chiếu bằng
+  mắt, khớp).
+- **Depends on:** Task 1 (dùng `FAKE_VOLUME_CONTRACT` để compile ra bytecode/abi lúc deploy —
+  thực ra compile xảy ra ở Task 3/main.tsx, Task 2 chỉ nhận `fakeVolumeAbi/Bytecode` qua params).
 
 ## Task 3 — `main.tsx`: UI, validate, wiring
 
