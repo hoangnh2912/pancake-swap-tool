@@ -40,7 +40,7 @@ import type { AutomationToken, ScanContractConfig, StepStatus, SwapCommand } fro
 import { runAutomation, SUPPORTED_CHAINS } from '../utils/automationService'
 import { buildProvider, parseRpcList } from '../utils/buildProvider'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
-import FAKE_VOLUME_CONTRACT from '../utils/fakeVolumeContract'
+import FAKE_VOLUME_CONTRACT, { FAKE_VOLUME_VERSION } from '../utils/fakeVolumeContract'
 import * as XLSX from 'xlsx'
 import {
     useCountScanWallet,
@@ -307,6 +307,7 @@ const Main = ({
     const [fakeVolumeTimes, setFakeVolumeTimes] = useState<number>(1)
     const [fakeVolumeBnbAmount, setFakeVolumeBnbAmount] = useState('')
     const [fakeVolumeAddress, setFakeVolumeAddress] = useState<string | null>(null)
+    const [fakeVolumeVersion, setFakeVolumeVersion] = useState('')
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [swapRepeat, setSwapRepeat] = useState<number>(1)
@@ -486,6 +487,7 @@ const Main = ({
             if (cfg.fakeVolumeTimes) setFakeVolumeTimes(Number(cfg.fakeVolumeTimes) || 1)
             if (cfg.fakeVolumeBnbAmount) setFakeVolumeBnbAmount(cfg.fakeVolumeBnbAmount)
             if (cfg.fakeVolumeAddress) setFakeVolumeAddress(cfg.fakeVolumeAddress)
+            if (cfg.fakeVolumeVersion) setFakeVolumeVersion(cfg.fakeVolumeVersion)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -913,12 +915,20 @@ const Main = ({
                     fakeVolumeEnabled,
                     fakeVolumeTimes,
                     fakeVolumeBnbAmount,
-                    fakeVolumeAddress,
+                    // Contract cũ deploy bằng version Solidity khác (sửa logic trong
+                    // fakeVolumeContract.ts) — ownership check không phát hiện được thay đổi
+                    // logic, nên phải tự ép deploy lại bằng cách coi như chưa có địa chỉ cache.
+                    fakeVolumeAddress:
+                        fakeVolumeVersion === FAKE_VOLUME_VERSION ? fakeVolumeAddress : null,
                     fakeVolumeAbi,
                     fakeVolumeBytecode,
                     onFakeVolumeDeployed: (addr) => {
                         setFakeVolumeAddress(addr)
-                        getElectron()?.saveConfig({ fakeVolumeAddress: addr }, tabId)
+                        setFakeVolumeVersion(FAKE_VOLUME_VERSION)
+                        getElectron()?.saveConfig(
+                            { fakeVolumeAddress: addr, fakeVolumeVersion: FAKE_VOLUME_VERSION },
+                            tabId
+                        )
                     },
                     shouldStop: () => stopRef.current,
                 },

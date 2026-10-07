@@ -51,4 +51,5 @@ model Config {
   fakeVolumeTimes     String @default("3")
   fakeVolumeBnbAmount String @default("")
   fakeVolumeAddress   String @default("")
+  fakeVolumeVersion   String @default("")
 }

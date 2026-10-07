@@ -2023,6 +2023,7 @@ export namespace Prisma {
     fakeVolumeTimes: string | null
     fakeVolumeBnbAmount: string | null
     fakeVolumeAddress: string | null
+    fakeVolumeVersion: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -2054,6 +2055,7 @@ export namespace Prisma {
     fakeVolumeTimes: string | null
     fakeVolumeBnbAmount: string | null
     fakeVolumeAddress: string | null
+    fakeVolumeVersion: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -2085,6 +2087,7 @@ export namespace Prisma {
     fakeVolumeTimes: number
     fakeVolumeBnbAmount: number
     fakeVolumeAddress: number
+    fakeVolumeVersion: number
     _all: number
   }
 
@@ -2118,6 +2121,7 @@ export namespace Prisma {
     fakeVolumeTimes?: true
     fakeVolumeBnbAmount?: true
     fakeVolumeAddress?: true
+    fakeVolumeVersion?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -2149,6 +2153,7 @@ export namespace Prisma {
     fakeVolumeTimes?: true
     fakeVolumeBnbAmount?: true
     fakeVolumeAddress?: true
+    fakeVolumeVersion?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -2180,6 +2185,7 @@ export namespace Prisma {
     fakeVolumeTimes?: true
     fakeVolumeBnbAmount?: true
     fakeVolumeAddress?: true
+    fakeVolumeVersion?: true
     _all?: true
   }
 
@@ -2284,6 +2290,7 @@ export namespace Prisma {
     fakeVolumeTimes: string
     fakeVolumeBnbAmount: string
     fakeVolumeAddress: string
+    fakeVolumeVersion: string
     _count: ConfigCountAggregateOutputType | null
     _min: ConfigMinAggregateOutputType | null
     _max: ConfigMaxAggregateOutputType | null
@@ -2332,6 +2339,7 @@ export namespace Prisma {
     fakeVolumeTimes?: boolean
     fakeVolumeBnbAmount?: boolean
     fakeVolumeAddress?: boolean
+    fakeVolumeVersion?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2363,6 +2371,7 @@ export namespace Prisma {
     fakeVolumeTimes?: boolean
     fakeVolumeBnbAmount?: boolean
     fakeVolumeAddress?: boolean
+    fakeVolumeVersion?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2394,6 +2403,7 @@ export namespace Prisma {
     fakeVolumeTimes?: boolean
     fakeVolumeBnbAmount?: boolean
     fakeVolumeAddress?: boolean
+    fakeVolumeVersion?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -2425,9 +2435,10 @@ export namespace Prisma {
     fakeVolumeTimes?: boolean
     fakeVolumeBnbAmount?: boolean
     fakeVolumeAddress?: boolean
+    fakeVolumeVersion?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson" | "fakeVolumeEnabled" | "fakeVolumeTimes" | "fakeVolumeBnbAmount" | "fakeVolumeAddress", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson" | "fakeVolumeEnabled" | "fakeVolumeTimes" | "fakeVolumeBnbAmount" | "fakeVolumeAddress" | "fakeVolumeVersion", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2461,6 +2472,7 @@ export namespace Prisma {
       fakeVolumeTimes: string
       fakeVolumeBnbAmount: string
       fakeVolumeAddress: string
+      fakeVolumeVersion: string
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -2912,6 +2924,7 @@ export namespace Prisma {
     readonly fakeVolumeTimes: FieldRef<"Config", 'String'>
     readonly fakeVolumeBnbAmount: FieldRef<"Config", 'String'>
     readonly fakeVolumeAddress: FieldRef<"Config", 'String'>
+    readonly fakeVolumeVersion: FieldRef<"Config", 'String'>
   }
     
 
@@ -3329,7 +3342,8 @@ export namespace Prisma {
     fakeVolumeEnabled: 'fakeVolumeEnabled',
     fakeVolumeTimes: 'fakeVolumeTimes',
     fakeVolumeBnbAmount: 'fakeVolumeBnbAmount',
-    fakeVolumeAddress: 'fakeVolumeAddress'
+    fakeVolumeAddress: 'fakeVolumeAddress',
+    fakeVolumeVersion: 'fakeVolumeVersion'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -3486,6 +3500,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFilter<"Config"> | string
     fakeVolumeBnbAmount?: StringFilter<"Config"> | string
     fakeVolumeAddress?: StringFilter<"Config"> | string
+    fakeVolumeVersion?: StringFilter<"Config"> | string
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -3517,6 +3532,7 @@ export namespace Prisma {
     fakeVolumeTimes?: SortOrder
     fakeVolumeBnbAmount?: SortOrder
     fakeVolumeAddress?: SortOrder
+    fakeVolumeVersion?: SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -3551,6 +3567,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFilter<"Config"> | string
     fakeVolumeBnbAmount?: StringFilter<"Config"> | string
     fakeVolumeAddress?: StringFilter<"Config"> | string
+    fakeVolumeVersion?: StringFilter<"Config"> | string
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -3582,6 +3599,7 @@ export namespace Prisma {
     fakeVolumeTimes?: SortOrder
     fakeVolumeBnbAmount?: SortOrder
     fakeVolumeAddress?: SortOrder
+    fakeVolumeVersion?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
     _min?: ConfigMinOrderByAggregateInput
@@ -3619,6 +3637,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringWithAggregatesFilter<"Config"> | string
     fakeVolumeBnbAmount?: StringWithAggregatesFilter<"Config"> | string
     fakeVolumeAddress?: StringWithAggregatesFilter<"Config"> | string
+    fakeVolumeVersion?: StringWithAggregatesFilter<"Config"> | string
   }
 
   export type ScanWalletCreateInput = {
@@ -3727,6 +3746,7 @@ export namespace Prisma {
     fakeVolumeTimes?: string
     fakeVolumeBnbAmount?: string
     fakeVolumeAddress?: string
+    fakeVolumeVersion?: string
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -3758,6 +3778,7 @@ export namespace Prisma {
     fakeVolumeTimes?: string
     fakeVolumeBnbAmount?: string
     fakeVolumeAddress?: string
+    fakeVolumeVersion?: string
   }
 
   export type ConfigUpdateInput = {
@@ -3789,6 +3810,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
     fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
+    fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -3820,6 +3842,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
     fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
+    fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigCreateManyInput = {
@@ -3851,6 +3874,7 @@ export namespace Prisma {
     fakeVolumeTimes?: string
     fakeVolumeBnbAmount?: string
     fakeVolumeAddress?: string
+    fakeVolumeVersion?: string
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -3882,6 +3906,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
     fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
+    fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -3913,6 +3938,7 @@ export namespace Prisma {
     fakeVolumeTimes?: StringFieldUpdateOperationsInput | string
     fakeVolumeBnbAmount?: StringFieldUpdateOperationsInput | string
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
+    fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -4082,6 +4108,7 @@ export namespace Prisma {
     fakeVolumeTimes?: SortOrder
     fakeVolumeBnbAmount?: SortOrder
     fakeVolumeAddress?: SortOrder
+    fakeVolumeVersion?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -4113,6 +4140,7 @@ export namespace Prisma {
     fakeVolumeTimes?: SortOrder
     fakeVolumeBnbAmount?: SortOrder
     fakeVolumeAddress?: SortOrder
+    fakeVolumeVersion?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -4144,6 +4172,7 @@ export namespace Prisma {
     fakeVolumeTimes?: SortOrder
     fakeVolumeBnbAmount?: SortOrder
     fakeVolumeAddress?: SortOrder
+    fakeVolumeVersion?: SortOrder
   }
 
   export type StringFieldUpdateOperationsInput = {

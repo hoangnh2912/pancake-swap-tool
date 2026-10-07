@@ -95,17 +95,20 @@ contract FakeVolume {
         for (uint256 i = 0; i < times; i++) {
             // 0: swapExactETHForTokens
             // Buy token
-            uint[] memory outWT = router.swapExactETHForTokens{value: amountIn}(
+            router.swapExactETHForTokens{value: amountIn}(
                 0,
                 pathWT,
                 address(this),
                 block.timestamp + 100000000
             );
-            amountIn = outWT[1];
+            // Dùng balance THỰC nhận được, không tin số Router trả về — token có thể có thuế
+            // buy (TOKEN1997 chariBuy) khiến số thực nhận ít hơn số Router tính theo pool
+            // thuần, bán nhiều hơn số dư thực có sẽ revert TRANSFER_FROM_FAILED.
+            uint256 tokenBalance = IERC20(token).balanceOf(address(this));
             // 1: swapTokensForExactETH
             // Sell token
             uint[] memory outTW = router.swapExactTokensForETH(
-                amountIn,
+                tokenBalance,
                 0,
                 pathTW,
                 address(this),
@@ -116,5 +119,10 @@ contract FakeVolume {
     }
 }
 `
+
+// Tăng mỗi khi sửa nội dung Solidity ở trên — automationService.ts so khớp với version đã lưu
+// trong Config để biết khi nào contract đã deploy cũ còn mang logic lỗi, bắt buộc deploy lại
+// thay vì âm thầm tái sử dụng (ownership check không phát hiện được thay đổi logic/bytecode).
+export const FAKE_VOLUME_VERSION = 'v2-balance-after-buy'
 
 export default FAKE_VOLUME_CONTRACT
