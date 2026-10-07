@@ -362,6 +362,22 @@ const Main = ({
 
     const scanContractAddresses = scanContracts.map((c) => c.address).filter(Boolean)
     const hasScanContracts = scanContractAddresses.length > 0
+
+    // Gợi ý BNB/vòng cho Fake Volume — dựa vào pool NHỎ NHẤT trong các token đang cấu hình,
+    // vì amount dùng chung cho cả batch, pool mỏng nhất mới là giới hạn thật.
+    const fakeVolumeSuggestion = (() => {
+        const liqBnbValues = tokens
+            .map((t) => Number(t.liquidityBNB))
+            .filter((v) => Number.isFinite(v) && v > 0)
+        if (liqBnbValues.length === 0) return null
+        const minLiq = Math.min(...liqBnbValues)
+        return {
+            poolBnb: minLiq,
+            min: (minLiq * 0.05).toFixed(10).replace(/0+$/, '').replace(/\.$/, ''),
+            max: (minLiq * 0.1).toFixed(10).replace(/0+$/, '').replace(/\.$/, ''),
+            mid: (minLiq * 0.07).toFixed(10).replace(/0+$/, '').replace(/\.$/, ''),
+        }
+    })()
     const [scanTabKey, setScanTabKey] = useState<string>('')
     const { mutateAsync: createManyScanWallet } = useCreateManyScanWallet()
 
@@ -1457,7 +1473,31 @@ const Main = ({
                                 disabled={running}
                                 style={{ width: 120 }}
                             />
+                            {fakeVolumeSuggestion && (
+                                <Button
+                                    size="small"
+                                    disabled={running}
+                                    onClick={() => {
+                                        const val = fakeVolumeSuggestion.mid
+                                        setFakeVolumeBnbAmount(val)
+                                        scheduleSave({ fakeVolumeBnbAmount: val })
+                                    }}
+                                >
+                                    Dùng gợi ý
+                                </Button>
+                            )}
                         </Flex>
+                        {fakeVolumeSuggestion ? (
+                            <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                                Gợi ý: {fakeVolumeSuggestion.min} – {fakeVolumeSuggestion.max} BNB (5-10% pool
+                                nhỏ nhất, {fakeVolumeSuggestion.poolBnb} BNB) — amount lớn hơn pool dễ bị
+                                revert do contract chống rút sạch thanh khoản.
+                            </AntText>
+                        ) : (
+                            <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                                Nhập "BNB liquidity" cho token ở bảng trên để xem gợi ý số BNB an toàn.
+                            </AntText>
+                        )}
                         {fakeVolumeTimes > 10 && (
                             <AntText type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
                                 Mỗi vòng = 2 lần swap thật qua Router, tốn gas thật — cân nhắc số vòng lớn.
