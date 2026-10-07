@@ -1081,7 +1081,7 @@ const Main = ({
                 <InputNumber
                     size="small"
                     min={0}
-                    // max={100}
+                    max={100}
                     value={Number(row.taxSell) || 0}
                     onChange={(v) => updateRow(row.id, 'taxSell', String(v ?? 0))}
                     disabled={running}
