@@ -200,8 +200,12 @@ async function estimateFakeVolumeSwapGas(
     try {
         const est = await contract.estimateGas.swap(token, times, amount)
         return est.mul(140).div(100)
-    } catch {
-        // Fallback — mỗi vòng = 2 swap thật qua Router (token có tax buy/sell) + overhead
+    } catch (err: any) {
+        // estimateGas trả về lý do revert cụ thể (vd "TransferHelper: TRANSFER_FROM_FAILED")
+        // → tx thật CHẮC CHẮN fail, ném lỗi luôn thay vì gửi tx thật tốn gas vô ích.
+        if (err?.reason || err?.error?.reason) throw err
+        // Không có lý do cụ thể (RPC không hỗ trợ estimateGas/lỗi mạng tạm thời) — fallback,
+        // vẫn thử gửi vì không chắc là sẽ revert thật.
         return ethers.BigNumber.from(150_000 + 350_000 * times)
     }
 }
