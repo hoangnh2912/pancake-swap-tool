@@ -22,28 +22,24 @@ interface IERC20 {
 interface IPancakeRouter {
     function WETH() external pure returns (address);
 
-    function swapExactETHForTokens(
+    // *SupportingFeeOnTransferTokens — bắt buộc cho token có thuế buy/sell (TOKEN1997
+    // chariBuy/chariSell). Hàm swapExactETHForTokens/swapExactTokensForETH thường tính
+    // amountOut theo pool thuần, không biết token tự trừ thêm thuế lúc transfer — Pair
+    // nhận/gửi lệch số thật, vi phạm invariant constant-product, revert "Pancake: K".
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable returns (uint256[] memory amounts);
+    ) external payable;
 
-    function swapTokensForExactETH(
-        uint256 amountOut,
-        uint256 amountInMax,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-
-    function swapExactTokensForETH(
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external returns (uint256[] memory amounts);
+    ) external;
 }
 
 contract FakeVolume {
@@ -68,7 +64,12 @@ contract FakeVolume {
     }
 
     function withdraw() public onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        // .transfer() dùng stipend cố định 2300 gas — verify thực tế trên fork mainnet (anvil)
+        // cho thấy revert ngay cả khi gửi cho 1 EOA bình thường. .call{value}("") forward hết
+        // gas còn lại, đúng khuyến nghị hiện tại của Solidity (compiler cũng cảnh báo .transfer
+        // deprecated).
+        (bool ok, ) = payable(owner).call{value: address(this).balance}("");
+        require(ok, "withdraw failed");
     }
 
     function withdrawToken(address token) public onlyOwner {
@@ -93,9 +94,8 @@ contract FakeVolume {
         }
         uint amountIn = amount;
         for (uint256 i = 0; i < times; i++) {
-            // 0: swapExactETHForTokens
             // Buy token
-            router.swapExactETHForTokens{value: amountIn}(
+            router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountIn}(
                 0,
                 pathWT,
                 address(this),
@@ -103,18 +103,19 @@ contract FakeVolume {
             );
             // Dùng balance THỰC nhận được, không tin số Router trả về — token có thể có thuế
             // buy (TOKEN1997 chariBuy) khiến số thực nhận ít hơn số Router tính theo pool
-            // thuần, bán nhiều hơn số dư thực có sẽ revert TRANSFER_FROM_FAILED.
+            // thuần, bán nhiều hơn số dư thực có sẽ revert.
             uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-            // 1: swapTokensForExactETH
             // Sell token
-            uint[] memory outTW = router.swapExactTokensForETH(
+            router.swapExactTokensForETHSupportingFeeOnTransferTokens(
                 tokenBalance,
                 0,
                 pathTW,
                 address(this),
                 block.timestamp + 100000000
             );
-            amountIn = outTW[1];
+            // Vòng kế tiếp dùng đúng số BNB THỰC đang có (không phải số Router tính) — nhất
+            // quán với cách lấy tokenBalance ở trên.
+            amountIn = address(this).balance;
         }
     }
 }
@@ -123,6 +124,6 @@ contract FakeVolume {
 // Tăng mỗi khi sửa nội dung Solidity ở trên — automationService.ts so khớp với version đã lưu
 // trong Config để biết khi nào contract đã deploy cũ còn mang logic lỗi, bắt buộc deploy lại
 // thay vì âm thầm tái sử dụng (ownership check không phát hiện được thay đổi logic/bytecode).
-export const FAKE_VOLUME_VERSION = 'v2-balance-after-buy'
+export const FAKE_VOLUME_VERSION = 'v4-call-not-transfer'
 
 export default FAKE_VOLUME_CONTRACT
