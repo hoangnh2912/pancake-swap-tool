@@ -303,7 +303,7 @@ const Main = ({
     const [swapKey, setSwapKey] = useState('')
     const [mintKey, setMintKey] = useState('')
     const [contractCode, setContractCode] = useState(DEFAULT_CONTRACT)
-    const [contractEditorOpen, setContractEditorOpen] = useState(true)
+    const [contractEditorOpen, setContractEditorOpen] = useState(false)
     const [tokens, setTokens] = useState<TokenRow[]>([newRow()])
     const [running, setRunning] = useState(false)
     const [logs, setLogs] = useState<{ id: number; text: string }[]>([])
@@ -1468,10 +1468,13 @@ const Main = ({
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
                 <Flex
                     align="center"
-                    justify="space-between"
+                    gap={2}
                     cursor="pointer"
                     onClick={() => setContractEditorOpen((v) => !v)}
                 >
+                    <Text fontSize="16px" color="gray.400" lineHeight={1}>
+                        {contractEditorOpen ? '▾' : '▸'}
+                    </Text>
                     <AntText
                         style={{
                             color: '#666',
@@ -1480,7 +1483,7 @@ const Main = ({
                             letterSpacing: 1,
                         }}
                     >
-                        {contractEditorOpen ? '▾' : '▸'} Contract Solidity
+                        Contract Solidity
                     </AntText>
                 </Flex>
                 {contractEditorOpen && (
