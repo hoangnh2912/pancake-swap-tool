@@ -668,16 +668,36 @@ export async function runAutomation(
                     await raceStop(fvSendTx.wait(), params.shouldStop)
                     onLog(`[4.2] ✓ Đã gửi BNB | tx: ${fvSendTx.hash}`)
 
-                    onLog(`[4.2] Thực thi fake swap ${fvTimes} vòng...`)
-                    const fvGasLimit = await estimateFakeVolumeSwapGas(
-                        fakeVolumeContract, contractAddress, fvTimes, fvAmountWei
-                    )
-                    const fvSwapTx = await fakeVolumeContract.swap(
-                        contractAddress, fvTimes, fvAmountWei,
-                        { gasLimit: fvGasLimit, gasPrice }
-                    )
-                    await raceStop(fvSwapTx.wait(), params.shouldStop)
-                    onLog(`[4.2] ✓ Fake swap xong | tx: ${fvSwapTx.hash}`)
+                    // BNB đã nằm trong contract từ bước gửi ở trên — nếu estimateGas/swap() lỗi
+                    // bên dưới, phải tự rút lại trước khi ném lỗi, không để kẹt trong contract.
+                    try {
+                        onLog(`[4.2] Thực thi fake swap ${fvTimes} vòng...`)
+                        const fvGasLimit = await estimateFakeVolumeSwapGas(
+                            fakeVolumeContract, contractAddress, fvTimes, fvAmountWei
+                        )
+                        const fvSwapTx = await fakeVolumeContract.swap(
+                            contractAddress, fvTimes, fvAmountWei,
+                            { gasLimit: fvGasLimit, gasPrice }
+                        )
+                        await raceStop(fvSwapTx.wait(), params.shouldStop)
+                        onLog(`[4.2] ✓ Fake swap xong | tx: ${fvSwapTx.hash}`)
+                    } catch (swapErr: any) {
+                        onLog(`[4.2] ❌ Fake swap lỗi — thử rút lại BNB đã gửi vào contract...`)
+                        try {
+                            const recoverTx = await fakeVolumeContract.withdraw({
+                                gasLimit: 100_000, gasPrice,
+                            })
+                            await raceStop(recoverTx.wait(), params.shouldStop)
+                            onLog(`[4.2] ✓ Đã rút lại BNB về ví swap | tx: ${recoverTx.hash}`)
+                        } catch (recoverErr: any) {
+                            onLog(
+                                `[4.2] ⚠ Rút lại BNB cũng thất bại — BNB có thể còn kẹt trong ` +
+                                `contract ${fakeVolumeContract.address}, cần gọi withdraw() thủ ` +
+                                `công sau: ${recoverErr.reason || recoverErr.message || recoverErr}`
+                            )
+                        }
+                        throw swapErr
+                    }
 
                     const fvWithdrawTx = await fakeVolumeContract.withdraw({
                         gasLimit: 100_000, gasPrice,
