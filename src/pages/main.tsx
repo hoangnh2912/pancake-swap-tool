@@ -303,6 +303,7 @@ const Main = ({
     const [swapKey, setSwapKey] = useState('')
     const [mintKey, setMintKey] = useState('')
     const [contractCode, setContractCode] = useState(DEFAULT_CONTRACT)
+    const [contractEditorOpen, setContractEditorOpen] = useState(true)
     const [tokens, setTokens] = useState<TokenRow[]>([newRow()])
     const [running, setRunning] = useState(false)
     const [logs, setLogs] = useState<{ id: number; text: string }[]>([])
@@ -1465,36 +1466,45 @@ const Main = ({
 
             {/* Contract Editor */}
             <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
-                <AntText
-                    style={{
-                        color: '#666',
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        letterSpacing: 1,
-                    }}
+                <Flex
+                    align="center"
+                    justify="space-between"
+                    cursor="pointer"
+                    onClick={() => setContractEditorOpen((v) => !v)}
                 >
-                    Contract Solidity
-                </AntText>
-                <Box mt={2} border="1px solid #333" borderRadius="4px" overflow="hidden">
-                    <Editor
-                        height="380px"
-                        language="sol"
-                        value={contractCode}
-                        onChange={(v) => {
-                            setContractCode(v || '')
-                            scheduleSave({ contractCode: v || '' })
+                    <AntText
+                        style={{
+                            color: '#666',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
                         }}
-                        theme="vs-dark"
-                        options={{
-                            minimap: { enabled: false },
-                            fontSize: 13,
-                            lineHeight: 20,
-                            scrollBeyondLastLine: false,
-                            wordWrap: 'on',
-                            tabSize: 4,
-                        }}
-                    />
-                </Box>
+                    >
+                        {contractEditorOpen ? '▾' : '▸'} Contract Solidity
+                    </AntText>
+                </Flex>
+                {contractEditorOpen && (
+                    <Box mt={2} border="1px solid #333" borderRadius="4px" overflow="hidden">
+                        <Editor
+                            height="380px"
+                            language="sol"
+                            value={contractCode}
+                            onChange={(v) => {
+                                setContractCode(v || '')
+                                scheduleSave({ contractCode: v || '' })
+                            }}
+                            theme="vs-dark"
+                            options={{
+                                minimap: { enabled: false },
+                                fontSize: 13,
+                                lineHeight: 20,
+                                scrollBeyondLastLine: false,
+                                wordWrap: 'on',
+                                tabSize: 4,
+                            }}
+                        />
+                    </Box>
+                )}
             </Box>
 
             {/* Token Table */}
