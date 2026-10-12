@@ -57,4 +57,5 @@ model Config {
   fakeVolumeBnbAmount String @default("")
   fakeVolumeAddress   String @default("")
   fakeVolumeVersion   String @default("")
+  fakeVolumeCode      String @default("")
 }

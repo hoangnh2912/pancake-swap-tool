@@ -40,7 +40,7 @@ import type { AutomationToken, ScanContractConfig, StepStatus, SwapCommand } fro
 import { runAutomation, SUPPORTED_CHAINS } from '../utils/automationService'
 import { buildProvider, parseRpcList } from '../utils/buildProvider'
 import DEFAULT_CONTRACT from '../utils/defaultContract'
-import FAKE_VOLUME_CONTRACT, { FAKE_VOLUME_VERSION } from '../utils/fakeVolumeContract'
+import FAKE_VOLUME_CONTRACT from '../utils/fakeVolumeContract'
 import * as XLSX from 'xlsx'
 import {
     useCountScanWallet,
@@ -121,6 +121,17 @@ const statusLabel: Record<RowStatus, string> = {
 const LABEL_W = '130px'
 
 const getElectron = () => (window as any).electron
+
+// Hash nội dung source (FNV-1a) — dùng làm "version" cache-invalidation cho FakeVolume
+// contract: đổi code (tự sửa hay user sửa trong Editor) ra hash khác -> tự deploy lại.
+const hashString = (s: string): string => {
+    let h = 0x811c9dc5
+    for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i)
+        h = Math.imul(h, 0x01000193)
+    }
+    return (h >>> 0).toString(16)
+}
 
 const SCAN_PAGE_SIZE = 20
 
@@ -308,6 +319,17 @@ const Main = ({
     const [fakeVolumeBnbAmount, setFakeVolumeBnbAmount] = useState('')
     const [fakeVolumeAddress, setFakeVolumeAddress] = useState<string | null>(null)
     const [fakeVolumeVersion, setFakeVolumeVersion] = useState('')
+    const [fakeVolumeCode, setFakeVolumeCode] = useState(FAKE_VOLUME_CONTRACT)
+    const [fakeVolumeAdvancedOpen, setFakeVolumeAdvancedOpen] = useState(false)
+    const [fakeVolumeCallFn, setFakeVolumeCallFn] = useState<
+        'withdraw' | 'withdrawToken' | 'swap' | 'transferOwnership'
+    >('withdraw')
+    const [fakeVolumeCallAddress, setFakeVolumeCallAddress] = useState('')
+    const [fakeVolumeCallToken, setFakeVolumeCallToken] = useState('')
+    const [fakeVolumeCallTimes, setFakeVolumeCallTimes] = useState<number>(1)
+    const [fakeVolumeCallAmount, setFakeVolumeCallAmount] = useState('')
+    const [fakeVolumeCallNewOwner, setFakeVolumeCallNewOwner] = useState('')
+    const [fakeVolumeCallLoading, setFakeVolumeCallLoading] = useState(false)
     const [swapCommands, setSwapCommands] = useState<SwapCommand[]>([])
     const [swapDelay, setSwapDelay] = useState<number>(0)
     const [swapRepeat, setSwapRepeat] = useState<number>(1)
@@ -488,6 +510,7 @@ const Main = ({
             if (cfg.fakeVolumeBnbAmount) setFakeVolumeBnbAmount(cfg.fakeVolumeBnbAmount)
             if (cfg.fakeVolumeAddress) setFakeVolumeAddress(cfg.fakeVolumeAddress)
             if (cfg.fakeVolumeVersion) setFakeVolumeVersion(cfg.fakeVolumeVersion)
+            if (cfg.fakeVolumeCode) setFakeVolumeCode(cfg.fakeVolumeCode)
             if (cfg.logsJson) {
                 try {
                     const saved = JSON.parse(cfg.logsJson)
@@ -778,6 +801,82 @@ const Main = ({
         })
     }
 
+    const FAKE_VOLUME_MIN_ABI = [
+        'function withdraw() public',
+        'function withdrawToken(address token) public',
+        'function swap(address token, uint256 times, uint256 amount) public',
+        'function transferOwnership(address newOwner) public',
+    ]
+
+    const handleFakeVolumeCall = async () => {
+        const target = (fakeVolumeCallAddress || fakeVolumeAddress || '').trim()
+        if (!ethers.utils.isAddress(target)) {
+            message.error('Địa chỉ contract không hợp lệ')
+            return
+        }
+        if (!swapKey) {
+            message.error('Cần private key ví swap (chủ sở hữu contract) để gọi hàm')
+            return
+        }
+        const rpcUrls = parseRpcList(rpcList)
+        if (rpcUrls.length === 0) {
+            message.error('Vui lòng nhập RPC URL')
+            return
+        }
+        setFakeVolumeCallLoading(true)
+        try {
+            const provider = buildProvider(rpcUrls)
+            const key = swapKey.trim().startsWith('0x') ? swapKey.trim() : `0x${swapKey.trim()}`
+            const wallet = new ethers.Wallet(key, provider)
+            const contract = new ethers.Contract(target, FAKE_VOLUME_MIN_ABI, wallet)
+            const gasPrice = ethers.utils.parseUnits(String(Number(gasPriceGwei) || 0.05), 'gwei')
+
+            addLog(`[FakeVolume manual] Gọi ${fakeVolumeCallFn}() trên ${target}...`)
+            let tx
+            if (fakeVolumeCallFn === 'withdraw') {
+                tx = await contract.withdraw({ gasLimit: 100_000, gasPrice })
+            } else if (fakeVolumeCallFn === 'withdrawToken') {
+                if (!ethers.utils.isAddress(fakeVolumeCallToken)) {
+                    throw new Error('Địa chỉ token không hợp lệ')
+                }
+                tx = await contract.withdrawToken(fakeVolumeCallToken, { gasLimit: 100_000, gasPrice })
+            } else if (fakeVolumeCallFn === 'swap') {
+                if (!ethers.utils.isAddress(fakeVolumeCallToken)) {
+                    throw new Error('Địa chỉ token không hợp lệ')
+                }
+                if (!(fakeVolumeCallTimes > 0)) throw new Error('Số vòng phải > 0')
+                if (!fakeVolumeCallAmount || !(Number(fakeVolumeCallAmount) > 0)) {
+                    throw new Error('Số BNB không hợp lệ')
+                }
+                const amountWei = ethers.utils.parseEther(fakeVolumeCallAmount)
+                const gasEst = await contract.estimateGas
+                    .swap(fakeVolumeCallToken, fakeVolumeCallTimes, amountWei)
+                    .catch((err: any) => {
+                        throw new Error(err.reason || err.error?.reason || err.message || String(err))
+                    })
+                tx = await contract.swap(fakeVolumeCallToken, fakeVolumeCallTimes, amountWei, {
+                    gasLimit: gasEst.mul(140).div(100),
+                    gasPrice,
+                })
+            } else {
+                if (!ethers.utils.isAddress(fakeVolumeCallNewOwner)) {
+                    throw new Error('Địa chỉ chủ sở hữu mới không hợp lệ')
+                }
+                tx = await contract.transferOwnership(fakeVolumeCallNewOwner, { gasLimit: 100_000, gasPrice })
+            }
+            addLog(`[FakeVolume manual] Đang chờ confirm | tx: ${tx.hash}`)
+            await tx.wait()
+            addLog(`[FakeVolume manual] ✓ ${fakeVolumeCallFn}() thành công | tx: ${tx.hash}`)
+            message.success(`${fakeVolumeCallFn}() thành công`)
+        } catch (err: any) {
+            const errMsg = err.reason || err.error?.reason || err.message || String(err)
+            addLog(`[FakeVolume manual] ❌ ${fakeVolumeCallFn}() lỗi: ${errMsg}`)
+            message.error(errMsg)
+        } finally {
+            setFakeVolumeCallLoading(false)
+        }
+    }
+
     const handleStart = async () => {
         if (!mainKey || !swapKey || !mintKey) {
             message.error('Vui lòng nhập đủ 3 private key')
@@ -874,9 +973,10 @@ const Main = ({
 
             let fakeVolumeAbi: any[] | undefined
             let fakeVolumeBytecode: string | undefined
+            const fakeVolumeCodeHash = hashString(fakeVolumeCode)
             if (fakeVolumeEnabled) {
                 addLog('Đang compile FakeVolume contract...')
-                const fvCompile = await getElectron()?.compileContract(FAKE_VOLUME_CONTRACT, solcVersion)
+                const fvCompile = await getElectron()?.compileContract(fakeVolumeCode, solcVersion)
                 fakeVolumeAbi = fvCompile.abi
                 fakeVolumeBytecode = fvCompile.bytecode
                 addLog('Compile FakeVolume thành công')
@@ -915,18 +1015,18 @@ const Main = ({
                     fakeVolumeEnabled,
                     fakeVolumeTimes,
                     fakeVolumeBnbAmount,
-                    // Contract cũ deploy bằng version Solidity khác (sửa logic trong
-                    // fakeVolumeContract.ts) — ownership check không phát hiện được thay đổi
-                    // logic, nên phải tự ép deploy lại bằng cách coi như chưa có địa chỉ cache.
+                    // Contract cũ deploy bằng source Solidity khác (sửa trong Editor bên dưới,
+                    // hash nội dung khác) — ownership check không phát hiện được thay đổi logic,
+                    // nên phải tự ép deploy lại bằng cách coi như chưa có địa chỉ cache.
                     fakeVolumeAddress:
-                        fakeVolumeVersion === FAKE_VOLUME_VERSION ? fakeVolumeAddress : null,
+                        fakeVolumeVersion === fakeVolumeCodeHash ? fakeVolumeAddress : null,
                     fakeVolumeAbi,
                     fakeVolumeBytecode,
                     onFakeVolumeDeployed: (addr) => {
                         setFakeVolumeAddress(addr)
-                        setFakeVolumeVersion(FAKE_VOLUME_VERSION)
+                        setFakeVolumeVersion(fakeVolumeCodeHash)
                         getElectron()?.saveConfig(
-                            { fakeVolumeAddress: addr, fakeVolumeVersion: FAKE_VOLUME_VERSION },
+                            { fakeVolumeAddress: addr, fakeVolumeVersion: fakeVolumeCodeHash },
                             tabId
                         )
                     },
@@ -1512,6 +1612,147 @@ const Main = ({
                             <AntText type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
                                 Mỗi vòng = 2 lần swap thật qua Router, tốn gas thật — cân nhắc số vòng lớn.
                             </AntText>
+                        )}
+
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={() => setFakeVolumeAdvancedOpen((v) => !v)}
+                            style={{ paddingLeft: 0, marginTop: 8 }}
+                        >
+                            {fakeVolumeAdvancedOpen ? '▾' : '▸'} Nâng cao — sửa contract / gọi hàm thủ công
+                        </Button>
+
+                        {fakeVolumeAdvancedOpen && (
+                            <>
+                                <Box mt={2}>
+                                    <Text fontSize="xs" color="gray.500" mb={1}>
+                                        Contract Solidity (FakeVolume) — sửa xong tự deploy lại ở lần chạy
+                                        kế tiếp (hash code đổi thì contract cache cũ tự bị bỏ qua)
+                                    </Text>
+                                    <Box border="1px solid #333" borderRadius="4px" overflow="hidden">
+                                        <Editor
+                                            height="260px"
+                                            language="sol"
+                                            value={fakeVolumeCode}
+                                            onChange={(v) => {
+                                                setFakeVolumeCode(v || '')
+                                                scheduleSave({ fakeVolumeCode: v || '' })
+                                            }}
+                                            theme="vs-dark"
+                                            options={{
+                                                minimap: { enabled: false },
+                                                fontSize: 12,
+                                                lineHeight: 18,
+                                                scrollBeyondLastLine: false,
+                                                wordWrap: 'on',
+                                                tabSize: 4,
+                                                readOnly: running,
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+
+                                <Box mt={3}>
+                                    <Text fontSize="xs" color="gray.500" mb={2}>
+                                        Gọi hàm thủ công tới contract đã deploy (vd rút BNB/token kẹt lại,
+                                        test fake swap riêng) — ký bằng ví swap (chủ sở hữu contract)
+                                    </Text>
+                                    <Flex align="center" gap={8} mb={2}>
+                                        <Text fontSize="sm" color="gray.400" minW="110px">
+                                            Địa chỉ contract
+                                        </Text>
+                                        <Input
+                                            size="small"
+                                            value={fakeVolumeCallAddress || fakeVolumeAddress || ''}
+                                            placeholder="0x..."
+                                            onChange={(e) => setFakeVolumeCallAddress(e.target.value)}
+                                            disabled={fakeVolumeCallLoading}
+                                            style={{ flex: 1, fontFamily: 'monospace' }}
+                                        />
+                                    </Flex>
+                                    <Flex align="center" gap={8} mb={2}>
+                                        <Text fontSize="sm" color="gray.400" minW="110px">
+                                            Hàm
+                                        </Text>
+                                        <Select
+                                            size="small"
+                                            value={fakeVolumeCallFn}
+                                            onChange={(v) => setFakeVolumeCallFn(v)}
+                                            disabled={fakeVolumeCallLoading}
+                                            style={{ width: 220 }}
+                                            options={[
+                                                { value: 'withdraw', label: 'withdraw() — rút BNB' },
+                                                { value: 'withdrawToken', label: 'withdrawToken(token) — rút token' },
+                                                { value: 'swap', label: 'swap(token, times, amount)' },
+                                                { value: 'transferOwnership', label: 'transferOwnership(newOwner)' },
+                                            ]}
+                                        />
+                                    </Flex>
+                                    {(fakeVolumeCallFn === 'withdrawToken' || fakeVolumeCallFn === 'swap') && (
+                                        <Flex align="center" gap={8} mb={2}>
+                                            <Text fontSize="sm" color="gray.400" minW="110px">
+                                                Token
+                                            </Text>
+                                            <Input
+                                                size="small"
+                                                value={fakeVolumeCallToken}
+                                                placeholder="0x... địa chỉ token"
+                                                onChange={(e) => setFakeVolumeCallToken(e.target.value)}
+                                                disabled={fakeVolumeCallLoading}
+                                                style={{ flex: 1, fontFamily: 'monospace' }}
+                                            />
+                                        </Flex>
+                                    )}
+                                    {fakeVolumeCallFn === 'swap' && (
+                                        <Flex align="center" gap={8} mb={2}>
+                                            <Text fontSize="sm" color="gray.400" minW="110px">
+                                                Số vòng / BNB
+                                            </Text>
+                                            <InputNumber
+                                                size="small"
+                                                min={1}
+                                                value={fakeVolumeCallTimes}
+                                                onChange={(v) => setFakeVolumeCallTimes(v ?? 1)}
+                                                disabled={fakeVolumeCallLoading}
+                                                style={{ width: 90 }}
+                                            />
+                                            <Input
+                                                size="small"
+                                                value={fakeVolumeCallAmount}
+                                                placeholder="0.001 BNB"
+                                                onChange={(e) => setFakeVolumeCallAmount(e.target.value)}
+                                                disabled={fakeVolumeCallLoading}
+                                                style={{ width: 140 }}
+                                            />
+                                        </Flex>
+                                    )}
+                                    {fakeVolumeCallFn === 'transferOwnership' && (
+                                        <Flex align="center" gap={8} mb={2}>
+                                            <Text fontSize="sm" color="gray.400" minW="110px">
+                                                Chủ sở hữu mới
+                                            </Text>
+                                            <Input
+                                                size="small"
+                                                value={fakeVolumeCallNewOwner}
+                                                placeholder="0x..."
+                                                onChange={(e) => setFakeVolumeCallNewOwner(e.target.value)}
+                                                disabled={fakeVolumeCallLoading}
+                                                style={{ flex: 1, fontFamily: 'monospace' }}
+                                            />
+                                        </Flex>
+                                    )}
+                                    <Button
+                                        size="small"
+                                        type="primary"
+                                        loading={fakeVolumeCallLoading}
+                                        onClick={handleFakeVolumeCall}
+                                        disabled={running}
+                                    >
+                                        Gọi hàm
+                                    </Button>
+                                </Box>
+                            </>
                         )}
                     </>
                 )}

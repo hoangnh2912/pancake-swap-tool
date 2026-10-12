@@ -121,9 +121,7 @@ contract FakeVolume {
 }
 `
 
-// Tăng mỗi khi sửa nội dung Solidity ở trên — automationService.ts so khớp với version đã lưu
-// trong Config để biết khi nào contract đã deploy cũ còn mang logic lỗi, bắt buộc deploy lại
-// thay vì âm thầm tái sử dụng (ownership check không phát hiện được thay đổi logic/bytecode).
-export const FAKE_VOLUME_VERSION = 'v4-call-not-transfer'
-
+// Source mặc định — main.tsx cho sửa trực tiếp trong Editor (lưu vào Config.fakeVolumeCode),
+// cache-invalidation dựa trên hash nội dung thực tế đang dùng (xem main.tsx), không phải
+// version cố định — sửa code (tự sửa hay user tự sửa trong Editor) đều tự phát hiện đúng.
 export default FAKE_VOLUME_CONTRACT
