@@ -1171,13 +1171,13 @@ const Main = ({
             ),
         },
         {
-            title: 'Tax Buy %',
+            title: 'Tax Buy (‰)',
             width: 100,
             render: (_: any, row: TokenRow) => (
                 <InputNumber
                     size="small"
                     min={0}
-                    max={100}
+                    max={1000}
                     value={Number(row.taxBuy) || 0}
                     onChange={(v) => updateRow(row.id, 'taxBuy', String(v ?? 0))}
                     disabled={running}
@@ -1186,13 +1186,13 @@ const Main = ({
             ),
         },
         {
-            title: 'Tax Sell %',
+            title: 'Tax Sell (‰)',
             width: 100,
             render: (_: any, row: TokenRow) => (
                 <InputNumber
                     size="small"
                     min={0}
-                    max={100}
+                    max={1000}
                     value={Number(row.taxSell) || 0}
                     onChange={(v) => updateRow(row.id, 'taxSell', String(v ?? 0))}
                     disabled={running}
