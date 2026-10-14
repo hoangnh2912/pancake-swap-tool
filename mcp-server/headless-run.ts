@@ -42,6 +42,7 @@ function compile(source, fileName) {
 }
 
 const prisma = new PrismaClient({ datasourceUrl: `file:${DB_PATH}` })
+let localServer
 
 async function appendLog(text) {
     const cfg = await prisma.config.findUnique({ where: { id: tabId } })
@@ -66,7 +67,7 @@ async function main() {
     app.use('*', cors({ origin: '*' }))
     app.use('/api/model/*', createHonoHandler({ getPrisma: () => prisma }))
     const port = await new Promise((resolve) => {
-        serve({ fetch: app.fetch, hostname: '127.0.0.1', port: 0 }, (info) => resolve(info.port))
+        localServer = serve({ fetch: app.fetch, hostname: '127.0.0.1', port: 0 }, (info) => resolve(info.port))
     })
     configureZenStack(`http://127.0.0.1:${port}/api/model`, fetch)
 
@@ -146,4 +147,8 @@ main()
     })
     .finally(async () => {
         await prisma.$disconnect()
+        // serve() giữ event loop sống vô thời hạn nếu không đóng — process không tự thoát
+        // dù automation đã xong, phải tự close() rồi exit() để chắc chắn kết thúc.
+        localServer?.close()
+        process.exit(process.exitCode || 0)
     })
