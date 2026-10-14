@@ -290,7 +290,7 @@ export async function runAutomation(
     const WBNB = chainCfg.wbnb
     const gasPrice = ethers.utils.parseUnits(String(params.gasPriceGwei ?? 0.05), 'gwei')
 
-    const provider = buildProvider(params.rpcList)
+    const provider = buildProvider(params.rpcList, params.chainId)
     const mainWallet = new ethers.Wallet(params.mainPrivateKey, provider)
     const swapWallet = new ethers.Wallet(params.swapPrivateKey, provider)
     const mintWallet = new ethers.Wallet(params.mintPrivateKey, provider)

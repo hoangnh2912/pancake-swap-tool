@@ -173,7 +173,10 @@ server.registerTool(
             }
         }
         const id = tabId || 'default'
-        const child = spawn('npx', ['tsx', path.join(__dirname, 'headless-run.ts'), id], {
+        // Gọi thẳng binary tsx cục bộ (không qua npx) — npx tạo thêm 1-2 tầng process con,
+        // detached+unref không kill hết được cả cây, để lại process mồ côi khi cần dừng khẩn.
+        const tsxBin = path.join(__dirname, 'node_modules', '.bin', 'tsx')
+        const child = spawn(tsxBin, [path.join(__dirname, 'headless-run.ts'), id], {
             cwd: __dirname,
             detached: true,
             stdio: ['ignore', fs.openSync(path.join(__dirname, 'run.log'), 'a'), fs.openSync(path.join(__dirname, 'run.log'), 'a')],
@@ -202,6 +205,27 @@ server.registerTool(
         } catch {
             return textResult({ ...state, status: 'finished (hoặc đã bị kill) — xem get_logs để biết kết quả' })
         }
+    }
+)
+
+server.registerTool(
+    'stop_automation',
+    {
+        title: 'Stop run_automation',
+        description:
+            'Kill khẩn cấp lần chạy run_automation đang chạy (cả process group, không để sót ' +
+            'tiến trình con). KHÔNG hoàn tác được tx đã gửi trước đó — chỉ dừng các bước CHƯA chạy.',
+    },
+    async () => {
+        if (!fs.existsSync(RUN_STATE_FILE)) return textResult('Không có lần chạy nào để dừng.')
+        const state = JSON.parse(fs.readFileSync(RUN_STATE_FILE, 'utf8'))
+        try {
+            process.kill(-state.pid, 'SIGKILL') // số âm = kill cả process group (detached tạo group riêng)
+        } catch (err) {
+            // process group có thể đã chết hoặc không tồn tại — vẫn dọn state file
+        }
+        fs.unlinkSync(RUN_STATE_FILE)
+        return textResult(`Đã dừng (pid group ${state.pid}, tabId ${state.tabId}).`)
     }
 )
 
