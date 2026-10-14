@@ -4,10 +4,12 @@ import { ConfigProvider, theme } from 'antd'
 import { createRoot } from 'react-dom/client'
 import { Provider as ZenStackProvider } from './hooks/zenstack'
 import TabManager from './pages/tab-manager'
+import { configureZenStack } from './utils/zenstack-function'
 
 const serverPort = new URLSearchParams(window.location.search).get('serverPort') || '8791'
-export const endpoint = `http://localhost:${serverPort}/api/model`
-export const fetchInstance = window.fetch.bind(window)
+const endpoint = `http://localhost:${serverPort}/api/model`
+const fetchInstance = window.fetch.bind(window)
+configureZenStack(endpoint, fetchInstance)
 
 const queryClient = new QueryClient()
 const root = createRoot(document.body)

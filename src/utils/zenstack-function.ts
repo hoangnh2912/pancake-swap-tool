@@ -1,5 +1,16 @@
 import type { Prisma } from '../../prisma/client'
-import { endpoint, fetchInstance } from '../app'
+
+// Không import trực tiếp từ '../app' — app.tsx có side-effect top-level (window.location,
+// document.body) chỉ chạy được trong renderer. Decouple qua configureZenStack() để module
+// này (và cả automationService.ts phụ thuộc nó) import được từ môi trường Node thuần (vd
+// script headless chạy automation ngoài Electron GUI) mà không crash.
+let endpoint = 'http://localhost:8791/api/model'
+let fetchInstance: typeof fetch = (globalThis as any).fetch
+
+export function configureZenStack(ep: string, fetchFn: typeof fetch) {
+    endpoint = ep
+    fetchInstance = fetchFn
+}
 
 const zenStackFunction = async <T, K = unknown>(
     model: Prisma.ModelName,

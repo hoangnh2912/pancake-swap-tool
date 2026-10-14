@@ -1,16 +1,18 @@
 #!/usr/bin/env node
-// MCP server nội bộ cho pancake-swap-tool — chỉ ĐỌC (không write, không ký tx, không lộ
-// private key) để đọc log/config/trạng thái automation trực tiếp từ SQLite, thay vì chạy
-// tay sqlite3 + python mỗi lần debug.
+// MCP server nội bộ cho pancake-swap-tool. Phần lớn tool chỉ ĐỌC (log/config/ScanWallet từ
+// SQLite, không lộ private key). Riêng `run_automation` KÝ TX THẬT bằng key đã lưu trong
+// Config — chỉ chạy khi gọi với confirm:true, không có tool nào khác động tới ví/on-chain.
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.resolve(__dirname, '..', 'prisma', 'auto-deploy.sqlite')
+const ROOT = path.resolve(__dirname, '..')
+const DB_PATH = path.join(ROOT, 'prisma', 'auto-deploy.sqlite')
 
 // Field KHÔNG BAO GIỜ trả ra ngoài (private key) — chặn cứng dù tool nào gọi.
 const SENSITIVE_FIELDS = new Set(['mainKey', 'swapKey', 'mintKey'])
@@ -136,6 +138,70 @@ server.registerTool(
             `SELECT * FROM ScanWallet ${where} ORDER BY createdAt DESC LIMIT ${limit || 50};`
         )
         return textResult(rows)
+    }
+)
+
+const RUN_STATE_FILE = path.join(__dirname, '.run-state.json')
+
+server.registerTool(
+    'run_automation',
+    {
+        title: 'Run automation (REAL, ký tx thật)',
+        description:
+            'Chạy runAutomation() THẬT ngoài Electron GUI, dùng ĐÚNG config/private key đã lưu ' +
+            'trong Config (tabId) — y hệt bấm "Bắt đầu Automation" trong app. KÝ GIAO DỊCH THẬT, ' +
+            'TỐN BNB THẬT. Bắt buộc confirm:true mới chạy. Chạy nền (không block) — dùng get_logs ' +
+            'để theo dõi tiến trình, run_automation_status để biết tiến trình đang chạy hay đã xong.',
+        inputSchema: {
+            tabId: z.string().optional().describe('Tab id, mặc định "default"'),
+            confirm: z
+                .literal(true)
+                .describe('Phải truyền đúng true — xác nhận đã hiểu đây là chạy thật, ký tx thật'),
+        },
+    },
+    async ({ tabId, confirm }) => {
+        if (confirm !== true) {
+            return textResult('Từ chối — thiếu confirm:true. Đây là hành động ký tx thật, tốn BNB thật.')
+        }
+        if (fs.existsSync(RUN_STATE_FILE)) {
+            const state = JSON.parse(fs.readFileSync(RUN_STATE_FILE, 'utf8'))
+            try {
+                process.kill(state.pid, 0) // không gửi tín hiệu, chỉ kiểm tra process còn sống
+                return textResult(`Đã có 1 lần chạy khác đang chạy (pid ${state.pid}, tabId ${state.tabId}) — đợi xong hoặc kiểm tra get_logs trước.`)
+            } catch {
+                // process không còn sống — cho chạy tiếp, dọn file cũ
+            }
+        }
+        const id = tabId || 'default'
+        const child = spawn('npx', ['tsx', path.join(__dirname, 'headless-run.ts'), id], {
+            cwd: __dirname,
+            detached: true,
+            stdio: ['ignore', fs.openSync(path.join(__dirname, 'run.log'), 'a'), fs.openSync(path.join(__dirname, 'run.log'), 'a')],
+        })
+        child.unref()
+        fs.writeFileSync(RUN_STATE_FILE, JSON.stringify({ pid: child.pid, tabId: id, startedAt: Date.now() }))
+        return textResult(
+            `Đã bắt đầu chạy automation THẬT cho tabId="${id}" (pid ${child.pid}). ` +
+            `Dùng get_logs({tabId:"${id}"}) để theo dõi, run_automation_status để biết còn chạy không.`
+        )
+    }
+)
+
+server.registerTool(
+    'run_automation_status',
+    {
+        title: 'Check run_automation status',
+        description: 'Kiểm tra lần chạy run_automation gần nhất còn đang chạy hay đã kết thúc.',
+    },
+    async () => {
+        if (!fs.existsSync(RUN_STATE_FILE)) return textResult('Chưa có lần chạy nào qua MCP.')
+        const state = JSON.parse(fs.readFileSync(RUN_STATE_FILE, 'utf8'))
+        try {
+            process.kill(state.pid, 0)
+            return textResult({ ...state, status: 'running' })
+        } catch {
+            return textResult({ ...state, status: 'finished (hoặc đã bị kill) — xem get_logs để biết kết quả' })
+        }
     }
 )
 
