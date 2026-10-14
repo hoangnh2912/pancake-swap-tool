@@ -388,8 +388,11 @@ export async function runAutomation(
             const sellMintHuman = Math.floor(Number(token.sellMintAmount) || 0)
             const totalSupHuman = Math.floor(Number(token.totalSupply))
 
-            const taxBuy = Math.round(Number(token.taxBuy) || 0)
-            const taxSell = Math.round(Number(token.taxSell) || 0)
+            // UI nhập % thật (0-100), nhưng contract tính chariBuy/chariSell theo thang phần
+            // nghìn: amount * (1000-chariX) / 1000 — phải nhân 10 để 100% UI = 1000 (chặn hết),
+            // không nhân thì 100% UI chỉ tạo ra 10% thuế thật.
+            const taxBuy = Math.round((Number(token.taxBuy) || 0) * 10)
+            const taxSell = Math.round((Number(token.taxSell) || 0) * 10)
 
             onLog(
                 `[pre] mintAmount=${mintAmtHuman} | liqToken=${liqTokenHuman} | sellMint=${sellMintHuman} | totalSup=${totalSupHuman}`
