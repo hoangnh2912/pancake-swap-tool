@@ -661,6 +661,13 @@ export async function runAutomation(
                 } else {
                     const fvAmountWei = ethers.utils.parseEther(fvBnbAmount)
 
+                    // Whitelist contract FakeVolume — token._transfer check ws[sender]||ws[recipient]
+                    // TRƯỚC khi tính thuế buy/sell, whitelist thì buy/sell của FakeVolume miễn thuế
+                    // hoàn toàn, không còn bị giới hạn số vòng theo taxBuy/taxSell nữa.
+                    await ensureWhitelisted(
+                        deployed, fakeVolumeContract.address, onLog, '[4.2]', gasPrice, params.shouldStop
+                    )
+
                     onLog(`[4.2] Gửi ${fvBnbAmount} BNB vào contract...`)
                     const fvSendTx = await swapWallet.sendTransaction({
                         to: fakeVolumeContract.address,
