@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pancake-swap-tool-local": {
+      "command": "node",
+      "args": ["mcp-server/index.mjs"]
+    }
+  }
+}

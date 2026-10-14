@@ -1,0 +1,11 @@
+{
+  "name": "pancake-swap-tool-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^3.23.8"
+  }
+}
