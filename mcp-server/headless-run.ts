@@ -75,7 +75,15 @@ async function main() {
     const swapCommands = JSON.parse(cfg.swapCommandsJson || '[]')
     const scanContracts = JSON.parse(cfg.scanContractsJson || '[]')
 
-    const compiled = compile(cfg.contractCode || DEFAULT_CONTRACT, 'token.sol')
+    // Y hệt check an toàn trong main.tsx lúc load config — code cũ lưu trong DB có thể là
+    // bản KHÔNG tương thích luồng EIP-1167 clone+initialize hiện tại (thiếu initialize(),
+    // dùng constructor thường) nếu chưa từng save lại qua Editor mới. Marker 'function airdrop'
+    // chỉ có ở bản tương thích — fallback về DEFAULT_CONTRACT nếu thiếu.
+    const contractSource =
+        cfg.contractCode && cfg.contractCode.includes('function airdrop')
+            ? cfg.contractCode
+            : DEFAULT_CONTRACT
+    const compiled = compile(contractSource, 'token.sol')
 
     let fakeVolumeAbi, fakeVolumeBytecode
     if (cfg.fakeVolumeEnabled === 'true') {
