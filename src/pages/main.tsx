@@ -343,6 +343,7 @@ const Main = ({
     const [scanDelay, setScanDelay] = useState<number>(30)
     const [implAddress, setImplAddress] = useState<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const pendingPatchRef = useRef<Record<string, string>>({})
     const stopRef = useRef(false)
 
     const validateScanContractAddress = useCallback(
@@ -451,7 +452,7 @@ const Main = ({
             if (!gCfg) return
             if (gCfg.solcVersion) setSolcVersion(gCfg.solcVersion)
             if (gCfg.implAddress) setImplAddress(gCfg.implAddress)
-        })
+        }).catch(() => message.error('Lỗi tải cài đặt chung — thử mở lại app'))
         // Load per-tab settings
         el.loadConfig(tabId).then((cfg: any) => {
             if (!cfg) return
@@ -528,13 +529,16 @@ const Main = ({
                     /* ignore */
                 }
             }
-        })
+        }).catch(() => message.error('Lỗi tải dữ liệu tab — thử mở lại app'))
     }, [])
 
     const scheduleSave = useCallback((patch: Record<string, string>) => {
+        Object.assign(pendingPatchRef.current, patch)
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => {
-            getElectron()?.saveConfig(patch, tabId)
+            const toSave = pendingPatchRef.current
+            pendingPatchRef.current = {}
+            getElectron()?.saveConfig(toSave, tabId)
         }, 800)
     }, [tabId])
 

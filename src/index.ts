@@ -131,7 +131,17 @@ app.on('before-quit', async () => {
 
 ipcMain.handle('load-config', async (_event, tabId?: string) => {
     const id = tabId || 'default'
-    return await prisma.config.findUnique({ where: { id } })
+    // Retry vài lần nếu SQLite đang bị lock (ví dụ 2 instance app khởi động cùng lúc) —
+    // nếu không, renderer nhận promise reject, form hiển thị trống (giống mất dữ liệu)
+    // trong khi dữ liệu vẫn còn nguyên trong DB.
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await prisma.config.findUnique({ where: { id } })
+        } catch (err) {
+            if (attempt >= 3) throw err
+            await new Promise((r) => setTimeout(r, 300))
+        }
+    }
 })
 
 ipcMain.handle('save-config', async (_event, data: Record<string, string>, tabId?: string) => {
