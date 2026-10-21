@@ -22,13 +22,35 @@ const { default: FAKE_VOLUME_CONTRACT } = await import(path.join(ROOT, 'src', 'u
 const tabId = process.argv[2] || 'default'
 const DB_PATH = path.join(ROOT, 'prisma', 'auto-deploy.sqlite')
 
-function compile(source, fileName) {
+// Giống app: dùng đúng solcVersion lưu ở _global (mặc định 0.8.27), không phải solc trong node_modules
+async function loadSolc(version) {
+    if (version === solc.version().split('+')[0]) return solc
+    const list = await (await fetch('https://binaries.soliditylang.org/bin/list.json')).json()
+    const file = list.releases[version]
+    if (!file) throw new Error(`solc version không hợp lệ: ${version}`)
+    const full = file.replace(/^soljson-/, '').replace(/\.js$/, '')
+    return new Promise((resolve, reject) =>
+        solc.loadRemoteVersion(full, (err, snapshot) => (err ? reject(err) : resolve(snapshot)))
+    )
+}
+
+// FNV-1a — copy y hệt hashString trong src/pages/main.tsx, phải khớp để so fakeVolumeVersion
+function hashString(s) {
+    let h = 0x811c9dc5
+    for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i)
+        h = Math.imul(h, 0x01000193)
+    }
+    return (h >>> 0).toString(16)
+}
+
+function compile(compiler, source, fileName) {
     const input = JSON.stringify({
         language: 'Solidity',
         sources: { [fileName]: { content: source } },
         settings: { outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } } },
     })
-    const output = JSON.parse(solc.compile(input))
+    const output = JSON.parse(compiler.compile(input))
     if (output.errors) {
         const errors = output.errors.filter((e) => e.severity === 'error')
         if (errors.length > 0) throw new Error(errors.map((e) => e.formattedMessage).join('\n'))
@@ -43,19 +65,50 @@ function compile(source, fileName) {
 
 const prisma = new PrismaClient({ datasourceUrl: `file:${DB_PATH}` })
 let localServer
+let stopping = false
 
-async function appendLog(text) {
-    const cfg = await prisma.config.findUnique({ where: { id: tabId } })
-    const logs = cfg?.logsJson ? JSON.parse(cfg.logsJson) : []
-    logs.push({ id: Date.now() + Math.random(), text })
-    await prisma.config.update({
-        where: { id: tabId },
-        data: { logsJson: JSON.stringify(logs.slice(-500)) },
+// Mọi ghi DB đi qua 1 hàng đợi — onLog/updateStatus không được await bên trong runAutomation,
+// read-modify-write logsJson/tokensJson chạy chồng nhau sẽ đè mất dòng.
+let dbQueue = Promise.resolve()
+function enqueue(fn) {
+    dbQueue = dbQueue.then(fn).catch((err) => console.error('[headless] ghi DB lỗi:', err))
+    return dbQueue
+}
+
+function appendLog(text) {
+    return enqueue(async () => {
+        const cfg = await prisma.config.findUnique({ where: { id: tabId } })
+        const logs = cfg?.logsJson ? JSON.parse(cfg.logsJson) : []
+        logs.push({ id: Date.now() + Math.random(), text })
+        await prisma.config.update({
+            where: { id: tabId },
+            data: { logsJson: JSON.stringify(logs.slice(-500)) },
+        })
     })
 }
 
+// Lưu status/contractAddress vào tokensJson theo index — lần chạy MCP sau resume token lỗi
+// thay vì deploy lại từ đầu (app GUI bỏ qua các field này khi load, không ảnh hưởng).
+function updateTokenStatus(index, status, contractAddress, errorMsg) {
+    return enqueue(async () => {
+        const cfg = await prisma.config.findUnique({ where: { id: tabId } })
+        const tokens = JSON.parse(cfg?.tokensJson || '[]')
+        if (!tokens[index]) return
+        tokens[index] = { ...tokens[index], status, contractAddress, errorMsg }
+        await prisma.config.update({ where: { id: tabId }, data: { tokensJson: JSON.stringify(tokens) } })
+    })
+}
+
+// stop_automation gửi SIGTERM — dừng êm qua shouldStop (rút BNB khỏi FakeVolume nếu đang dở)
+process.on('SIGTERM', () => {
+    if (stopping) return
+    stopping = true
+    appendLog('=== [headless] Nhận lệnh dừng — dừng sau bước hiện tại ===')
+})
+
 async function main() {
     const cfg = await prisma.config.findUnique({ where: { id: tabId } })
+    const gCfg = await prisma.config.findUnique({ where: { id: '_global' } })
     if (!cfg) throw new Error(`Không tìm thấy Config id="${tabId}"`)
     if (!cfg.mainKey || !cfg.swapKey || !cfg.mintKey) {
         throw new Error('Thiếu private key (main/swap/mint) trong Config — chưa cấu hình đủ qua GUI')
@@ -72,7 +125,18 @@ async function main() {
     configureZenStack(`http://127.0.0.1:${port}/api/model`, fetch)
 
     const normalizeKey = (k) => (k.trim().startsWith('0x') ? k.trim() : `0x${k.trim()}`)
+    // Giống app: bỏ token đã success, token error còn contractAddress thì resume
     const tokens = JSON.parse(cfg.tokensJson || '[]')
+        .map((t, i) => ({
+            ...t,
+            id: String(i),
+            resumeContractAddress: t.status === 'error' && t.contractAddress ? t.contractAddress : undefined,
+        }))
+        .filter((t) => t.status !== 'success')
+    if (tokens.length === 0) {
+        await appendLog('=== [headless] Không có token nào cần chạy — tất cả đã hoàn thành ===')
+        return
+    }
     const swapCommands = JSON.parse(cfg.swapCommandsJson || '[]')
     const scanContracts = JSON.parse(cfg.scanContractsJson || '[]')
 
@@ -84,60 +148,79 @@ async function main() {
         cfg.contractCode && cfg.contractCode.includes('function airdrop')
             ? cfg.contractCode
             : DEFAULT_CONTRACT
-    const compiled = compile(contractSource, 'token.sol')
+    const compiler = await loadSolc(gCfg?.solcVersion || '0.8.27')
+    const compiled = compile(compiler, contractSource, 'token.sol')
 
+    // Giống app: đổi code FakeVolume (hash khác fakeVolumeVersion) thì coi như chưa có contract
+    const fakeVolumeCode = cfg.fakeVolumeCode || FAKE_VOLUME_CONTRACT
+    const fakeVolumeCodeHash = hashString(fakeVolumeCode)
     let fakeVolumeAbi, fakeVolumeBytecode
     if (cfg.fakeVolumeEnabled === 'true') {
-        const fv = compile(cfg.fakeVolumeCode || FAKE_VOLUME_CONTRACT, 'fakeVolume.sol')
+        const fv = compile(compiler, fakeVolumeCode, 'fakeVolume.sol')
         fakeVolumeAbi = fv.abi
         fakeVolumeBytecode = fv.bytecode
     }
+    const implRef = { current: null }
 
     await appendLog(`\n=== [headless] Bắt đầu chạy qua MCP (tabId=${tabId}) ===`)
 
-    await runAutomation(
-        {
-            rpcList: (cfg.rpc || '').split('\n').map((s) => s.trim()).filter(Boolean),
-            chainId: Number(cfg.chainId) || 56,
-            gasPriceGwei: Number(cfg.gasPriceGwei) || 0.05,
-            mainPrivateKey: normalizeKey(cfg.mainKey),
-            swapPrivateKey: normalizeKey(cfg.swapKey),
-            mintPrivateKey: normalizeKey(cfg.mintKey),
-            abi: compiled.abi,
-            bytecode: compiled.bytecode,
-            tokens,
-            swapCommands,
-            swapDelayMs: (Number(cfg.swapDelay) || 0) * 1000,
-            swapRepeat: Number(cfg.swapRepeat) || 1,
-            transferBnbToMain: cfg.transferBnbToMain || '',
-            scanContracts,
-            scanMode: cfg.scanMode === 'contract' ? 'contract' : 'allBlocks',
-            disperseAmount: cfg.disperseAmount || '',
-            disperseBatchSize: Number(cfg.disperseBatchSize) || 10000,
-            scanDelaySeconds: Number(cfg.scanDelay) || 30,
-            existingImplementationAddress: cfg.implAddress || null,
-            fakeVolumeEnabled: cfg.fakeVolumeEnabled === 'true',
-            fakeVolumeTimes: Number(cfg.fakeVolumeTimes) || 1,
-            fakeVolumeBnbAmount: cfg.fakeVolumeBnbAmount || '',
-            fakeVolumeAddress: cfg.fakeVolumeAddress || null,
-            fakeVolumeAbi,
-            fakeVolumeBytecode,
-            onFakeVolumeDeployed: async (addr) => {
-                await prisma.config.update({ where: { id: tabId }, data: { fakeVolumeAddress: addr } })
+    try {
+        await runAutomation(
+            {
+                rpcList: (cfg.rpc || '').split('\n').map((s) => s.trim()).filter(Boolean),
+                chainId: Number(cfg.chainId) || 56,
+                gasPriceGwei: Number(cfg.gasPriceGwei) || 0.05,
+                mainPrivateKey: normalizeKey(cfg.mainKey),
+                swapPrivateKey: normalizeKey(cfg.swapKey),
+                mintPrivateKey: normalizeKey(cfg.mintKey),
+                abi: compiled.abi,
+                bytecode: compiled.bytecode,
+                tokens,
+                swapCommands,
+                swapDelayMs: (Number(cfg.swapDelay) || 0) * 1000,
+                swapRepeat: Number(cfg.swapRepeat) || 1,
+                transferBnbToMain: cfg.transferBnbToMain || '',
+                scanContracts,
+                scanMode: cfg.scanMode === 'contract' ? 'contract' : 'allBlocks',
+                disperseAmount: cfg.disperseAmount || '',
+                disperseBatchSize: Number(cfg.disperseBatchSize) || 10000,
+                scanDelaySeconds: Number(cfg.scanDelay) || 30,
+                existingImplementationAddress: gCfg?.implAddress || null,
+                _implRef: implRef,
+                fakeVolumeEnabled: cfg.fakeVolumeEnabled === 'true',
+                fakeVolumeTimes: Number(cfg.fakeVolumeTimes) || 1,
+                fakeVolumeBnbAmount: cfg.fakeVolumeBnbAmount || '',
+                fakeVolumeAddress:
+                    cfg.fakeVolumeVersion === fakeVolumeCodeHash ? cfg.fakeVolumeAddress || null : null,
+                fakeVolumeAbi,
+                fakeVolumeBytecode,
+                onFakeVolumeDeployed: (addr) =>
+                    enqueue(() =>
+                        prisma.config.update({
+                            where: { id: tabId },
+                            data: { fakeVolumeAddress: addr, fakeVolumeVersion: fakeVolumeCodeHash },
+                        })
+                    ),
+                shouldStop: () => stopping,
             },
-            shouldStop: () => false,
-        },
-        (msg) => appendLog(msg),
-        async (id, status, contractAddress, errorMsg) => {
-            const updated = JSON.parse((await prisma.config.findUnique({ where: { id: tabId } }))?.tokensJson || '[]')
-            // tokensJson không lưu status/contractAddress theo thiết kế hiện tại — bỏ qua update
-            // ở đây, log text đã đủ để biết kết quả qua get_logs.
-            void updated
-        },
-        async () => {} // onStepChange — không cần stepStatesJson cho lần chạy headless
-    )
+            (msg) => appendLog(msg),
+            (id, status, contractAddress, errorMsg) => updateTokenStatus(Number(id), status, contractAddress, errorMsg),
+            async () => {} // onStepChange — không cần stepStatesJson cho lần chạy headless
+        )
+    } finally {
+        // Giống app: lưu impl mới deploy vào _global để lần sau (app hoặc MCP) dùng lại
+        if (implRef.current) {
+            await enqueue(() =>
+                prisma.config.upsert({
+                    where: { id: '_global' },
+                    create: { id: '_global', implAddress: implRef.current },
+                    update: { implAddress: implRef.current },
+                })
+            )
+        }
+    }
 
-    await appendLog('=== [headless] Hoàn thành ===')
+    await appendLog(stopping ? '=== [headless] Đã dừng ===' : '=== [headless] Hoàn thành ===')
 }
 
 main()
@@ -146,6 +229,7 @@ main()
         process.exitCode = 1
     })
     .finally(async () => {
+        await dbQueue
         await prisma.$disconnect()
         // serve() giữ event loop sống vô thời hạn nếu không đóng — process không tự thoát
         // dù automation đã xong, phải tự close() rồi exit() để chắc chắn kết thúc.

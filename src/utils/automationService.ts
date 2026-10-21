@@ -309,6 +309,18 @@ export async function runAutomation(
 
     const mainBal = await provider.getBalance(mainWallet.address)
     onLog(`BNB chủ : ${ethers.utils.formatEther(mainBal)} BNB`)
+    const swapBal = await provider.getBalance(swapWallet.address)
+    onLog(`BNB swap: ${ethers.utils.formatEther(swapBal)} BNB`)
+
+    // Fake Volume deploy + nạp BNB đều từ ví swap — chặn sớm nếu không đủ (chưa tính gas)
+    if (params.fakeVolumeEnabled && Number(params.fakeVolumeBnbAmount) > 0) {
+        const fvNeed = ethers.utils.parseEther(params.fakeVolumeBnbAmount!)
+        if (swapBal.lt(fvNeed)) {
+            throw new Error(
+                `Ví swap không đủ BNB cho Fake Volume: có ${ethers.utils.formatEther(swapBal)}, cần ${params.fakeVolumeBnbAmount} + gas`
+            )
+        }
+    }
 
     // Tracks last swap completion time ACROSS tokens — delay applies globally,
     // not just between commands within the same token (fixes: 1 command/token

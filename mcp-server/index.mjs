@@ -176,11 +176,13 @@ server.registerTool(
         // Gọi thẳng binary tsx cục bộ (không qua npx) — npx tạo thêm 1-2 tầng process con,
         // detached+unref không kill hết được cả cây, để lại process mồ côi khi cần dừng khẩn.
         const tsxBin = path.join(__dirname, 'node_modules', '.bin', 'tsx')
+        const logFd = fs.openSync(path.join(__dirname, 'run.log'), 'a')
         const child = spawn(tsxBin, [path.join(__dirname, 'headless-run.ts'), id], {
             cwd: __dirname,
             detached: true,
-            stdio: ['ignore', fs.openSync(path.join(__dirname, 'run.log'), 'a'), fs.openSync(path.join(__dirname, 'run.log'), 'a')],
+            stdio: ['ignore', logFd, logFd],
         })
+        fs.closeSync(logFd) // child đã giữ fd riêng
         child.unref()
         fs.writeFileSync(RUN_STATE_FILE, JSON.stringify({ pid: child.pid, tabId: id, startedAt: Date.now() }))
         return textResult(
@@ -213,19 +215,38 @@ server.registerTool(
     {
         title: 'Stop run_automation',
         description:
-            'Kill khẩn cấp lần chạy run_automation đang chạy (cả process group, không để sót ' +
-            'tiến trình con). KHÔNG hoàn tác được tx đã gửi trước đó — chỉ dừng các bước CHƯA chạy.',
+            'Dừng lần chạy run_automation đang chạy: gửi SIGTERM để dừng êm sau bước hiện tại ' +
+            '(tự rút BNB khỏi FakeVolume nếu đang dở), quá 60s chưa thoát thì SIGKILL cả process ' +
+            'group. KHÔNG hoàn tác được tx đã gửi trước đó — chỉ dừng các bước CHƯA chạy.',
     },
     async () => {
         if (!fs.existsSync(RUN_STATE_FILE)) return textResult('Không có lần chạy nào để dừng.')
         const state = JSON.parse(fs.readFileSync(RUN_STATE_FILE, 'utf8'))
+        const alive = () => {
+            try {
+                process.kill(state.pid, 0)
+                return true
+            } catch {
+                return false
+            }
+        }
+        let forced = false
         try {
-            process.kill(-state.pid, 'SIGKILL') // số âm = kill cả process group (detached tạo group riêng)
+            process.kill(-state.pid, 'SIGTERM') // số âm = cả process group (detached tạo group riêng)
+            for (let i = 0; i < 60 && alive(); i++) await new Promise((r) => setTimeout(r, 1000))
+            if (alive()) {
+                forced = true
+                process.kill(-state.pid, 'SIGKILL')
+            }
         } catch (err) {
             // process group có thể đã chết hoặc không tồn tại — vẫn dọn state file
         }
         fs.unlinkSync(RUN_STATE_FILE)
-        return textResult(`Đã dừng (pid group ${state.pid}, tabId ${state.tabId}).`)
+        return textResult(
+            forced
+                ? `Quá 60s chưa dừng êm — đã SIGKILL (pid group ${state.pid}). Kiểm tra get_logs xem BNB có kẹt trong FakeVolume không.`
+                : `Đã dừng (pid group ${state.pid}, tabId ${state.tabId}).`
+        )
     }
 )
 
