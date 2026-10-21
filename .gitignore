@@ -59,3 +59,7 @@ out
 __MACOSX
 .webpack/*
 /generated/prisma
+
+# DB chứa private key — không commit
+prisma/*.sqlite
+prisma/*.sqlite-journal
