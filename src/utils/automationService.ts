@@ -191,23 +191,52 @@ async function estimateAirdropGas(
     }
 }
 
-async function estimateFakeVolumeSwapGas(
+// Estimate swap(times) trước khi bắn tx — fail thì giảm một nửa số vòng và estimate lại,
+// chỉ bắn tx khi estimate qua. Fail cả ở 1 vòng thì ném lỗi (caller rút BNB về).
+async function estimateFakeVolumeSwap(
     contract: ethers.Contract,
     token: string,
     times: number,
-    amount: ethers.BigNumber
-): Promise<ethers.BigNumber> {
-    try {
-        const est = await contract.estimateGas.swap(token, times, amount)
-        return est.mul(140).div(100)
-    } catch (err: any) {
-        // estimateGas trả về lý do revert cụ thể (vd "TransferHelper: TRANSFER_FROM_FAILED")
-        // → tx thật CHẮC CHẮN fail, ném lỗi luôn thay vì gửi tx thật tốn gas vô ích.
-        if (err?.reason || err?.error?.reason) throw err
-        // Không có lý do cụ thể (RPC không hỗ trợ estimateGas/lỗi mạng tạm thời) — fallback,
-        // vẫn thử gửi vì không chắc là sẽ revert thật.
-        return ethers.BigNumber.from(150_000 + 350_000 * times)
+    amount: ethers.BigNumber,
+    onLog: (msg: string) => void
+): Promise<{ times: number; gasLimit: ethers.BigNumber }> {
+    for (;;) {
+        try {
+            const est = await contract.estimateGas.swap(token, times, amount)
+            return { times, gasLimit: est.mul(140).div(100) }
+        } catch (err: any) {
+            if (times <= 1) throw err
+            const reason = err?.reason || err?.error?.reason || err?.code || 'unknown'
+            times = Math.ceil(times / 2)
+            onLog(`[4.2] ⚠ Estimate fail (${reason}) — giảm còn ${times} vòng/tx`)
+        }
     }
+}
+
+// Số vòng tối đa mỗi tx swap() — giữ gas mỗi tx ≤ 1/4 block gas limit (tx quá to vượt limit
+// hoặc khó được validator đưa vào block). Gas/vòng = estimate(2 vòng) − estimate(1 vòng).
+async function planFakeVolumeChunk(
+    contract: ethers.Contract,
+    provider: ethers.providers.Provider,
+    token: string,
+    times: number,
+    amount: ethers.BigNumber
+): Promise<number> {
+    const blockGasLimit = (await provider.getBlock('latest')).gasLimit.toNumber()
+    const budget = (blockGasLimit / 4) / 1.4 // chừa hệ số ×1.4 của estimateFakeVolumeSwap
+    let base = 150_000
+    let perRound = 350_000
+    try {
+        const [g1, g2] = await Promise.all([
+            contract.estimateGas.swap(token, 1, amount),
+            contract.estimateGas.swap(token, 2, amount),
+        ])
+        perRound = Math.max(g2.sub(g1).toNumber(), 50_000)
+        base = Math.max(g1.toNumber() - perRound, 0)
+    } catch {
+        // Không estimate được — dùng số ước lượng mặc định, estimateFakeVolumeSwap sẽ tự giảm nếu fail
+    }
+    return Math.max(1, Math.min(times, Math.floor((budget - base) / perRound)))
 }
 
 function raceStop(promise: Promise<any>, shouldStop: (() => boolean) | undefined): Promise<any> {
@@ -693,16 +722,32 @@ export async function runAutomation(
                     // BNB đã nằm trong contract từ bước gửi ở trên — nếu estimateGas/swap() lỗi
                     // bên dưới, phải tự rút lại trước khi ném lỗi, không để kẹt trong contract.
                     try {
-                        onLog(`[4.2] Thực thi fake swap ${fvTimes} vòng...`)
-                        const fvGasLimit = await estimateFakeVolumeSwapGas(
-                            fakeVolumeContract, contractAddress, fvTimes, fvAmountWei
+                        let fvChunk = await planFakeVolumeChunk(
+                            fakeVolumeContract, provider, contractAddress, fvTimes, fvAmountWei
                         )
-                        const fvSwapTx = await fakeVolumeContract.swap(
-                            contractAddress, fvTimes, fvAmountWei,
-                            { gasLimit: fvGasLimit, gasPrice }
+                        onLog(
+                            `[4.2] Thực thi fake swap ${fvTimes} vòng — chia ` +
+                            `${Math.ceil(fvTimes / fvChunk)} tx (tối đa ${fvChunk} vòng/tx)...`
                         )
-                        await raceStop(fvSwapTx.wait(), params.shouldStop)
-                        onLog(`[4.2] ✓ Fake swap xong | tx: ${fvSwapTx.hash}`)
+                        let fvDone = 0
+                        while (fvDone < fvTimes && !params.shouldStop?.()) {
+                            // Tx sau dùng toàn bộ BNB còn trong contract (đã trừ phí/thuế của tx trước)
+                            const amt = fvDone === 0
+                                ? fvAmountWei
+                                : await provider.getBalance(fakeVolumeContract.address)
+                            const { times: n, gasLimit: fvGasLimit } = await estimateFakeVolumeSwap(
+                                fakeVolumeContract, contractAddress,
+                                Math.min(fvChunk, fvTimes - fvDone), amt, onLog
+                            )
+                            fvChunk = Math.min(fvChunk, n) // đã giảm thì các tx sau dùng luôn mức mới
+                            const fvSwapTx = await fakeVolumeContract.swap(
+                                contractAddress, n, amt,
+                                { gasLimit: fvGasLimit, gasPrice }
+                            )
+                            await raceStop(fvSwapTx.wait(), params.shouldStop)
+                            fvDone += n
+                            onLog(`[4.2] ✓ Fake swap ${fvDone}/${fvTimes} vòng | tx: ${fvSwapTx.hash}`)
+                        }
                     } catch (swapErr: any) {
                         onLog(`[4.2] ❌ Fake swap lỗi — thử rút lại BNB đã gửi vào contract...`)
                         try {
