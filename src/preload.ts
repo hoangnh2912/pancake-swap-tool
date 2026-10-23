@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('electron', {
     projectOpen: (filePath: string, password: string) => ipcRenderer.invoke('project-open', filePath, password),
     projectSave: () => ipcRenderer.invoke('project-save'),
     projectSaveAs: (password: string) => ipcRenderer.invoke('project-save-as', password),
+    projectClose: () => ipcRenderer.invoke('project-close'),
+    projectClearRecent: () => ipcRenderer.invoke('project-clear-recent'),
     projectSetTabs: (tabs: unknown) => ipcRenderer.invoke('project-set-tabs', tabs),
     updateState: () => ipcRenderer.invoke('update-state'),
     checkForUpdates: () => ipcRenderer.invoke('update-check'),

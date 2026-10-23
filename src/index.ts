@@ -175,7 +175,7 @@ let lastFlushedMtime = 0
 // Cache meta (máy local): cache DB hiện thuộc file nào, đã flush tới mtime nào — để biết cache
 // có thay đổi chưa ghi vào file (vd MCP chạy lúc app tắt) khi mở lại đúng file đó.
 const cacheMetaPath = () => path.join(app.getPath('userData'), 'project-cache.json')
-const readCacheMeta = (): { path: string; flushedMtime: number; db?: string; version?: string } | null => {
+const readCacheMeta = (): { path: string | null; flushedMtime: number; db?: string; version?: string } | null => {
     try {
         return JSON.parse(fs.readFileSync(cacheMetaPath(), 'utf8'))
     } catch {
@@ -183,6 +183,26 @@ const readCacheMeta = (): { path: string; flushedMtime: number; db?: string; ver
     }
 }
 const dbMtime = () => fs.statSync(DB_PATH).mtimeMs
+
+// File mở gần đây (tối đa 10, bỏ file đã bị xoá/di chuyển). Chưa có danh sách → lấy file trong cache meta.
+const recentPath = () => path.join(app.getPath('userData'), 'recent-projects.json')
+const readRecent = (): string[] => {
+    let list: unknown
+    try {
+        list = JSON.parse(fs.readFileSync(recentPath(), 'utf8'))
+    } catch {
+        list = [readCacheMeta()?.path]
+    }
+    return Array.isArray(list) ? list.filter((p): p is string => typeof p === 'string' && fs.existsSync(p)) : []
+}
+const writeRecent = (list: string[]) => {
+    fs.writeFileSync(recentPath(), JSON.stringify(list.slice(0, 10)))
+    buildMenu()
+}
+const addRecent = (filePath: string) => {
+    writeRecent([filePath, ...readRecent().filter((p) => p !== filePath)])
+    app.addRecentDocument(filePath)
+}
 
 // Chỉ giữ field có trong schema hiện tại — file từ bản cũ/mới hơn không làm Prisma lỗi
 const pickFields = (rows: any[], fields: Record<string, string>) =>
@@ -245,7 +265,7 @@ const requestOpen = (filePath: string) => {
 
 ipcMain.handle('project-info', async () => ({
     path: currentProject?.path ?? null,
-    recent: readCacheMeta()?.path ?? null,
+    recent: readRecent(),
     tabs: currentProject ? await readTabs() : null,
 }))
 
@@ -297,7 +317,7 @@ ipcMain.handle('project-open', async (_event, filePath: string, password: string
         fs.writeFileSync(cacheMetaPath(), JSON.stringify({ path: filePath, flushedMtime: lastFlushedMtime, db: DB_PATH, version: app.getVersion() }))
     }
     updateTitle()
-    app.addRecentDocument(filePath)
+    addRecent(filePath)
     return { tabs: await readTabs() }
 })
 
@@ -312,9 +332,26 @@ ipcMain.handle('project-save-as', async (_event, password: string) => {
     currentProject = { path: filePath, password }
     await flushProject(true)
     updateTitle()
-    app.addRecentDocument(filePath)
+    addRecent(filePath)
     return filePath
 })
+
+// Đóng file: ghi nốt vào .adp rồi xoá cache — không để private key dạng rõ trên máy khi không mở file
+ipcMain.handle('project-close', async () => {
+    if (!currentProject) return
+    const write = flushChain.then(() => writeProjectFile())
+    flushChain = write.catch(() => {})
+    await write // ghi lỗi → throw, KHÔNG xoá cache (tránh mất dữ liệu chưa ghi)
+    currentProject = null
+    await prisma.$transaction([prisma.scanWallet.deleteMany(), prisma.config.deleteMany()])
+    fs.writeFileSync(
+        cacheMetaPath(),
+        JSON.stringify({ path: null, flushedMtime: dbMtime(), db: DB_PATH, version: app.getVersion() })
+    )
+    updateTitle()
+})
+
+ipcMain.handle('project-clear-recent', () => writeRecent([]))
 
 ipcMain.handle('project-save', async () => {
     if (!currentProject) throw new Error('Chưa có file đang mở')
@@ -436,8 +473,18 @@ function buildMenu() {
             label: 'File',
             submenu: [
                 { label: 'Mở…', accelerator: 'CmdOrCtrl+O', click: send('open') },
+                {
+                    label: 'Mở gần đây',
+                    submenu: [
+                        ...readRecent().map((p) => ({ label: p, click: () => requestOpen(p) })),
+                        { type: 'separator' as const },
+                        { label: 'Xoá danh sách', click: () => writeRecent([]) },
+                    ],
+                },
                 { label: 'Lưu', accelerator: 'CmdOrCtrl+S', click: send('save') },
                 { label: 'Lưu thành…', accelerator: 'CmdOrCtrl+Shift+S', click: send('saveAs') },
+                { type: 'separator' },
+                { label: 'Đóng file', accelerator: 'CmdOrCtrl+Shift+W', click: send('close') },
             ],
         },
         { role: 'editMenu' },
