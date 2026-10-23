@@ -2,7 +2,7 @@
   "name": "auto-deploy",
   "productName": "auto-deploy",
   "version": "1.0.1",
-  "description": "",
+  "description": "Auto deploy token + swap tool (BSC)",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
