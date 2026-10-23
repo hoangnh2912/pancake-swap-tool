@@ -1,7 +1,7 @@
 import './setup'
 
 import { BrowserWindow, Menu, app, autoUpdater, dialog, ipcMain } from 'electron'
-import { execFile } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { Prisma, PrismaClient } from '../prisma/client'
@@ -341,15 +341,27 @@ app.on('open-file', (event, filePath) => {
 // Windows: double-click mở instance mới với đường dẫn file trong argv
 pendingOpenPath = findProjectArg(process.argv)
 
-// Windows: build ZIP không có installer → tự đăng ký đuôi .adp vào HKCU (không cần quyền admin)
+// Windows: đăng ký đuôi .adp vào HKCU (không cần quyền admin). Installer (Squirrel) gọi lúc cài/update,
+// bản ZIP gọi mỗi lần mở app.
+const ADP_PROG_ID = 'AutoDeploy.Project'
+// Squirrel: app nằm ở app-x.y.z\ (đổi mỗi lần update), Update.exe + stub <tên>.exe ở thư mục cha
+const squirrelRoot = path.resolve(path.dirname(process.execPath), '..')
+const isSquirrelInstall = process.platform === 'win32' && fs.existsSync(path.join(squirrelRoot, 'Update.exe'))
+const regCmd = (args: string[]) => {
+    try {
+        execFileSync('reg', args, { stdio: 'ignore', windowsHide: true })
+    } catch (err) {
+        console.error('[reg]', args.join(' '), err)
+    }
+}
+
 function registerWindowsFileAssociation() {
     if (process.platform !== 'win32' || !app.isPackaged) return
-    const progId = 'AutoDeploy.Project'
-    // Squirrel: app nằm ở app-x.y.z\ (đổi mỗi lần update) — trỏ vào stub ở thư mục cha, luôn chạy bản mới nhất
-    const stub = path.resolve(path.dirname(process.execPath), '..', path.basename(process.execPath))
-    const exe = fs.existsSync(stub) ? stub : process.execPath
+    const progId = ADP_PROG_ID
+    // Trỏ vào stub ở thư mục cha → luôn chạy bản mới nhất sau mỗi lần update
+    const exe = isSquirrelInstall ? path.join(squirrelRoot, path.basename(process.execPath)) : process.execPath
     const reg = (key: string, value: string) =>
-        execFile('reg', ['add', `HKCU\\Software\\Classes\\${key}`, '/ve', '/d', value, '/f'], () => {})
+        regCmd(['add', `HKCU\\Software\\Classes\\${key}`, '/ve', '/d', value, '/f'])
     reg(`.${PROJECT_EXT}`, progId)
     reg(progId, 'Auto Deploy Project')
     reg(`${progId}\\DefaultIcon`, `"${exe}",0`)
@@ -359,31 +371,61 @@ function registerWindowsFileAssociation() {
 // ── OTA update (Windows/Squirrel) ────────────────────────────────────────────
 // update.electronjs.org đọc GitHub Releases (public) của repo: cần RELEASES + .nupkg do CI upload.
 // shortcut: chỉ Windows — macOS cần code signing mới auto-update được, làm khi có Apple Developer ID.
+type UpdateStatus = 'unsupported' | 'idle' | 'checking' | 'downloading' | 'latest' | 'downloaded' | 'error'
+let updateState: { status: UpdateStatus; message?: string } = {
+    status: process.platform === 'win32' && app.isPackaged ? 'idle' : 'unsupported',
+}
+let downloadedRelease = ''
+const setUpdateState = (status: UpdateStatus, message?: string) => {
+    updateState = { status, message }
+    mainWindow?.webContents.send('update-status', updateState)
+}
+
+async function promptInstallUpdate() {
+    const { response } = await dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        buttons: ['Khởi động lại & cập nhật', 'Để sau'],
+        defaultId: 0,
+        cancelId: 1,
+        message: `Đã tải xong bản cập nhật ${downloadedRelease}`.trim(),
+        detail:
+            'Dữ liệu được ghi vào file .adp trước khi khởi động lại. ' +
+            'Không khởi động lại khi đang chạy automation — chọn "Để sau", bản mới sẽ được cài ở lần mở app tới.',
+    })
+    if (response !== 0) return
+    await flushProject()
+    autoUpdater.quitAndInstall()
+}
+
 function setupAutoUpdate() {
-    if (process.platform !== 'win32' || !app.isPackaged) return
-    if (process.argv.includes('--squirrel-firstrun')) return // Squirrel còn giữ lock file lúc mới cài
+    if (updateState.status === 'unsupported') return
     autoUpdater.setFeedURL({
         url: `https://update.electronjs.org/hoangnh2912/pancake-swap-tool/${process.platform}-${process.arch}/${app.getVersion()}`,
     })
-    autoUpdater.on('error', (err) => console.error('[update]', err.message))
-    autoUpdater.on('update-downloaded', async (_event, _notes, releaseName) => {
-        const { response } = await dialog.showMessageBox(mainWindow, {
-            type: 'info',
-            buttons: ['Khởi động lại & cập nhật', 'Để sau'],
-            defaultId: 0,
-            cancelId: 1,
-            message: `Đã tải xong bản cập nhật ${releaseName || ''}`.trim(),
-            detail:
-                'Dữ liệu được ghi vào file .adp trước khi khởi động lại. ' +
-                'Không khởi động lại khi đang chạy automation — chọn "Để sau", bản mới sẽ được cài ở lần mở app tới.',
-        })
-        if (response !== 0) return
-        await flushProject()
-        autoUpdater.quitAndInstall()
+    autoUpdater.on('checking-for-update', () => setUpdateState('checking'))
+    autoUpdater.on('update-available', () => setUpdateState('downloading'))
+    autoUpdater.on('update-not-available', () => setUpdateState('latest'))
+    autoUpdater.on('error', (err) => {
+        console.error('[update]', err.message)
+        setUpdateState('error', err.message)
     })
-    autoUpdater.checkForUpdates()
+    autoUpdater.on('update-downloaded', (_event, _notes, releaseName) => {
+        downloadedRelease = releaseName || ''
+        setUpdateState('downloaded', downloadedRelease)
+        promptInstallUpdate()
+    })
+    // Kiểm tra ngay khi mở app; lần chạy đầu sau khi cài Squirrel còn giữ lock file → đợi 30s
+    setTimeout(() => autoUpdater.checkForUpdates(), process.argv.includes('--squirrel-firstrun') ? 30_000 : 0)
     setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000)
 }
+
+ipcMain.handle('update-state', () => updateState)
+ipcMain.handle('update-check', () => {
+    if (updateState.status === 'downloaded') promptInstallUpdate()
+    else if (updateState.status !== 'unsupported' && updateState.status !== 'checking' && updateState.status !== 'downloading')
+        autoUpdater.checkForUpdates()
+    return updateState
+})
 
 // Menu File (Cmd/Ctrl+O/S/Shift+S) — renderer xử lý vì cần hỏi mật khẩu
 function buildMenu() {
@@ -414,9 +456,32 @@ ipcMain.handle('get-solc-versions', () => {
 })
 
 // ── Window ────────────────────────────────────────────────────────────────────
-if (require('electron-squirrel-startup')) {
+// Squirrel chạy app với --squirrel-install/updated/uninstall/obsolete rồi đợi app thoát:
+// tạo/xoá shortcut + đăng ký/gỡ đuôi .adp ngay lúc cài, không đợi lần mở app đầu tiên.
+function handleSquirrelEvent(): boolean {
+    const cmd = process.platform === 'win32' ? process.argv[1] : undefined
+    if (!cmd || !['--squirrel-install', '--squirrel-updated', '--squirrel-uninstall', '--squirrel-obsolete'].includes(cmd))
+        return false
+    const exeName = path.basename(process.execPath)
+    const update = (arg: string) => {
+        try {
+            execFileSync(path.join(squirrelRoot, 'Update.exe'), [arg], { stdio: 'ignore', windowsHide: true })
+        } catch (err) {
+            console.error('[squirrel]', arg, err)
+        }
+    }
+    if (cmd === '--squirrel-install' || cmd === '--squirrel-updated') {
+        update(`--createShortcut=${exeName}`)
+        registerWindowsFileAssociation()
+    } else if (cmd === '--squirrel-uninstall') {
+        update(`--removeShortcut=${exeName}`)
+        regCmd(['delete', `HKCU\\Software\\Classes\\.${PROJECT_EXT}`, '/f'])
+        regCmd(['delete', `HKCU\\Software\\Classes\\${ADP_PROG_ID}`, '/f'])
+    }
     app.quit()
+    return true
 }
+const squirrelEvent = handleSquirrelEvent()
 
 let mainWindow: BrowserWindow
 
@@ -442,9 +507,10 @@ const createWindow = (serverPort: number): void => {
 let resolvedServerPort: number
 
 app.on('ready', async () => {
+    if (squirrelEvent) return
     resolvedServerPort = await startServer()
     buildMenu()
-    registerWindowsFileAssociation()
+    if (!isSquirrelInstall) registerWindowsFileAssociation() // installer đã đăng ký lúc cài
     createWindow(resolvedServerPort)
     setupAutoUpdate()
 })

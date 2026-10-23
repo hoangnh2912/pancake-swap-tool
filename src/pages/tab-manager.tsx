@@ -30,6 +30,41 @@ const electron = () => (window as any).electron
 const ipcErrorMessage = (err: any) =>
     String(err?.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
 
+// Phiên bản app + nút kiểm tra cập nhật (OTA chỉ có ở bản cài Windows). App tự kiểm tra khi mở;
+// chỉ báo kết quả "đã mới nhất"/lỗi khi người dùng tự bấm.
+function UpdateControl() {
+    const [state, setState] = useState<{ status: string; message?: string }>({ status: 'idle' })
+    const manual = useRef(false)
+    useEffect(() => {
+        electron().updateState().then(setState)
+        return electron().onUpdateStatus((st: { status: string; message?: string }) => {
+            setState(st)
+            if (st.status === 'downloading') message.info('Có bản mới — đang tải về…')
+            if (!manual.current) return
+            if (st.status === 'latest') message.success('Đang dùng bản mới nhất')
+            if (st.status === 'error') message.error(`Lỗi kiểm tra cập nhật: ${st.message}`)
+            if (st.status !== 'checking') manual.current = false
+        })
+    }, [])
+    const check = async () => {
+        manual.current = true
+        const st = await electron().checkForUpdates()
+        if (st.status === 'unsupported') {
+            manual.current = false
+            message.info('Tự cập nhật chỉ có ở bản cài đặt (installer) trên Windows')
+        }
+    }
+    const busy = state.status === 'checking' || state.status === 'downloading'
+    return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, color: '#888' }}>v{electron().appVersion}</span>
+            <Button size="small" loading={busy} onClick={check}>
+                {state.status === 'downloading' ? 'Đang tải bản mới' : state.status === 'downloaded' ? 'Cài bản mới' : 'Kiểm tra cập nhật'}
+            </Button>
+        </span>
+    )
+}
+
 // Hỏi mật khẩu bằng Modal — resolve null nếu huỷ. confirm=true: nhập 2 lần (khi đặt mật khẩu mới)
 function askPassword(title: string, confirm: boolean): Promise<string | null> {
     return new Promise((resolve) => {
@@ -304,6 +339,7 @@ export default function TabManager() {
                         )}
                         <Button onClick={() => openProject()}>Mở file…</Button>
                         <Button onClick={() => saveProject(true)}>Tạo file mới từ dữ liệu hiện có trên máy…</Button>
+                        <div style={{ marginTop: 16 }}><UpdateControl /></div>
                     </>
                 )}
             </div>
@@ -329,6 +365,7 @@ export default function TabManager() {
                             <Button size="small" onClick={() => openProject()}>Mở file</Button>
                             <Button size="small" onClick={() => saveProject(false)}>Lưu</Button>
                             <Button size="small" onClick={() => saveProject(true)}>Lưu thành…</Button>
+                            <UpdateControl />
                         </span>
                     ),
                 }}

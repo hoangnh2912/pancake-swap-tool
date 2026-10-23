@@ -16,6 +16,13 @@ contextBridge.exposeInMainWorld('electron', {
     projectSave: () => ipcRenderer.invoke('project-save'),
     projectSaveAs: (password: string) => ipcRenderer.invoke('project-save-as', password),
     projectSetTabs: (tabs: unknown) => ipcRenderer.invoke('project-set-tabs', tabs),
+    updateState: () => ipcRenderer.invoke('update-state'),
+    checkForUpdates: () => ipcRenderer.invoke('update-check'),
+    onUpdateStatus: (cb: (state: { status: string; message?: string }) => void) => {
+        const h = (_e: unknown, state: { status: string; message?: string }) => cb(state)
+        ipcRenderer.on('update-status', h)
+        return () => ipcRenderer.removeListener('update-status', h)
+    },
     onProjectSaveError: (cb: (msg: string) => void) => {
         const h = (_e: unknown, msg: string) => cb(msg)
         ipcRenderer.on('project-save-error', h)
