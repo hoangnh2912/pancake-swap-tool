@@ -58,4 +58,6 @@ model Config {
   fakeVolumeAddress   String @default("")
   fakeVolumeVersion   String @default("")
   fakeVolumeCode      String @default("")
+  gasPriceGwei        String @default("0.05")
+  tabsJson            String @default("")
 }

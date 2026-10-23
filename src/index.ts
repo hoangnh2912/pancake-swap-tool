@@ -1,9 +1,12 @@
 import './setup'
 
-import { BrowserWindow, app, ipcMain } from 'electron'
+import { BrowserWindow, Menu, app, autoUpdater, dialog, ipcMain } from 'electron'
+import { execFile } from 'node:child_process'
+import fs from 'node:fs'
 import path from 'node:path'
-import { PrismaClient } from '../prisma/client'
+import { Prisma, PrismaClient } from '../prisma/client'
 import { startServer } from './server'
+import { PROJECT_EXT, decodeProject, encodeProject } from './utils/projectFile'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
@@ -119,14 +122,21 @@ ipcMain.handle('compile-contract', async (_event, sourceCode: string, solcVersio
 })
 
 // ── Config IPC ────────────────────────────────────────────────────────────────
-const prisma = new PrismaClient({
-    datasourceUrl: app.isPackaged
-        ? `file:${path.join(app.getAppPath(), '..', 'prisma', 'auto-deploy.sqlite')}`
-        : `file:${path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')}`,
-})
+const DB_PATH = app.isPackaged
+    ? path.join(app.getAppPath(), '..', 'prisma', 'auto-deploy.sqlite')
+    : path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')
+const prisma = new PrismaClient({ datasourceUrl: `file:${DB_PATH}` })
 
-app.on('before-quit', async () => {
-    await prisma.$disconnect()
+// Ghi nốt thay đổi vào file .adp trước khi thoát
+let quitting = false
+app.on('before-quit', (event) => {
+    if (quitting) return
+    event.preventDefault()
+    quitting = true
+    flushProject().finally(async () => {
+        await prisma.$disconnect()
+        app.quit()
+    })
 })
 
 ipcMain.handle('load-config', async (_event, tabId?: string) => {
@@ -152,6 +162,248 @@ ipcMain.handle('save-config', async (_event, data: Record<string, string>, tabId
         update: data as any,
     })
 })
+
+// ── File dự án .adp — NGUỒN DỮ LIỆU GỐC ─────────────────────────────────────
+// SQLite chỉ là cache làm việc. Mọi thay đổi DB (IPC save-config, Hono/ZenStack ScanWallet,
+// MCP headless ghi thẳng file DB) được phát hiện qua mtime file DB → tự ghi lại vào file .adp
+// đang mở. Mật khẩu chỉ giữ trong RAM. Không có file đang mở thì renderer chặn UI ở màn hình
+// chọn/tạo file.
+let currentProject: { path: string; password: string } | null = null
+let pendingOpenPath: string | null = null // file mở từ Finder/Explorer trước khi renderer sẵn sàng
+let lastFlushedMtime = 0
+
+// Cache meta (máy local): cache DB hiện thuộc file nào, đã flush tới mtime nào — để biết cache
+// có thay đổi chưa ghi vào file (vd MCP chạy lúc app tắt) khi mở lại đúng file đó.
+const cacheMetaPath = () => path.join(app.getPath('userData'), 'project-cache.json')
+const readCacheMeta = (): { path: string; flushedMtime: number; db?: string; version?: string } | null => {
+    try {
+        return JSON.parse(fs.readFileSync(cacheMetaPath(), 'utf8'))
+    } catch {
+        return null
+    }
+}
+const dbMtime = () => fs.statSync(DB_PATH).mtimeMs
+
+// Chỉ giữ field có trong schema hiện tại — file từ bản cũ/mới hơn không làm Prisma lỗi
+const pickFields = (rows: any[], fields: Record<string, string>) =>
+    rows.map((r) => Object.fromEntries(Object.keys(fields).filter((k) => k in r).map((k) => [k, r[k]])))
+
+const updateTitle = () =>
+    mainWindow?.setTitle(currentProject ? `${path.basename(currentProject.path)} — auto-deploy` : 'auto-deploy')
+
+async function writeProjectFile() {
+    if (!currentProject) return
+    const mtime = dbMtime()
+    const file = encodeProject(
+        { config: await prisma.config.findMany(), scanWallet: await prisma.scanWallet.findMany() },
+        currentProject.password
+    )
+    // Ghi file tạm rồi rename — lỗi giữa chừng không làm hỏng file .adp cũ
+    fs.writeFileSync(`${currentProject.path}.tmp`, file)
+    fs.renameSync(`${currentProject.path}.tmp`, currentProject.path)
+    lastFlushedMtime = mtime
+    fs.writeFileSync(cacheMetaPath(), JSON.stringify({ path: currentProject.path, flushedMtime: mtime, db: DB_PATH, version: app.getVersion() }))
+}
+
+// Mọi lần ghi file chạy tuần tự. force=false: chỉ ghi khi DB đổi kể từ lần ghi trước.
+let flushChain: Promise<void> = Promise.resolve()
+function flushProject(force = false): Promise<void> {
+    flushChain = flushChain
+        .then(() => (currentProject && (force || dbMtime() > lastFlushedMtime) ? writeProjectFile() : undefined))
+        .catch((err) => {
+            mainWindow?.webContents.send('project-save-error', String(err?.message || err))
+        })
+    return flushChain
+}
+
+let flushTimer: NodeJS.Timeout | null = null
+fs.watchFile(DB_PATH, { interval: 1000 }, (curr) => {
+    if (!currentProject || curr.mtimeMs <= lastFlushedMtime) return
+    if (flushTimer) clearTimeout(flushTimer)
+    flushTimer = setTimeout(() => flushProject(), 1500)
+})
+
+const readTabs = async () => {
+    const g = await prisma.config.findUnique({ where: { id: '_global' } })
+    try {
+        const tabs = JSON.parse(g?.tabsJson || 'null')
+        return Array.isArray(tabs) && tabs.length > 0 ? tabs : null
+    } catch {
+        return null
+    }
+}
+
+const requestOpen = (filePath: string) => {
+    if (mainWindow && !mainWindow.webContents.isLoading()) {
+        mainWindow.webContents.send('project-open-request', filePath)
+        if (mainWindow.isMinimized()) mainWindow.restore()
+        mainWindow.focus()
+    } else {
+        pendingOpenPath = filePath
+    }
+}
+
+ipcMain.handle('project-info', async () => ({
+    path: currentProject?.path ?? null,
+    recent: readCacheMeta()?.path ?? null,
+    tabs: currentProject ? await readTabs() : null,
+}))
+
+ipcMain.handle('project-take-pending', () => {
+    const p = pendingOpenPath
+    pendingOpenPath = null
+    return p
+})
+
+ipcMain.handle('project-pick-open', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Auto Deploy Project', extensions: [PROJECT_EXT] }],
+    })
+    return canceled ? null : filePaths[0] ?? null
+})
+
+ipcMain.handle('project-open', async (_event, filePath: string, password: string) => {
+    const payload = decodeProject(fs.readFileSync(filePath), password) // sai mật khẩu → throw ở đây
+    await flushProject() // ghi nốt thay đổi của file đang mở trước khi thay cache
+    const meta = readCacheMeta()
+    // OTA (Squirrel) cài bản mới vào app-x.y.z\ khác → DB rỗng mới, không phải cache của file này.
+    // Thiếu check db/version thì DB rỗng bị coi là "mới hơn" và ghi đè mất dữ liệu file .adp.
+    const cacheNewer =
+        meta?.path === filePath &&
+        meta.db === DB_PATH &&
+        meta.version === app.getVersion() &&
+        dbMtime() > meta.flushedMtime
+    if (!cacheNewer) {
+        const config = pickFields(payload.config, Prisma.ConfigScalarFieldEnum)
+        // File .adp bản đầu lưu tabs ngoài config — chuyển vào row _global
+        if (Array.isArray(payload.tabs)) {
+            const g = config.find((c) => c.id === '_global')
+            if (!g) config.push({ id: '_global', tabsJson: JSON.stringify(payload.tabs) })
+            else if (!g.tabsJson) g.tabsJson = JSON.stringify(payload.tabs)
+        }
+        await prisma.$transaction([
+            prisma.scanWallet.deleteMany(),
+            prisma.config.deleteMany(),
+            prisma.config.createMany({ data: config as any }),
+            prisma.scanWallet.createMany({ data: pickFields(payload.scanWallet, Prisma.ScanWalletScalarFieldEnum) as any }),
+        ])
+    }
+    currentProject = { path: filePath, password }
+    if (cacheNewer) {
+        await flushProject(true) // cache có thay đổi chưa ghi (vd MCP chạy khi app tắt) → ghi vào file
+    } else {
+        lastFlushedMtime = dbMtime()
+        fs.writeFileSync(cacheMetaPath(), JSON.stringify({ path: filePath, flushedMtime: lastFlushedMtime, db: DB_PATH, version: app.getVersion() }))
+    }
+    updateTitle()
+    app.addRecentDocument(filePath)
+    return { tabs: await readTabs() }
+})
+
+// Tạo file mới / Lưu thành: ghi dữ liệu hiện có ra file mới, từ đó làm việc trên file mới
+ipcMain.handle('project-save-as', async (_event, password: string) => {
+    const { canceled, filePath } = await dialog.showSaveDialog({
+        defaultPath: currentProject?.path ?? `du-an-${new Date().toISOString().slice(0, 10)}.${PROJECT_EXT}`,
+        filters: [{ name: 'Auto Deploy Project', extensions: [PROJECT_EXT] }],
+    })
+    if (canceled || !filePath) return null
+    await flushProject() // file cũ nhận nốt thay đổi trước khi chuyển sang file mới
+    currentProject = { path: filePath, password }
+    await flushProject(true)
+    updateTitle()
+    app.addRecentDocument(filePath)
+    return filePath
+})
+
+ipcMain.handle('project-save', async () => {
+    if (!currentProject) throw new Error('Chưa có file đang mở')
+    await flushProject(true)
+    return currentProject.path
+})
+
+ipcMain.handle('project-set-tabs', async (_event, tabs: unknown) => {
+    await prisma.config.upsert({
+        where: { id: '_global' },
+        create: { id: '_global', tabsJson: JSON.stringify(tabs) },
+        update: { tabsJson: JSON.stringify(tabs) },
+    })
+})
+
+const findProjectArg = (argv: string[]) => argv.find((a) => a.toLowerCase().endsWith(`.${PROJECT_EXT}`)) ?? null
+
+// macOS: Finder double-click (kể cả khi app chưa chạy) — phải đăng ký trước 'ready'
+app.on('open-file', (event, filePath) => {
+    event.preventDefault()
+    requestOpen(filePath)
+})
+
+// Windows: double-click mở instance mới với đường dẫn file trong argv
+pendingOpenPath = findProjectArg(process.argv)
+
+// Windows: build ZIP không có installer → tự đăng ký đuôi .adp vào HKCU (không cần quyền admin)
+function registerWindowsFileAssociation() {
+    if (process.platform !== 'win32' || !app.isPackaged) return
+    const progId = 'AutoDeploy.Project'
+    // Squirrel: app nằm ở app-x.y.z\ (đổi mỗi lần update) — trỏ vào stub ở thư mục cha, luôn chạy bản mới nhất
+    const stub = path.resolve(path.dirname(process.execPath), '..', path.basename(process.execPath))
+    const exe = fs.existsSync(stub) ? stub : process.execPath
+    const reg = (key: string, value: string) =>
+        execFile('reg', ['add', `HKCU\\Software\\Classes\\${key}`, '/ve', '/d', value, '/f'], () => {})
+    reg(`.${PROJECT_EXT}`, progId)
+    reg(progId, 'Auto Deploy Project')
+    reg(`${progId}\\DefaultIcon`, `"${exe}",0`)
+    reg(`${progId}\\shell\\open\\command`, `"${exe}" "%1"`)
+}
+
+// ── OTA update (Windows/Squirrel) ────────────────────────────────────────────
+// update.electronjs.org đọc GitHub Releases (public) của repo: cần RELEASES + .nupkg do CI upload.
+// shortcut: chỉ Windows — macOS cần code signing mới auto-update được, làm khi có Apple Developer ID.
+function setupAutoUpdate() {
+    if (process.platform !== 'win32' || !app.isPackaged) return
+    if (process.argv.includes('--squirrel-firstrun')) return // Squirrel còn giữ lock file lúc mới cài
+    autoUpdater.setFeedURL({
+        url: `https://update.electronjs.org/hoangnh2912/pancake-swap-tool/${process.platform}-${process.arch}/${app.getVersion()}`,
+    })
+    autoUpdater.on('error', (err) => console.error('[update]', err.message))
+    autoUpdater.on('update-downloaded', async (_event, _notes, releaseName) => {
+        const { response } = await dialog.showMessageBox(mainWindow, {
+            type: 'info',
+            buttons: ['Khởi động lại & cập nhật', 'Để sau'],
+            defaultId: 0,
+            cancelId: 1,
+            message: `Đã tải xong bản cập nhật ${releaseName || ''}`.trim(),
+            detail:
+                'Dữ liệu được ghi vào file .adp trước khi khởi động lại. ' +
+                'Không khởi động lại khi đang chạy automation — chọn "Để sau", bản mới sẽ được cài ở lần mở app tới.',
+        })
+        if (response !== 0) return
+        await flushProject()
+        autoUpdater.quitAndInstall()
+    })
+    autoUpdater.checkForUpdates()
+    setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000)
+}
+
+// Menu File (Cmd/Ctrl+O/S/Shift+S) — renderer xử lý vì cần hỏi mật khẩu
+function buildMenu() {
+    const send = (action: string) => () => mainWindow?.webContents.send('project-menu', action)
+    const template: Electron.MenuItemConstructorOptions[] = [
+        ...(process.platform === 'darwin' ? [{ role: 'appMenu' as const }] : []),
+        {
+            label: 'File',
+            submenu: [
+                { label: 'Mở…', accelerator: 'CmdOrCtrl+O', click: send('open') },
+                { label: 'Lưu', accelerator: 'CmdOrCtrl+S', click: send('save') },
+                { label: 'Lưu thành…', accelerator: 'CmdOrCtrl+Shift+S', click: send('saveAs') },
+            ],
+        },
+        { role: 'editMenu' },
+        { role: 'viewMenu' },
+        { role: 'windowMenu' },
+    ]
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
 
 // Return available solc versions for the settings UI
 ipcMain.handle('get-solc-versions', () => {
@@ -179,7 +431,9 @@ const createWindow = (serverPort: number): void => {
         height: 900,
         icon: './src/favicon.ico',
     })
-    mainWindow.setMenuBarVisibility(false)
+    mainWindow.setMenuBarVisibility(false) // Windows: ẩn thanh menu, phím tắt Ctrl+O/S vẫn chạy
+    mainWindow.on('page-title-updated', (e) => e.preventDefault()) // giữ tiêu đề tên file
+    mainWindow.webContents.on('did-finish-load', updateTitle)
     mainWindow.maximize()
     const separator = MAIN_WINDOW_WEBPACK_ENTRY.includes('?') ? '&' : '?'
     mainWindow.loadURL(`${MAIN_WINDOW_WEBPACK_ENTRY}${separator}serverPort=${serverPort}`)
@@ -189,7 +443,10 @@ let resolvedServerPort: number
 
 app.on('ready', async () => {
     resolvedServerPort = await startServer()
+    buildMenu()
+    registerWindowsFileAssociation()
     createWindow(resolvedServerPort)
+    setupAutoUpdate()
 })
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()

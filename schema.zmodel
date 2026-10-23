@@ -53,4 +53,7 @@ model Config {
   fakeVolumeAddress   String @default("")
   fakeVolumeVersion   String @default("")
   fakeVolumeCode      String @default("")
+  gasPriceGwei        String @default("0.05")
+  // Danh sách tab [{id,title}] — chỉ dùng ở row _global (nguồn gốc nằm trong file .adp)
+  tabsJson            String @default("")
 }

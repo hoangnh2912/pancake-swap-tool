@@ -61,5 +61,7 @@ __MACOSX
 /generated/prisma
 
 # DB chứa private key — không commit
-prisma/*.sqlite
-prisma/*.sqlite-journal
+prisma/*.sqlite*
+
+# DB rỗng + Prisma client tạo lúc build (forge prePackage)
+/build/

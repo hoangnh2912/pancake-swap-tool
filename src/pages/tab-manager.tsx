@@ -1,6 +1,7 @@
-import { Input, Spin, Tabs } from 'antd'
+import { Button, Input, Modal, Spin, Tabs, message } from 'antd'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { runningWalletsStore } from '../utils/walletRegistry'
 import Main, { type TabStatus } from './main'
 
 const STORAGE_KEY = 'tabs-v2'
@@ -21,6 +22,51 @@ function loadTabs(): TabItem[] {
         }
     } catch {}
     return defaultTabs
+}
+
+const electron = () => (window as any).electron
+
+// Lỗi từ ipcRenderer.invoke có prefix "Error invoking remote method '...': Error: " — bỏ đi
+const ipcErrorMessage = (err: any) =>
+    String(err?.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
+
+// Hỏi mật khẩu bằng Modal — resolve null nếu huỷ. confirm=true: nhập 2 lần (khi đặt mật khẩu mới)
+function askPassword(title: string, confirm: boolean): Promise<string | null> {
+    return new Promise((resolve) => {
+        let pw = ''
+        let pw2 = ''
+        Modal.confirm({
+            title,
+            icon: null,
+            content: (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                    <Input.Password autoFocus placeholder="Mật khẩu" onChange={(e) => (pw = e.target.value)} />
+                    {confirm && (
+                        <>
+                            <Input.Password placeholder="Nhập lại mật khẩu" onChange={(e) => (pw2 = e.target.value)} />
+                            <span style={{ fontSize: 12, color: '#faad14' }}>
+                                File chứa private key — quên mật khẩu là không mở lại được file.
+                            </span>
+                        </>
+                    )}
+                </div>
+            ),
+            okText: 'OK',
+            cancelText: 'Huỷ',
+            onOk: () => {
+                if (!pw) {
+                    message.error('Chưa nhập mật khẩu')
+                    return Promise.reject()
+                }
+                if (confirm && pw !== pw2) {
+                    message.error('Mật khẩu nhập lại không khớp')
+                    return Promise.reject()
+                }
+                resolve(pw)
+            },
+            onCancel: () => resolve(null),
+        })
+    })
 }
 
 function TabLabel({
@@ -113,9 +159,30 @@ export default function TabManager() {
         return () => obs.disconnect()
     }, [])
 
+    // project: undefined = đang tải; path null = chưa mở file nào → chặn UI ở màn hình chọn file
+    const [project, setProject] = useState<{ path: string | null; recent: string | null }>()
+
+    // Nguồn gốc của tabs là Config._global.tabsJson (nằm trong file .adp); localStorage chỉ là cache
     const saveTabs = useCallback((next: TabItem[]) => {
         setTabs(next)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+        electron()?.projectSetTabs(next)
+    }, [])
+
+    useEffect(() => {
+        electron()
+            ?.projectInfo()
+            .then((info: { path: string | null; recent: string | null; tabs: TabItem[] | null }) => {
+                setProject(info)
+                if (!info.path) return
+                if (info.tabs) {
+                    setTabs(info.tabs)
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(info.tabs))
+                    setActiveKey((k) => (info.tabs!.some((t) => t.id === k) ? k : info.tabs![0].id))
+                } else {
+                    electron().projectSetTabs(loadTabs()) // DB cũ chưa có tabsJson — đưa tabs vào file
+                }
+            })
     }, [])
 
     const addTab = useCallback(() => {
@@ -151,9 +218,97 @@ export default function TabManager() {
         [tabs, saveTabs]
     )
 
+    const openProject = async (filePath?: string | null) => {
+        if (Object.keys(runningWalletsStore.state).length > 0) {
+            message.error('Đang chạy automation — dừng trước khi mở file khác')
+            return
+        }
+        const target = filePath ?? (await electron()?.projectPickOpen())
+        if (!target) return
+        const name = target.split(/[\\/]/).pop()
+        for (;;) {
+            const pw = await askPassword(`Mở ${name}`, false)
+            if (pw === null) return
+            try {
+                const res = await electron().projectOpen(target, pw)
+                if (res.tabs?.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(res.tabs))
+                message.success(`Đã mở ${name} — đang tải lại...`)
+                setTimeout(() => window.location.reload(), 800)
+                return
+            } catch (err) {
+                const msg = ipcErrorMessage(err)
+                message.error(msg)
+                if (!msg.startsWith('Sai mật khẩu')) return // sai mật khẩu thì cho nhập lại
+            }
+        }
+    }
+
+    // App tự ghi file .adp khi dữ liệu đổi — Lưu chỉ ép ghi ngay; Lưu thành/Tạo mới chuyển sang file mới
+    const saveProject = async (saveAs: boolean) => {
+        try {
+            if (!saveAs && project?.path) {
+                message.success(`Đã lưu: ${await electron().projectSave()}`)
+                return
+            }
+            const pw = await askPassword('Đặt mật khẩu cho file', true)
+            if (pw === null) return
+            const saved = await electron().projectSaveAs(pw)
+            if (!saved) return
+            message.success(`Đã lưu: ${saved}`)
+            if (!project?.path) setTimeout(() => window.location.reload(), 500) // vừa tạo file đầu tiên → vào app
+            else setProject((p) => p && { ...p, path: saved })
+        } catch (err) {
+            message.error(`Lưu lỗi: ${ipcErrorMessage(err)}`)
+        }
+    }
+
+    // Menu File / phím tắt và file mở từ Finder/Explorer — dùng ref để listener luôn gọi bản mới nhất
+    const actionsRef = useRef({ openProject, saveProject })
+    actionsRef.current = { openProject, saveProject }
+    useEffect(() => {
+        const el = electron()
+        if (!el?.onProjectMenu) return
+        const offMenu = el.onProjectMenu((action: string) => {
+            if (action === 'open') actionsRef.current.openProject()
+            else actionsRef.current.saveProject(action === 'saveAs')
+        })
+        const offOpen = el.onProjectOpenRequest((p: string) => actionsRef.current.openProject(p))
+        const offErr = el.onProjectSaveError((msg: string) => message.error(`Lỗi ghi file .adp: ${msg}`, 8))
+        el.projectTakePending().then((p: string | null) => p && actionsRef.current.openProject(p))
+        return () => {
+            offMenu()
+            offOpen()
+            offErr()
+        }
+    }, [])
+
     const handleStatusChange = useCallback((tabId: string, status: TabStatus) => {
         setTabStatuses((prev) => ({ ...prev, [tabId]: status }))
     }, [])
+
+    if (!project?.path) {
+        const recentName = project?.recent?.split(/[\\/]/).pop()
+        return (
+            <div style={{
+                height: '100vh', background: '#141414', color: '#ddd',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
+            }}>
+                {project === undefined ? <Spin /> : (
+                    <>
+                        <div style={{ fontSize: 18, fontWeight: 600 }}>Mở file dự án (.adp) để bắt đầu</div>
+                        <div style={{ fontSize: 12, color: '#888', maxWidth: 420, textAlign: 'center' }}>
+                            Toàn bộ dữ liệu (tab, config, private key, ví đã quét) được lưu và mã hoá trong file .adp.
+                        </div>
+                        {project.recent && (
+                            <Button type="primary" onClick={() => openProject(project.recent)}>Mở lại {recentName}</Button>
+                        )}
+                        <Button onClick={() => openProject()}>Mở file…</Button>
+                        <Button onClick={() => saveProject(true)}>Tạo file mới từ dữ liệu hiện có trên máy…</Button>
+                    </>
+                )}
+            </div>
+        )
+    }
 
     return (
         /* Outer div: 100vh height, overflow hidden — Tabs fills it */
@@ -168,6 +323,15 @@ export default function TabManager() {
                 }}
                 style={{ height: '100%' }}
                 animated={false}
+                tabBarExtraContent={{
+                    right: (
+                        <span style={{ display: 'inline-flex', gap: 8, paddingRight: 8 }}>
+                            <Button size="small" onClick={() => openProject()}>Mở file</Button>
+                            <Button size="small" onClick={() => saveProject(false)}>Lưu</Button>
+                            <Button size="small" onClick={() => saveProject(true)}>Lưu thành…</Button>
+                        </span>
+                    ),
+                }}
                 renderTabBar={(props, DefaultTabBar) => (
                     <div ref={navRef}>
                         <DefaultTabBar
