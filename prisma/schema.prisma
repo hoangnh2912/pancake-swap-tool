@@ -58,6 +58,8 @@ model Config {
   fakeVolumeAddress   String @default("")
   fakeVolumeVersion   String @default("")
   fakeVolumeCode      String @default("")
+  seedBuyBnb          String @default("0.0001")
+  seedBuyTimes        String @default("2")
   gasPriceGwei        String @default("0.05")
   tabsJson            String @default("")
 }

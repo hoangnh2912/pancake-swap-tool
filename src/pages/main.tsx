@@ -318,6 +318,8 @@ const Main = ({
     const [fakeVolumeEnabled, setFakeVolumeEnabled] = useState(false)
     const [fakeVolumeTimes, setFakeVolumeTimes] = useState<number>(1)
     const [fakeVolumeBnbAmount, setFakeVolumeBnbAmount] = useState('')
+    const [seedBuyTimes, setSeedBuyTimes] = useState<number>(2)
+    const [seedBuyBnb, setSeedBuyBnb] = useState('0.0001')
     const [fakeVolumeAddress, setFakeVolumeAddress] = useState<string | null>(null)
     const [fakeVolumeVersion, setFakeVolumeVersion] = useState('')
     const [fakeVolumeCode, setFakeVolumeCode] = useState(FAKE_VOLUME_CONTRACT)
@@ -510,6 +512,8 @@ const Main = ({
             if (cfg.fakeVolumeEnabled) setFakeVolumeEnabled(cfg.fakeVolumeEnabled === 'true')
             if (cfg.fakeVolumeTimes) setFakeVolumeTimes(Number(cfg.fakeVolumeTimes) || 1)
             if (cfg.fakeVolumeBnbAmount) setFakeVolumeBnbAmount(cfg.fakeVolumeBnbAmount)
+            if (cfg.seedBuyTimes != null) setSeedBuyTimes(Number(cfg.seedBuyTimes) || 0)
+            if (cfg.seedBuyBnb != null) setSeedBuyBnb(cfg.seedBuyBnb)
             if (cfg.fakeVolumeAddress) setFakeVolumeAddress(cfg.fakeVolumeAddress)
             if (cfg.fakeVolumeVersion) setFakeVolumeVersion(cfg.fakeVolumeVersion)
             if (cfg.fakeVolumeCode) setFakeVolumeCode(cfg.fakeVolumeCode)
@@ -1020,6 +1024,8 @@ const Main = ({
                     fakeVolumeEnabled,
                     fakeVolumeTimes,
                     fakeVolumeBnbAmount,
+                    seedBuyTimes,
+                    seedBuyBnb,
                     // Contract cũ deploy bằng source Solidity khác (sửa trong Editor bên dưới,
                     // hash nội dung khác) — ownership check không phát hiện được thay đổi logic,
                     // nên phải tự ép deploy lại bằng cách coi như chưa có địa chỉ cache.
@@ -1543,6 +1549,47 @@ const Main = ({
                     pagination={false}
                     size="small"
                 />
+            </Box>
+
+            {/* Mua mồi (4.1) — ví swap mua vài lệnh nhỏ ngay sau Add Liquidity */}
+            <Box bg="#1c1c1c" borderRadius="8px" p={4} mb={4} border="1px solid #2a2a2a">
+                <AntText style={{ color: '#666', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Mua mồi sau Add Liquidity (4.1)
+                </AntText>
+                <Flex align="center" gap={16} mt={3}>
+                    <Text fontSize="sm" color="gray.400">
+                        Số lần
+                    </Text>
+                    <InputNumber
+                        size="small"
+                        min={0}
+                        value={seedBuyTimes}
+                        onChange={(v) => {
+                            const val = v ?? 0
+                            setSeedBuyTimes(val)
+                            scheduleSave({ seedBuyTimes: String(val) })
+                        }}
+                        disabled={running}
+                        style={{ width: 90 }}
+                    />
+                    <Text fontSize="sm" color="gray.400" ml={2}>
+                        BNB mỗi lần
+                    </Text>
+                    <Input
+                        size="small"
+                        value={seedBuyBnb}
+                        placeholder="0.0001"
+                        onChange={(e) => {
+                            setSeedBuyBnb(e.target.value)
+                            scheduleSave({ seedBuyBnb: e.target.value })
+                        }}
+                        disabled={running}
+                        style={{ width: 120 }}
+                    />
+                </Flex>
+                <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                    Số lần = 0 để bỏ qua bước này.
+                </AntText>
             </Box>
 
             {/* Fake Volume — chạy sau Add Liquidity, trước Lệnh swap */}
@@ -2268,12 +2315,7 @@ const Main = ({
                                             { title: '2. Set Whitelist', status: statuses[1] },
                                             { title: '3. Transfer Token (Mint wallet)', status: statuses[2] },
                                             { title: '4. Add Liquidity', status: statuses[3] },
-                                            /* TEMPORARILY DISABLED: step 4.1
-                                            {
-                                                title: '4.1 Transfer token mới cho ví đã quét',
-                                                status: statuses[4],
-                                            },
-                                            */
+                                            { title: '4.1 Mua mồi', status: statuses[4] },
                                             { title: '4.2 Fake Volume', status: statuses[5] },
                                             { title: '5.1 Chạy lệnh swap', status: statuses[6] },
                                             { title: '5.2 Quét & Airdrop', status: statuses[7] },

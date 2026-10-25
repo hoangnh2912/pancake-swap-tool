@@ -53,6 +53,9 @@ model Config {
   fakeVolumeAddress   String @default("")
   fakeVolumeVersion   String @default("")
   fakeVolumeCode      String @default("")
+  // Bước 4.1: mua mồi sau add liquidity
+  seedBuyBnb          String @default("0.0001")
+  seedBuyTimes        String @default("2")
   gasPriceGwei        String @default("0.05")
   // Danh sách tab [{id,title}] — chỉ dùng ở row _global (nguồn gốc nằm trong file .adp)
   tabsJson            String @default("")

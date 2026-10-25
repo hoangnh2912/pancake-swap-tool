@@ -2025,6 +2025,8 @@ export namespace Prisma {
     fakeVolumeAddress: string | null
     fakeVolumeVersion: string | null
     fakeVolumeCode: string | null
+    seedBuyBnb: string | null
+    seedBuyTimes: string | null
     gasPriceGwei: string | null
     tabsJson: string | null
   }
@@ -2060,6 +2062,8 @@ export namespace Prisma {
     fakeVolumeAddress: string | null
     fakeVolumeVersion: string | null
     fakeVolumeCode: string | null
+    seedBuyBnb: string | null
+    seedBuyTimes: string | null
     gasPriceGwei: string | null
     tabsJson: string | null
   }
@@ -2095,6 +2099,8 @@ export namespace Prisma {
     fakeVolumeAddress: number
     fakeVolumeVersion: number
     fakeVolumeCode: number
+    seedBuyBnb: number
+    seedBuyTimes: number
     gasPriceGwei: number
     tabsJson: number
     _all: number
@@ -2132,6 +2138,8 @@ export namespace Prisma {
     fakeVolumeAddress?: true
     fakeVolumeVersion?: true
     fakeVolumeCode?: true
+    seedBuyBnb?: true
+    seedBuyTimes?: true
     gasPriceGwei?: true
     tabsJson?: true
   }
@@ -2167,6 +2175,8 @@ export namespace Prisma {
     fakeVolumeAddress?: true
     fakeVolumeVersion?: true
     fakeVolumeCode?: true
+    seedBuyBnb?: true
+    seedBuyTimes?: true
     gasPriceGwei?: true
     tabsJson?: true
   }
@@ -2202,6 +2212,8 @@ export namespace Prisma {
     fakeVolumeAddress?: true
     fakeVolumeVersion?: true
     fakeVolumeCode?: true
+    seedBuyBnb?: true
+    seedBuyTimes?: true
     gasPriceGwei?: true
     tabsJson?: true
     _all?: true
@@ -2310,6 +2322,8 @@ export namespace Prisma {
     fakeVolumeAddress: string
     fakeVolumeVersion: string
     fakeVolumeCode: string
+    seedBuyBnb: string
+    seedBuyTimes: string
     gasPriceGwei: string
     tabsJson: string
     _count: ConfigCountAggregateOutputType | null
@@ -2362,6 +2376,8 @@ export namespace Prisma {
     fakeVolumeAddress?: boolean
     fakeVolumeVersion?: boolean
     fakeVolumeCode?: boolean
+    seedBuyBnb?: boolean
+    seedBuyTimes?: boolean
     gasPriceGwei?: boolean
     tabsJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2397,6 +2413,8 @@ export namespace Prisma {
     fakeVolumeAddress?: boolean
     fakeVolumeVersion?: boolean
     fakeVolumeCode?: boolean
+    seedBuyBnb?: boolean
+    seedBuyTimes?: boolean
     gasPriceGwei?: boolean
     tabsJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2432,6 +2450,8 @@ export namespace Prisma {
     fakeVolumeAddress?: boolean
     fakeVolumeVersion?: boolean
     fakeVolumeCode?: boolean
+    seedBuyBnb?: boolean
+    seedBuyTimes?: boolean
     gasPriceGwei?: boolean
     tabsJson?: boolean
   }, ExtArgs["result"]["config"]>
@@ -2467,11 +2487,13 @@ export namespace Prisma {
     fakeVolumeAddress?: boolean
     fakeVolumeVersion?: boolean
     fakeVolumeCode?: boolean
+    seedBuyBnb?: boolean
+    seedBuyTimes?: boolean
     gasPriceGwei?: boolean
     tabsJson?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson" | "fakeVolumeEnabled" | "fakeVolumeTimes" | "fakeVolumeBnbAmount" | "fakeVolumeAddress" | "fakeVolumeVersion" | "fakeVolumeCode" | "gasPriceGwei" | "tabsJson", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "rpc" | "chainId" | "mainKey" | "swapKey" | "mintKey" | "contractCode" | "tokensJson" | "solcVersion" | "swapCommandsJson" | "swapDelay" | "swapRepeat" | "transferBnbToMain" | "scanContract" | "disperseAmount" | "disperseBatchSize" | "scanContractsJson" | "scanMode" | "scanDelay" | "scanMaxDuration" | "implAddress" | "factoryAddress" | "logsJson" | "stepStatesJson" | "fakeVolumeEnabled" | "fakeVolumeTimes" | "fakeVolumeBnbAmount" | "fakeVolumeAddress" | "fakeVolumeVersion" | "fakeVolumeCode" | "seedBuyBnb" | "seedBuyTimes" | "gasPriceGwei" | "tabsJson", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -2507,6 +2529,8 @@ export namespace Prisma {
       fakeVolumeAddress: string
       fakeVolumeVersion: string
       fakeVolumeCode: string
+      seedBuyBnb: string
+      seedBuyTimes: string
       gasPriceGwei: string
       tabsJson: string
     }, ExtArgs["result"]["config"]>
@@ -2962,6 +2986,8 @@ export namespace Prisma {
     readonly fakeVolumeAddress: FieldRef<"Config", 'String'>
     readonly fakeVolumeVersion: FieldRef<"Config", 'String'>
     readonly fakeVolumeCode: FieldRef<"Config", 'String'>
+    readonly seedBuyBnb: FieldRef<"Config", 'String'>
+    readonly seedBuyTimes: FieldRef<"Config", 'String'>
     readonly gasPriceGwei: FieldRef<"Config", 'String'>
     readonly tabsJson: FieldRef<"Config", 'String'>
   }
@@ -3384,6 +3410,8 @@ export namespace Prisma {
     fakeVolumeAddress: 'fakeVolumeAddress',
     fakeVolumeVersion: 'fakeVolumeVersion',
     fakeVolumeCode: 'fakeVolumeCode',
+    seedBuyBnb: 'seedBuyBnb',
+    seedBuyTimes: 'seedBuyTimes',
     gasPriceGwei: 'gasPriceGwei',
     tabsJson: 'tabsJson'
   };
@@ -3544,6 +3572,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFilter<"Config"> | string
     fakeVolumeVersion?: StringFilter<"Config"> | string
     fakeVolumeCode?: StringFilter<"Config"> | string
+    seedBuyBnb?: StringFilter<"Config"> | string
+    seedBuyTimes?: StringFilter<"Config"> | string
     gasPriceGwei?: StringFilter<"Config"> | string
     tabsJson?: StringFilter<"Config"> | string
   }
@@ -3579,6 +3609,8 @@ export namespace Prisma {
     fakeVolumeAddress?: SortOrder
     fakeVolumeVersion?: SortOrder
     fakeVolumeCode?: SortOrder
+    seedBuyBnb?: SortOrder
+    seedBuyTimes?: SortOrder
     gasPriceGwei?: SortOrder
     tabsJson?: SortOrder
   }
@@ -3617,6 +3649,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFilter<"Config"> | string
     fakeVolumeVersion?: StringFilter<"Config"> | string
     fakeVolumeCode?: StringFilter<"Config"> | string
+    seedBuyBnb?: StringFilter<"Config"> | string
+    seedBuyTimes?: StringFilter<"Config"> | string
     gasPriceGwei?: StringFilter<"Config"> | string
     tabsJson?: StringFilter<"Config"> | string
   }, "id">
@@ -3652,6 +3686,8 @@ export namespace Prisma {
     fakeVolumeAddress?: SortOrder
     fakeVolumeVersion?: SortOrder
     fakeVolumeCode?: SortOrder
+    seedBuyBnb?: SortOrder
+    seedBuyTimes?: SortOrder
     gasPriceGwei?: SortOrder
     tabsJson?: SortOrder
     _count?: ConfigCountOrderByAggregateInput
@@ -3693,6 +3729,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringWithAggregatesFilter<"Config"> | string
     fakeVolumeVersion?: StringWithAggregatesFilter<"Config"> | string
     fakeVolumeCode?: StringWithAggregatesFilter<"Config"> | string
+    seedBuyBnb?: StringWithAggregatesFilter<"Config"> | string
+    seedBuyTimes?: StringWithAggregatesFilter<"Config"> | string
     gasPriceGwei?: StringWithAggregatesFilter<"Config"> | string
     tabsJson?: StringWithAggregatesFilter<"Config"> | string
   }
@@ -3805,6 +3843,8 @@ export namespace Prisma {
     fakeVolumeAddress?: string
     fakeVolumeVersion?: string
     fakeVolumeCode?: string
+    seedBuyBnb?: string
+    seedBuyTimes?: string
     gasPriceGwei?: string
     tabsJson?: string
   }
@@ -3840,6 +3880,8 @@ export namespace Prisma {
     fakeVolumeAddress?: string
     fakeVolumeVersion?: string
     fakeVolumeCode?: string
+    seedBuyBnb?: string
+    seedBuyTimes?: string
     gasPriceGwei?: string
     tabsJson?: string
   }
@@ -3875,6 +3917,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
     fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
     fakeVolumeCode?: StringFieldUpdateOperationsInput | string
+    seedBuyBnb?: StringFieldUpdateOperationsInput | string
+    seedBuyTimes?: StringFieldUpdateOperationsInput | string
     gasPriceGwei?: StringFieldUpdateOperationsInput | string
     tabsJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3910,6 +3954,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
     fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
     fakeVolumeCode?: StringFieldUpdateOperationsInput | string
+    seedBuyBnb?: StringFieldUpdateOperationsInput | string
+    seedBuyTimes?: StringFieldUpdateOperationsInput | string
     gasPriceGwei?: StringFieldUpdateOperationsInput | string
     tabsJson?: StringFieldUpdateOperationsInput | string
   }
@@ -3945,6 +3991,8 @@ export namespace Prisma {
     fakeVolumeAddress?: string
     fakeVolumeVersion?: string
     fakeVolumeCode?: string
+    seedBuyBnb?: string
+    seedBuyTimes?: string
     gasPriceGwei?: string
     tabsJson?: string
   }
@@ -3980,6 +4028,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
     fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
     fakeVolumeCode?: StringFieldUpdateOperationsInput | string
+    seedBuyBnb?: StringFieldUpdateOperationsInput | string
+    seedBuyTimes?: StringFieldUpdateOperationsInput | string
     gasPriceGwei?: StringFieldUpdateOperationsInput | string
     tabsJson?: StringFieldUpdateOperationsInput | string
   }
@@ -4015,6 +4065,8 @@ export namespace Prisma {
     fakeVolumeAddress?: StringFieldUpdateOperationsInput | string
     fakeVolumeVersion?: StringFieldUpdateOperationsInput | string
     fakeVolumeCode?: StringFieldUpdateOperationsInput | string
+    seedBuyBnb?: StringFieldUpdateOperationsInput | string
+    seedBuyTimes?: StringFieldUpdateOperationsInput | string
     gasPriceGwei?: StringFieldUpdateOperationsInput | string
     tabsJson?: StringFieldUpdateOperationsInput | string
   }
@@ -4188,6 +4240,8 @@ export namespace Prisma {
     fakeVolumeAddress?: SortOrder
     fakeVolumeVersion?: SortOrder
     fakeVolumeCode?: SortOrder
+    seedBuyBnb?: SortOrder
+    seedBuyTimes?: SortOrder
     gasPriceGwei?: SortOrder
     tabsJson?: SortOrder
   }
@@ -4223,6 +4277,8 @@ export namespace Prisma {
     fakeVolumeAddress?: SortOrder
     fakeVolumeVersion?: SortOrder
     fakeVolumeCode?: SortOrder
+    seedBuyBnb?: SortOrder
+    seedBuyTimes?: SortOrder
     gasPriceGwei?: SortOrder
     tabsJson?: SortOrder
   }
@@ -4258,6 +4314,8 @@ export namespace Prisma {
     fakeVolumeAddress?: SortOrder
     fakeVolumeVersion?: SortOrder
     fakeVolumeCode?: SortOrder
+    seedBuyBnb?: SortOrder
+    seedBuyTimes?: SortOrder
     gasPriceGwei?: SortOrder
     tabsJson?: SortOrder
   }

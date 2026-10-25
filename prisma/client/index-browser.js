@@ -160,6 +160,8 @@ exports.Prisma.ConfigScalarFieldEnum = {
   fakeVolumeAddress: 'fakeVolumeAddress',
   fakeVolumeVersion: 'fakeVolumeVersion',
   fakeVolumeCode: 'fakeVolumeCode',
+  seedBuyBnb: 'seedBuyBnb',
+  seedBuyTimes: 'seedBuyTimes',
   gasPriceGwei: 'gasPriceGwei',
   tabsJson: 'tabsJson'
 };

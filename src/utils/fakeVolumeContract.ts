@@ -115,7 +115,8 @@ contract FakeVolume {
             );
             // Vòng kế tiếp dùng đúng số BNB THỰC đang có (không phải số Router tính) — nhất
             // quán với cách lấy tokenBalance ở trên.
-            amountIn = address(this).balance;
+            // Chỉ swap 90%, chừa 10% trong contract (withdraw() rút về hết lúc cuối).
+            amountIn = address(this).balance * 90 / 100;
         }
     }
 }

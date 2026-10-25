@@ -150,6 +150,9 @@ export interface AutomationParams {
      *  các lệnh swap người dùng cấu hình — tạo volume thật trên Pancake. */
     fakeVolumeEnabled?: boolean
     fakeVolumeTimes?: number
+    /** Bước 4.1: số lần mua mồi sau add liquidity (0 = bỏ qua) và BNB mỗi lần */
+    seedBuyTimes?: number
+    seedBuyBnb?: string
     /** BNB mỗi vòng, dạng ether-string (vd "0.001") */
     fakeVolumeBnbAmount?: string
     /** Địa chỉ FakeVolume contract đã deploy từ lần chạy trước — tái sử dụng nếu còn hợp lệ */
@@ -203,17 +206,26 @@ async function estimateFakeVolumeSwap(
     for (;;) {
         try {
             const est = await contract.estimateGas.swap(token, times, amount)
-            return { times, gasLimit: est.mul(140).div(100) }
+            // Không vượt trần gas/tx của BSC; estimate đã sát trần thì coi như fail để chia nhỏ
+            if (est.gt(TX_GAS_CAP * 0.9)) throw new Error(`gas ${est} sát trần ${TX_GAS_CAP}`)
+            const gasLimit = est.mul(140).div(100)
+            return { times, gasLimit: gasLimit.gt(TX_GAS_CAP) ? ethers.BigNumber.from(TX_GAS_CAP) : gasLimit }
         } catch (err: any) {
             if (times <= 1) throw err
-            const reason = err?.reason || err?.error?.reason || err?.code || 'unknown'
+            const reason = err?.reason || err?.error?.reason || err?.code || err?.message || 'unknown'
             times = Math.ceil(times / 2)
             onLog(`[4.2] ⚠ Estimate fail (${reason}) — giảm còn ${times} vòng/tx`)
         }
     }
 }
 
-// Số vòng tối đa mỗi tx swap() — giữ gas mỗi tx ≤ 1/4 block gas limit (tx quá to vượt limit
+// Trần gas mỗi tx của BSC (2^24) — RPC từ chối "transaction gas limit too high" nếu vượt
+const TX_GAS_CAP = 16_777_216
+// FakeVolume chỉ swap 90% số BNB, chừa 10% trong contract — swap lớn thì số BNB bán về
+// không tròn 100% (phí + lệch pool), swap đúng 100% dễ thiếu ở các vòng sau.
+const fvSwapPortion = (bal: ethers.BigNumber) => bal.mul(90).div(100)
+
+// Số vòng tối đa mỗi tx swap() — giữ gas mỗi tx ≤ 1/4 block gas limit và ≤ TX_GAS_CAP (tx quá to vượt limit
 // hoặc khó được validator đưa vào block). Gas/vòng = estimate(2 vòng) − estimate(1 vòng).
 async function planFakeVolumeChunk(
     contract: ethers.Contract,
@@ -223,7 +235,7 @@ async function planFakeVolumeChunk(
     amount: ethers.BigNumber
 ): Promise<number> {
     const blockGasLimit = (await provider.getBlock('latest')).gasLimit.toNumber()
-    const budget = (blockGasLimit / 4) / 1.4 // chừa hệ số ×1.4 của estimateFakeVolumeSwap
+    const budget = Math.min(blockGasLimit / 4, TX_GAS_CAP * 0.9) / 1.4 // chừa hệ số ×1.4 của estimateFakeVolumeSwap
     let base = 150_000
     let perRound = 350_000
     try {
@@ -683,6 +695,22 @@ export async function runAutomation(
                 onLog('[1.1] ✓ Cleared scan records (1 lần đầu batch)')
             }
                 onLog('[1.1] Bỏ qua airdrop (tạm tắt)')
+
+                // ── Step 4.1: ví swap mua mồi vài lệnh nhỏ ngay sau khi add liquidity ──
+                const seedTimes = params.seedBuyTimes ?? 0
+                const seedBnb = params.seedBuyBnb || '0'
+                if (!(seedTimes > 0) || !(Number(seedBnb) > 0)) onLog('[4.1] Bỏ qua mua mồi (số lần/BNB = 0)')
+                const seedRouter = new ethers.Contract(PANCAKE_ROUTER, ROUTER_PANCAKE_V2_ABI, swapWallet)
+                for (let i = 1; i <= seedTimes && Number(seedBnb) > 0; i++) {
+                    checkStop()
+                    onLog(`[4.1] Mua ${seedBnb} BNB (${i}/${seedTimes})...`)
+                    tx = await seedRouter.swapExactETHForTokensSupportingFeeOnTransferTokens(
+                        0, [WBNB, contractAddress], swapWallet.address, Math.floor(Date.now() / 1000) + 600,
+                        { value: ethers.utils.parseEther(seedBnb), gasLimit: 500_000, gasPrice }
+                    )
+                    await raceStop(tx.wait(), params.shouldStop)
+                    onLog(`[4.1] ✓ Mua ${i}/${seedTimes} | tx: ${tx.hash}`)
+                }
                 onStepChange(token.id, 4, 'finish')
                 checkStop()
             }
@@ -723,7 +751,7 @@ export async function runAutomation(
                     // bên dưới, phải tự rút lại trước khi ném lỗi, không để kẹt trong contract.
                     try {
                         let fvChunk = await planFakeVolumeChunk(
-                            fakeVolumeContract, provider, contractAddress, fvTimes, fvAmountWei
+                            fakeVolumeContract, provider, contractAddress, fvTimes, fvSwapPortion(fvAmountWei)
                         )
                         onLog(
                             `[4.2] Thực thi fake swap ${fvTimes} vòng — chia ` +
@@ -732,9 +760,9 @@ export async function runAutomation(
                         let fvDone = 0
                         while (fvDone < fvTimes && !params.shouldStop?.()) {
                             // Tx sau dùng toàn bộ BNB còn trong contract (đã trừ phí/thuế của tx trước)
-                            const amt = fvDone === 0
+                            const amt = fvSwapPortion(fvDone === 0
                                 ? fvAmountWei
-                                : await provider.getBalance(fakeVolumeContract.address)
+                                : await provider.getBalance(fakeVolumeContract.address))
                             const { times: n, gasLimit: fvGasLimit } = await estimateFakeVolumeSwap(
                                 fakeVolumeContract, contractAddress,
                                 Math.min(fvChunk, fvTimes - fvDone), amt, onLog
