@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electron', {
     projectSetTabs: (tabs: unknown) => ipcRenderer.invoke('project-set-tabs', tabs),
     updateState: () => ipcRenderer.invoke('update-state'),
     checkForUpdates: () => ipcRenderer.invoke('update-check'),
+    setAutomationRunning: (running: boolean) => ipcRenderer.send('automation-running', running),
     onUpdateStatus: (cb: (state: { status: string; message?: string }) => void) => {
         const h = (_e: unknown, state: { status: string; message?: string }) => cb(state)
         ipcRenderer.on('update-status', h)

@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Prisma, PrismaClient } from '../prisma/client'
 import { startServer } from './server'
+import { migrateDb } from './utils/dbMigrate'
 import { PROJECT_EXT, decodeProject, encodeProject } from './utils/projectFile'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
@@ -126,6 +127,13 @@ const DB_PATH = app.isPackaged
     ? path.join(app.getAppPath(), '..', 'prisma', 'auto-deploy.sqlite')
     : path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')
 const prisma = new PrismaClient({ datasourceUrl: `file:${DB_PATH}` })
+// DB cache tạo bằng bản cũ (schema khác) → migrate trước khi bất kỳ ai query
+async function prepareDb() {
+    if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, '')
+    const schemaSql = fs.readFileSync(path.join(path.dirname(DB_PATH), 'schema.sql'), 'utf8')
+    const migrated = await migrateDb(prisma, DB_PATH, schemaSql)
+    if (migrated.length) console.log(`[db] migrated: ${migrated.join(', ')}`)
+}
 
 // Ghi nốt thay đổi vào file .adp trước khi thoát
 let quitting = false
@@ -205,8 +213,9 @@ const addRecent = (filePath: string) => {
 }
 
 // Chỉ giữ field có trong schema hiện tại — file từ bản cũ/mới hơn không làm Prisma lỗi
+// File .adp bản cũ/mới hơn: bỏ field schema này không có; field thiếu hoặc null → DEFAULT của schema
 const pickFields = (rows: any[], fields: Record<string, string>) =>
-    rows.map((r) => Object.fromEntries(Object.keys(fields).filter((k) => k in r).map((k) => [k, r[k]])))
+    rows.map((r) => Object.fromEntries(Object.keys(fields).filter((k) => r[k] != null).map((k) => [k, r[k]])))
 
 const updateTitle = () =>
     mainWindow?.setTitle(currentProject ? `${path.basename(currentProject.path)} — auto-deploy` : 'auto-deploy')
@@ -419,20 +428,39 @@ const setUpdateState = (status: UpdateStatus, message?: string) => {
 }
 
 async function promptInstallUpdate() {
+    if (automationRunning) {
+        promptPending = true
+        return
+    }
     const { response } = await dialog.showMessageBox(mainWindow, {
         type: 'info',
-        buttons: ['Khởi động lại & cập nhật', 'Để sau'],
+        buttons: ['Cập nhật ngay', 'Để sau'],
         defaultId: 0,
         cancelId: 1,
-        message: `Đã tải xong bản cập nhật ${downloadedRelease}`.trim(),
+        message: `Có bản cập nhật mới ${downloadedRelease}`.trim(),
         detail:
-            'Dữ liệu được ghi vào file .adp trước khi khởi động lại. ' +
-            'Không khởi động lại khi đang chạy automation — chọn "Để sau", bản mới sẽ được cài ở lần mở app tới.',
+            `Bạn đang dùng bản ${app.getVersion()}. Cập nhật sẽ ghi dữ liệu vào file .adp rồi khởi động lại app. ` +
+            'Chọn "Để sau" thì có thể cập nhật bất cứ lúc nào bằng nút cập nhật trên thanh trên cùng.',
     })
     if (response !== 0) return
+    if (automationRunning) {
+        dialog.showErrorBox('Chưa cập nhật được', 'Đang chạy automation — dừng hoặc đợi chạy xong rồi bấm nút cập nhật.')
+        return
+    }
     await flushProject()
     autoUpdater.quitAndInstall()
 }
+
+// Renderer báo có tab nào đang chạy automation không — đang chạy thì hoãn hỏi cập nhật tới khi xong
+let automationRunning = false
+let promptPending = false
+ipcMain.on('automation-running', (_event, running: boolean) => {
+    automationRunning = running
+    if (!running && promptPending) {
+        promptPending = false
+        promptInstallUpdate()
+    }
+})
 
 function setupAutoUpdate() {
     if (updateState.status === 'unsupported') return
@@ -449,11 +477,10 @@ function setupAutoUpdate() {
     autoUpdater.on('update-downloaded', (_event, _notes, releaseName) => {
         downloadedRelease = releaseName || ''
         setUpdateState('downloaded', downloadedRelease)
-        promptInstallUpdate()
+        promptInstallUpdate() // đang chạy automation thì hỏi sau khi chạy xong
     })
-    // Kiểm tra ngay khi mở app; lần chạy đầu sau khi cài Squirrel còn giữ lock file → đợi 30s
+    // Chỉ kiểm tra 1 lần khi mở app; lần chạy đầu sau khi cài Squirrel còn giữ lock file → đợi 30s
     setTimeout(() => autoUpdater.checkForUpdates(), process.argv.includes('--squirrel-firstrun') ? 30_000 : 0)
-    setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000)
 }
 
 ipcMain.handle('update-state', () => updateState)
@@ -555,6 +582,11 @@ let resolvedServerPort: number
 
 app.on('ready', async () => {
     if (squirrelEvent) return
+    try {
+        await prepareDb()
+    } catch (err: any) {
+        dialog.showErrorBox('Lỗi cập nhật cơ sở dữ liệu', `${err?.message || err}`)
+    }
     resolvedServerPort = await startServer()
     buildMenu()
     if (!isSquirrelInstall) registerWindowsFileAssociation() // installer đã đăng ký lúc cài

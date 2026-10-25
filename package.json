@@ -11,7 +11,7 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "format": "biome format --write --verbose --fix",
-    "generate": "zenstack generate",
+    "generate": "zenstack generate && prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --output prisma/schema.sql",
     "db:push": "prisma db push"
   },
   "keywords": [],

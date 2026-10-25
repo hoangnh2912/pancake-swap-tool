@@ -25,6 +25,12 @@ function prepareEmptyPrismaDir() {
         stdio: 'inherit',
         shell: process.platform === 'win32', // Windows: npx là npx.cmd
     })
+    // index.ts đọc schema.sql cạnh DB để tự migrate DB tạo bằng bản cũ
+    execFileSync(
+        'npx',
+        ['prisma', 'migrate', 'diff', '--from-empty', '--to-schema-datamodel', schema, '--script', '--output', path.join(BUILD_PRISMA_DIR, 'schema.sql')],
+        { stdio: 'inherit', shell: process.platform === 'win32' }
+    )
 }
 
 const config: ForgeConfig = {

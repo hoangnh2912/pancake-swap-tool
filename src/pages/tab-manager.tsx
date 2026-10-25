@@ -185,6 +185,14 @@ export default function TabManager() {
     const [navHeight, setNavHeight] = useState(46)
     const navRef = useRef<HTMLDivElement>(null)
 
+    // Main process chỉ tự cài bản cập nhật khi không tab nào đang chạy automation
+    useEffect(() => {
+        const report = () => electron()?.setAutomationRunning(Object.keys(runningWalletsStore.state).length > 0)
+        report()
+        const sub = runningWalletsStore.subscribe(report)
+        return () => sub.unsubscribe()
+    }, [])
+
     useEffect(() => {
         const el = navRef.current
         if (!el) return
