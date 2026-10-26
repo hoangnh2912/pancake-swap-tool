@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/renderer'
 import {
     DeleteOutlined,
     DownloadOutlined,
@@ -570,6 +571,8 @@ const Main = ({
     const logSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const addLog = useCallback((msg: string) => {
         const time = new Date().toLocaleTimeString('vi-VN')
+        const isError = /❌|✗|LỖI/.test(msg)
+        Sentry.logger[isError ? 'error' : 'info'](msg, { tabId })
         setLogs((prev) => {
             const next = [...prev, { id: logIdRef.current++, text: `[${time}] ${msg}` }]
             const trimmed = next.slice(-500)

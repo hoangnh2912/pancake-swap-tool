@@ -47,6 +47,7 @@ jobs:
         run: yarn make
         env:
           NODE_ENV: production
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

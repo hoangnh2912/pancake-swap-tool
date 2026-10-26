@@ -7,6 +7,8 @@ const ForkTsCheckerWebpackPlugin: typeof IForkTsCheckerWebpackPlugin = require('
 
 export const definePlugin = new webpack.DefinePlugin({
     APP_VERSION: JSON.stringify(version),
+    // DSN lấy từ secret SENTRY_DSN lúc build (CI) — rỗng thì Sentry tắt
+    SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN || ''),
 })
 
 // export const plugins = [

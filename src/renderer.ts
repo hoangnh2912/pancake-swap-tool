@@ -27,4 +27,9 @@
  */
 
 // import './index.css';
+import * as Sentry from '@sentry/electron/renderer'
 import './app'
+
+declare const SENTRY_DSN: string
+// dsn/release lấy từ main — renderer chỉ cần bật log
+if (SENTRY_DSN) Sentry.init({ enableLogs: true })

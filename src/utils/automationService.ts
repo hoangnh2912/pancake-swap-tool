@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/renderer'
 import { ethers } from 'ethers'
 import { ERC20_ABI, ROUTER_PANCAKE_V2_ABI } from './abi'
 import { buildProvider } from './buildProvider'
@@ -1307,6 +1308,7 @@ export async function runAutomation(
                 err.message ||
                 'Unknown error'
             onStepChange(token.id, currentStep, 'error')
+            Sentry.captureException(err, { tags: { step: String(currentStep + 1), code: String(err.code || 'n/a') } })
             onLog(`=== ✗ Token "${token.name}" thất bại tại step ${currentStep + 1} ===`)
             onLog(`    code   : ${err.code || 'n/a'}`)
             onLog(`    reason : ${err.reason || 'n/a'}`)

@@ -1,5 +1,6 @@
 import './setup'
 
+import * as Sentry from '@sentry/electron/main'
 import { BrowserWindow, Menu, app, autoUpdater, dialog, ipcMain } from 'electron'
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -8,8 +9,10 @@ import { Prisma, PrismaClient } from '../prisma/client'
 import { startServer } from './server'
 import { migrateDb } from './utils/dbMigrate'
 import { PROJECT_EXT, decodeProject, encodeProject } from './utils/projectFile'
+import { makeScrubber } from './utils/sentryScrub'
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string
+declare const SENTRY_DSN: string
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string
 // __non_webpack_require__ bypasses webpack bundling and uses Node.js native require
 declare const __non_webpack_require__: NodeRequire
@@ -127,6 +130,29 @@ const DB_PATH = app.isPackaged
     ? path.join(app.getAppPath(), '..', 'prisma', 'auto-deploy.sqlite')
     : path.join(app.getAppPath(), 'prisma', 'auto-deploy.sqlite')
 const prisma = new PrismaClient({ datasourceUrl: `file:${DB_PATH}` })
+
+// Sentry: lỗi + log automation của cả main lẫn renderer (renderer gửi qua main) — private key
+// các ví trong DB bị xoá khỏi mọi event/log trước khi rời máy.
+let sentrySecrets: string[] = []
+const refreshSentrySecrets = () =>
+    prisma.config
+        .findMany({ select: { mainKey: true, swapKey: true, mintKey: true } })
+        .then((rows) => {
+            sentrySecrets = rows.flatMap((r) => [r.mainKey, r.swapKey, r.mintKey]).filter(Boolean)
+        })
+        .catch(() => {})
+const scrub = makeScrubber(() => sentrySecrets)
+Sentry.init({
+    dsn: SENTRY_DSN,
+    enabled: !!SENTRY_DSN && app.isPackaged,
+    release: app.getVersion(),
+    enableLogs: true,
+    beforeSend: (event) => scrub(event),
+    beforeSendTransaction: (event) => scrub(event),
+    beforeBreadcrumb: (crumb) => scrub(crumb),
+    beforeSendLog: (log) => scrub(log),
+})
+fs.watchFile(DB_PATH, { interval: 1000 }, refreshSentrySecrets)
 // DB cache tạo bằng bản cũ (schema khác) → migrate trước khi bất kỳ ai query
 async function prepareDb() {
     if (!fs.existsSync(DB_PATH)) fs.writeFileSync(DB_PATH, '')
@@ -584,6 +610,7 @@ app.on('ready', async () => {
     if (squirrelEvent) return
     try {
         await prepareDb()
+        await refreshSentrySecrets()
     } catch (err: any) {
         dialog.showErrorBox('Lỗi cập nhật cơ sở dữ liệu', `${err?.message || err}`)
     }

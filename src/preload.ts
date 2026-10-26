@@ -1,3 +1,4 @@
+import '@sentry/electron/preload' // cầu IPC để renderer gửi event/log Sentry qua main
 import { contextBridge, ipcRenderer } from 'electron'
 
 declare const APP_VERSION: string
