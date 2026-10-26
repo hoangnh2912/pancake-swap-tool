@@ -225,6 +225,8 @@ const TX_GAS_CAP = 16_777_216
 // FakeVolume chỉ swap 90% số BNB, chừa 10% trong contract — swap lớn thì số BNB bán về
 // không tròn 100% (phí + lệch pool), swap đúng 100% dễ thiếu ở các vòng sau.
 const fvSwapPortion = (bal: ethers.BigNumber) => bal.mul(90).div(100)
+// Tối đa 50 vòng mỗi tx swap() — 200 vòng = 4 tx; gas mỗi tx vẫn tự tính, nặng quá thì tự giảm
+const FV_MAX_ROUNDS_PER_TX = 50
 
 // Số vòng tối đa mỗi tx swap() — giữ gas mỗi tx ≤ 1/4 block gas limit và ≤ TX_GAS_CAP (tx quá to vượt limit
 // hoặc khó được validator đưa vào block). Gas/vòng = estimate(2 vòng) − estimate(1 vòng).
@@ -236,7 +238,8 @@ async function planFakeVolumeChunk(
     amount: ethers.BigNumber
 ): Promise<number> {
     const blockGasLimit = (await provider.getBlock('latest')).gasLimit.toNumber()
-    const budget = Math.min(blockGasLimit / 4, TX_GAS_CAP * 0.9) / 1.4 // chừa hệ số ×1.4 của estimateFakeVolumeSwap
+    // gasLimit = estimate×1.4 nhưng bị cắt ở TX_GAS_CAP, nên budget so trực tiếp với estimate
+    const budget = Math.min(blockGasLimit / 4, TX_GAS_CAP * 0.9)
     let base = 150_000
     let perRound = 350_000
     try {
@@ -249,7 +252,7 @@ async function planFakeVolumeChunk(
     } catch {
         // Không estimate được — dùng số ước lượng mặc định, estimateFakeVolumeSwap sẽ tự giảm nếu fail
     }
-    return Math.max(1, Math.min(times, Math.floor((budget - base) / perRound)))
+    return Math.max(1, Math.min(times, FV_MAX_ROUNDS_PER_TX, Math.floor((budget - base) / perRound)))
 }
 
 function raceStop(promise: Promise<any>, shouldStop: (() => boolean) | undefined): Promise<any> {
