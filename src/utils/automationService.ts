@@ -207,7 +207,7 @@ async function estimateFakeVolumeSwap(
         try {
             const est = await contract.estimateGas.swap(token, times, amount)
             // Không vượt trần gas/tx của BSC; estimate đã sát trần thì coi như fail để chia nhỏ
-            if (est.gt(TX_GAS_CAP * 0.9)) throw new Error(`gas ${est} sát trần ${TX_GAS_CAP}`)
+            if (est.gt(Math.floor(TX_GAS_CAP * 0.9))) throw new Error(`gas ${est} sát trần ${TX_GAS_CAP}`)
             const gasLimit = est.mul(140).div(100)
             return { times, gasLimit: gasLimit.gt(TX_GAS_CAP) ? ethers.BigNumber.from(TX_GAS_CAP) : gasLimit }
         } catch (err: any) {
